@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>qrc;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Translation Files">
+      <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
+      <Extensions>ts</Extensions>
+    </Filter>
+    <Filter Include="decoder">
+      <UniqueIdentifier>{53093e66-222d-4039-a816-ddbf80247c06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Thread">
+      <UniqueIdentifier>{325d1334-acd5-4ea8-b4ee-899a2619041e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Thread">
+      <UniqueIdentifier>{0ab88015-a2d0-4c36-bc6a-78ea845166f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Tools">
+      <UniqueIdentifier>{3a992f89-05a9-4c96-9d1e-5950e858ae0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Tools">
+      <UniqueIdentifier>{f58475e5-d13d-47cb-9740-e8eeca98ffba}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="OpenRtk_Dirver.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+    <QtUic Include="OpenRtk_Dirver.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtMoc Include="OpenRtk_Dirver.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClCompile Include="OpenRtk_Dirver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StreamManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StreamConfigUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SingleStream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="decoder\mixed_raw.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="decoder\rtcm.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="decoder\openrtk_user.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="decoder\imu_raw.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="DecodeThread.cpp">
+      <Filter>Source Files\Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="MergeThread.cpp">
+      <Filter>Source Files\Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="DecodeTools.cpp">
+      <Filter>Source Files\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="MergeTools.cpp">
+      <Filter>Source Files\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="AnalysisTools.cpp">
+      <Filter>Source Files\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="AnalysisThread.cpp">
+      <Filter>Source Files\Thread</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="StreamManager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="StreamConfigUI.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="SingleStream.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="MergeThread.h">
+      <Filter>Header Files\Thread</Filter>
+    </QtMoc>
+    <QtMoc Include="DecodeThread.h">
+      <Filter>Header Files\Thread</Filter>
+    </QtMoc>
+    <QtMoc Include="DecodeTools.h">
+      <Filter>Header Files\Tools</Filter>
+    </QtMoc>
+    <QtMoc Include="MergeTools.h">
+      <Filter>Header Files\Tools</Filter>
+    </QtMoc>
+    <QtMoc Include="AnalysisTools.h">
+      <Filter>Header Files\Tools</Filter>
+    </QtMoc>
+    <QtMoc Include="AnalysisThread.h">
+      <Filter>Header Files\Thread</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="StreamConfigUI.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="DecodeTools.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="MergeTools.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="AnalysisTools.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="decoder\mixed_raw.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="decoder\rtcm.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="decoder\rtklib_core.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="decoder\openrtk_user.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="decoder\imu_raw.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="logo.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="logo.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

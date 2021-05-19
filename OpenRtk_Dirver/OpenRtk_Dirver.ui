@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>OpenRtk_DirverClass</class>
+ <widget class="QMainWindow" name="OpenRtk_DirverClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>596</width>
+    <height>419</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>OpenRtk_Dirver</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="OpenRtk_Dirver.qrc">
+    <normaloff>:/OpenRtk_Dirver/logo.ico</normaloff>:/OpenRtk_Dirver/logo.ico</iconset>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QHBoxLayout" name="horizontalLayout_6">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Bitrate</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="BaudBox">
+          <property name="editable">
+           <bool>true</bool>
+          </property>
+          <item>
+           <property name="text">
+            <string>115200</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>128000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>256000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>460800</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>921600</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Port1</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="com1_box"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Port2</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="com2_box"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Port3</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="com3_box"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="refresh_btn">
+          <property name="text">
+           <string>Refresh</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>Port</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Read</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Write</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <item>
+         <widget class="QCheckBox" name="replay_chk">
+          <property name="text">
+           <string>replay file</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="filepath_edt"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="select_btn">
+          <property name="text">
+           <string>select</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLabel" name="showtime_lb">
+          <property name="text">
+           <string>00:00:00:000</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QProgressBar" name="progressBar">
+          <property name="maximum">
+           <number>10000</number>
+          </property>
+          <property name="value">
+           <number>0</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="decode_btn">
+          <property name="text">
+           <string>decode</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="log_path_btn">
+          <property name="text">
+           <string>Log Path</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="clear_btn">
+          <property name="text">
+           <string>Clear</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="open_btn">
+          <property name="text">
+           <string>Open</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>596</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionDecoder"/>
+    <addaction name="actionMerger"/>
+    <addaction name="actionAnalysis"/>
+   </widget>
+   <addaction name="menuTools"/>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionDecoder">
+   <property name="text">
+    <string>Decoder</string>
+   </property>
+  </action>
+  <action name="actionMerger">
+   <property name="text">
+    <string>Merger</string>
+   </property>
+  </action>
+  <action name="actionAnalysis">
+   <property name="text">
+    <string>Analysis</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="OpenRtk_Dirver.qrc"/>
+ </resources>
+ <connections/>
+</ui>
