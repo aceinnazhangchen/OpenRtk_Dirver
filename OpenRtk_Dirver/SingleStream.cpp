@@ -126,10 +126,10 @@ QString SingleStream::GetName()
 {
 	StreamConfig& config = StreamManager::Instance()->GetStreamConfig(m_Index);
 	if (config.stream_type == emStreamType_Serial) {
-		return QString::asprintf("Serial_%d_%s_", m_Index, qPrintable(m_QSerialPort->portName()));
+		return QString::asprintf("Serial_%d_%s_", m_Index + 1, qPrintable(m_QSerialPort->portName()));
 	}
 	else {
-		return QString::asprintf("File_%d_", m_Index);
+		return QString::asprintf("File_%d_", m_Index + 1);
 	}
 }
 
