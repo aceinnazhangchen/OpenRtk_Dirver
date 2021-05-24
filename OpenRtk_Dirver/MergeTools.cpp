@@ -17,6 +17,8 @@ MergeTools::MergeTools(QWidget *parent)
 
 	connect(m_MergeThread, SIGNAL(sgnProgress(int, int)), this, SLOT(onProcess(int, int)));
 	connect(m_MergeThread, SIGNAL(sgnFinished()), this, SLOT(onFinished()));
+
+	connect(ui.fileformat_cmb,SIGNAL(currentIndexChanged(int)), this, SLOT(onFileFormatChanged(int)));
 }
 
 MergeTools::~MergeTools()
@@ -89,8 +91,9 @@ void MergeTools::onMergeClicked() {
 		return;
 	}
 	ui.progressBar->setValue(0);
-	m_MergeThread->setRtcmFileName(filename);
-	m_MergeThread->setImuFileName(filename2);
+	m_MergeThread->setMergeFormat(ui.fileformat_cmb->currentIndex());
+	m_MergeThread->setMergeFileName1(filename);
+	m_MergeThread->setMergeFileName2(filename2);
 	m_MergeThread->start();
 	setOperable(false);
 }
@@ -107,4 +110,16 @@ void MergeTools::onProcess(int present, int msecs)
 void MergeTools::onFinished()
 {
 	setOperable(true);
+}
+
+void MergeTools::onFileFormatChanged(int index)
+{
+	if (index == emMergeFromat_rover_base) {
+		ui.label->setText("rover:");
+		ui.label_2->setText("base:");
+	}
+	else if (index == emMergeFromat_rtcm_imu) {
+		ui.label->setText("rtcm:");
+		ui.label_2->setText("imu:");
+	}
 }

@@ -91,6 +91,7 @@
     <ClCompile Include="decoder\mixed_raw.c" />
     <ClCompile Include="decoder\openrtk_user.c" />
     <ClCompile Include="decoder\rtcm.c" />
+    <ClCompile Include="decoder\rtkcmn.c" />
     <ClCompile Include="DecodeThread.cpp" />
     <ClCompile Include="DecodeTools.cpp" />
     <ClCompile Include="MergeThread.cpp" />
@@ -118,6 +119,8 @@
     <QtMoc Include="SingleStream.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="decoder\gnss_datatype.h" />
+    <ClInclude Include="decoder\rtkcmn.h" />
     <ClInclude Include="resource.h" />
     <QtMoc Include="AnalysisTools.h" />
     <QtMoc Include="AnalysisThread.h" />

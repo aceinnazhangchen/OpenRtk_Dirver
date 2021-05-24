@@ -304,11 +304,11 @@ int StreamManager::ReadOnePackage()
 		stn = input_aceinna_format_raw(bytes[0], outbuff, &outlen);
 		if (TYPE_ROV == stn) {
 			m_roverbuff.append((char*)outbuff, outlen);
-			//if (m_logFile) fprintf(m_logFile, "$ROV,len:%d\n", outlen);
+			if (m_logFile) fprintf(m_logFile, "$ROV,len:%d\n", outlen);
 		}
 		else if (TYPE_BAS == stn) {
 			m_basebuff.append((char*)outbuff, outlen);
-			//if (m_logFile) fprintf(m_logFile, "$BAS,len:%d\n", outlen);
+			if (m_logFile) fprintf(m_logFile, "$BAS,len:%d\n", outlen);
 		}
 		else if (TYPE_IMU == stn) {
 			//log
@@ -360,6 +360,7 @@ void StreamManager::OpenReplayFile()
 	emit sgnReplayProcess(0, 0);
 	m_TimeCounter.start();
 	set_output_aceinna_file(0);
+	memset(&gnss, 0, sizeof(gnss_rtcm_t));
 	QString logFileName = m_ReplayFileName + ".log";
 	m_logFile = fopen(logFileName.toLocal8Bit().data(), "w");
 }

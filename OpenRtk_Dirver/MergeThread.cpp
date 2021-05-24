@@ -1,12 +1,16 @@
 #include "MergeThread.h"
 #include <QDir>
+#include <QDebug>
 
 MergeThread::MergeThread(QObject *parent)
 	: QThread(parent)
 	, m_isStop(true)
+	, m_MergeFormat(emMergeFromat_rtcm_imu)
 	, m_outlen(0)
 	, m_rtcmFile(NULL)
 	, m_imuFile(NULL)
+	, m_roverFile(NULL)
+	, m_baseFile(NULL)
 	, m_outFile(NULL)
 	, m_logFile(NULL)
 	, m_RawFilesSize(0)
@@ -24,10 +28,21 @@ MergeThread::~MergeThread()
 void MergeThread::run()
 {
 	m_isStop = false;
-	if (!m_RtcmFileName.isEmpty() && !m_ImuFileName.isEmpty()) {
+	if (!m_MergeFileName1.isEmpty() && !m_MergeFileName2.isEmpty()) {
 		m_TimeCounter.start();
+		m_RawFilesReadSize = 0;
 		makeOutFileName();
-		mergeFile();
+		switch (m_MergeFormat)
+		{
+		case emMergeFromat_rtcm_imu:
+			mergeRtcmImuFile();
+			break;
+		case emMergeFromat_rover_base:
+			mergeRoverBaseFile();
+			break;
+		default:
+			break;
+		}
 	}
 	emit sgnFinished();
 }
@@ -37,37 +52,55 @@ void MergeThread::stop()
 	m_isStop = true;
 }
 
-void MergeThread::setRtcmFileName(QString file)
+void MergeThread::setMergeFormat(int format)
 {
-	m_RtcmFileName = file;
+	m_MergeFormat = format;
 }
 
-void MergeThread::setImuFileName(QString file)
+void MergeThread::setMergeFileName1(QString file)
 {
-	m_ImuFileName = file;
+	m_MergeFileName1 = file;
+}
+
+void MergeThread::setMergeFileName2(QString file)
+{
+	m_MergeFileName2 = file;
 }
 
 void MergeThread::makeOutFileName()
 {
-	QFileInfo outDir(m_RtcmFileName);
+	QFileInfo outDir(m_MergeFileName1);
 	if (outDir.isFile()) {
-		QString basename = outDir.baseName();
-		QString absoluteDir = outDir.absoluteDir().absolutePath();
-		m_OutFileName = absoluteDir + QDir::separator() + basename + "-new.bin";
-		m_OutLogName = absoluteDir + QDir::separator() + basename + "-new.log";
+		if (m_MergeFormat == emMergeFromat_rtcm_imu) {
+			QString basename = outDir.baseName();
+			QString absoluteDir = outDir.absoluteDir().absolutePath();
+			m_OutFileName = absoluteDir + QDir::separator() + basename + ".imu-rtcm";
+			m_OutLogName = absoluteDir + QDir::separator() + basename + ".imu-rtcm.log";
+
+		}
+		else if (m_MergeFormat == emMergeFromat_rover_base) {
+			QString basename = outDir.baseName();
+			QString absoluteDir = outDir.absoluteDir().absolutePath();
+			m_OutFileName = absoluteDir + QDir::separator() + basename + ".rover-base";
+			m_OutLogName = absoluteDir + QDir::separator() + basename + ".rover-base.log";
+		}
 	}
 }
 
-void MergeThread::mergeFile() {
+void MergeThread::mergeRtcmImuFile() {
 	if (is_aceinna_decoding()) return;
 	set_aceinna_decoding(1);
-	m_rtcmFile = fopen(m_RtcmFileName.toLocal8Bit().data(),"rb");
-	m_imuFile = fopen(m_ImuFileName.toLocal8Bit().data(), "rb");
+	m_rtcmFile = fopen(m_MergeFileName1.toLocal8Bit().data(),"rb");
+	m_imuFile = fopen(m_MergeFileName2.toLocal8Bit().data(), "rb");
 	m_outFile = fopen(m_OutFileName.toLocal8Bit().data(), "wb");
 	m_logFile = fopen(m_OutLogName.toLocal8Bit().data(), "w");
-	if (m_rtcmFile && m_imuFile && m_outFile) {
+	if (m_rtcmFile && m_imuFile && m_outFile && m_logFile) {
 		m_RawFilesSize = getFileSize(m_rtcmFile);
 		m_RawFilesSize += getFileSize(m_imuFile);
+		m_roverbuff.clear();
+		m_basebuff.clear();
+		m_imubuff.clear();
+		memset(&m_gnss, 0, sizeof(m_gnss));
 		int stn = 0;
 		while (!feof(m_rtcmFile) && !feof(m_imuFile)) {
 			if (m_isStop) break;
@@ -124,6 +157,29 @@ void MergeThread::mergeFile() {
 	if (m_outFile) fclose(m_outFile); m_outFile = NULL;
 	if (m_logFile) fclose(m_logFile); m_logFile = NULL;
 	set_aceinna_decoding(0);
+}
+
+void MergeThread::mergeRoverBaseFile()
+{
+	m_roverFile = fopen(m_MergeFileName1.toLocal8Bit().data(), "rb");
+	m_baseFile = fopen(m_MergeFileName2.toLocal8Bit().data(), "rb");
+	m_outFile = fopen(m_OutFileName.toLocal8Bit().data(), "wb");
+	m_logFile = fopen(m_OutLogName.toLocal8Bit().data(), "w");
+	if (m_roverFile && m_baseFile && m_outFile && m_logFile) {
+		m_RawFilesSize = getFileSize(m_roverFile);
+		m_RawFilesSize += getFileSize(m_baseFile);
+		m_roverbuff.clear();
+		m_basebuff.clear();
+		memset(&m_gnss, 0, sizeof(m_gnss));
+		while (!feof(m_roverFile) && !feof(m_baseFile)) {
+			readOneRover();
+			readOneBase();
+		}
+	}
+	if (m_roverFile) fclose(m_roverFile); m_roverFile = NULL;
+	if (m_baseFile) fclose(m_baseFile); m_baseFile = NULL;
+	if (m_outFile) fclose(m_outFile); m_outFile = NULL;
+	if (m_logFile) fclose(m_logFile); m_logFile = NULL;
 }
 
 int MergeThread::readOneRtcm() {
@@ -195,10 +251,66 @@ int MergeThread::readOneImu()
 	return ret;
 }
 
+void MergeThread::readOneRover()
+{
+	char c = 0;
+	int ret = 0;
+	uint8_t* buffer = NULL;
+	int len = 0;
+	while (!feof(m_roverFile)) {
+		fread(&c, sizeof(char), 1, m_roverFile);
+		m_roverbuff.append(c);
+		ret = input_rtcm3(c, 0, &m_gnss);
+		if (is_complete_rtcm()) {
+			UpdateProcess(m_roverbuff.size());
+			fprintf(m_outFile, "%s1%03d", ROV_FLAG, m_roverbuff.size());
+			fwrite(m_roverbuff.data(), 1, m_roverbuff.size(), m_outFile);
+			//fprintf(m_logFile, "%s,1,%03d,%03d\n", ROV_FLAG, m_roverbuff.size(), m_roverbuff.size() + 8);
+			buffer = (uint8_t*)m_roverbuff.data();
+			len = m_roverbuff.size() - 3;
+			fprintf(m_logFile, "%s,1,%03d, %d\n", ROV_FLAG, m_roverbuff.size(),rtcm_getbitu(buffer, len * 8, 24));
+			m_roverbuff.clear();
+		}
+		if (ret == 1) {
+			//fprintf(m_logFile, "rover,%f\n", m_gnss.rcv[0].time.time + m_gnss.rcv[0].time.sec);
+			break;
+		}
+	}
+}
+
+void MergeThread::readOneBase()
+{
+	char c = 0;
+	int ret = 0;
+	uint8_t* buffer = NULL;
+	int len = 0;
+	if (m_gnss.rcv[1].time.time >= m_gnss.rcv[0].time.time) return;
+	while (!feof(m_baseFile)) {
+		fread(&c, sizeof(char), 1, m_baseFile);
+		m_basebuff.append(c);
+		ret = input_rtcm3(c, 1, &m_gnss);
+		if (is_complete_rtcm()) {
+			UpdateProcess(m_basebuff.size());
+			fprintf(m_outFile, "%s%03d", BAS_FLAG, m_basebuff.size());
+			fwrite(m_basebuff.data(), 1, m_basebuff.size(), m_outFile);
+			//fprintf(m_logFile, "%s,0,%03d,%03d\n", BAS_FLAG, m_basebuff.size(), m_basebuff.size() + 8);
+			buffer = (uint8_t*)m_basebuff.data();
+			len = m_basebuff.size() - 3;
+			fprintf(m_logFile, "%s,0,%03d, %d\n", BAS_FLAG, m_basebuff.size(), rtcm_getbitu(buffer, len * 8, 24));
+			m_basebuff.clear();
+		}
+		if (ret == 1) {
+			//fprintf(m_logFile, "base,%f\n", m_gnss.rcv[1].time.time + m_gnss.rcv[1].time.sec);
+			break;
+		}
+	}
+}
+
 void MergeThread::UpdateProcess(int size) {
 	m_RawFilesReadSize += size;
 	double percent = (double)m_RawFilesReadSize / (double)m_RawFilesSize * 10000;
 	emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+	//qDebug("%d/%d", m_RawFilesReadSize, m_RawFilesSize);
 }
 
 int MergeThread::getFileSize(FILE * file)

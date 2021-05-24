@@ -6,6 +6,12 @@
 #include "decoder\rtcm.h"
 #include "decoder\imu_raw.h"
 
+enum emMergeFromat
+{
+	emMergeFromat_rover_base,
+	emMergeFromat_rtcm_imu,
+};
+
 class MergeThread : public QThread
 {
 	Q_OBJECT
@@ -15,23 +21,30 @@ public:
 	~MergeThread();
 	void run();
 	void stop();
-	void setRtcmFileName(QString file);
-	void setImuFileName(QString file);
+	void setMergeFormat(int format);
+	void setMergeFileName1(QString file);
+	void setMergeFileName2(QString file);
 	void makeOutFileName();
-	void mergeFile();
+	void mergeRtcmImuFile();
+	void mergeRoverBaseFile();
 	int readOneRtcm();
 	int readOneImu();
+	void readOneRover();
+	void readOneBase();
 	void UpdateProcess(int size);
 	int getFileSize(FILE * file);
 private:
 	bool m_isStop;
+	int m_MergeFormat;
 	QTime m_TimeCounter;
-	QString m_RtcmFileName;
-	QString m_ImuFileName;
+	QString m_MergeFileName1;
+	QString m_MergeFileName2;
 	QString m_OutFileName;
 	QString m_OutLogName;
 	FILE * m_rtcmFile;
 	FILE * m_imuFile;
+	FILE * m_roverFile;
+	FILE * m_baseFile;
 	FILE * m_outFile;
 	FILE * m_logFile;
 	int m_RawFilesSize;

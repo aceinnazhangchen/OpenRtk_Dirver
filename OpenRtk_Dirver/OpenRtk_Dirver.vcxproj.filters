@@ -94,6 +94,9 @@
     <ClCompile Include="AnalysisThread.cpp">
       <Filter>Source Files\Thread</Filter>
     </ClCompile>
+    <ClCompile Include="decoder\rtkcmn.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="StreamManager.h">
@@ -156,6 +159,12 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="decoder\rtkcmn.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="decoder\gnss_datatype.h">
+      <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

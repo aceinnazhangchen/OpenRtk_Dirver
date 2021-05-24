@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "mixed_raw.h"
 #include "imu_raw.h"
+#include "rtcm.h"
 
 #ifndef NEAM_HEAD
 #define NEAM_HEAD 0x24 //'$'
@@ -35,6 +36,7 @@ static int is_decoding = 0;
 void set_aceinna_decoding(int decoding)
 {
 	is_decoding = decoding;
+	memset(&raw, 0, sizeof(aceinna_raw_t));
 }
 int is_aceinna_decoding()
 {
@@ -102,6 +104,7 @@ void decode_aceinna_imu(uint8_t* buff) {
 
 extern int input_aceinna_format_raw(uint8_t c, uint8_t* outbuff, uint32_t* outlen) {
 	int ret = 0;
+	int crc = 0;
 	if (raw.buffer_len == 0) {
 		if (c == NEAM_HEAD) {
 			raw.buffer[raw.buffer_len++] = c;
@@ -133,12 +136,13 @@ extern int input_aceinna_format_raw(uint8_t c, uint8_t* outbuff, uint32_t* outle
 					raw.rov_index = raw.buffer[ACEINNA_HEAD_SIZE] - 48;
 					memcpy(str_bin_len, raw.buffer + ROV_HEAD_LEN - 3, 3);
 					raw.data_len = atoi(str_bin_len);
-					if (aceinna_log_file)fprintf(aceinna_log_file, "$ROV,%d,%03d\n", raw.rov_index, raw.data_len);
 				}
 				if (raw.data_len > 0 && raw.buffer_len == ROV_HEAD_LEN + raw.data_len) {
 					//write rov
 					write_aceinna_rov1_file(raw.buffer + ROV_HEAD_LEN, raw.data_len);
 					ret = raw.type;
+					crc = rtcm_getbitu(raw.buffer + ROV_HEAD_LEN, (raw.data_len - 3) * 8, 24);
+					if (aceinna_log_file)fprintf(aceinna_log_file, "$ROV,%d,%03d, %d\n", raw.rov_index, raw.data_len,crc);
 					if (outbuff && outlen) {
 						memcpy(outbuff, raw.buffer, raw.buffer_len);
 						*outlen = raw.buffer_len;
@@ -153,12 +157,13 @@ extern int input_aceinna_format_raw(uint8_t c, uint8_t* outbuff, uint32_t* outle
 					char str_bin_len[4] = { 0 };
 					memcpy(str_bin_len, raw.buffer + BAS_HEAD_LEN - 3, 3);
 					raw.data_len = atoi(str_bin_len);
-					if (aceinna_log_file)fprintf(aceinna_log_file, "$BAS,%d,%03d\n", 0, raw.data_len);
 				}
 				if (raw.data_len > 0 && raw.buffer_len == BAS_HEAD_LEN + raw.data_len) {
 					//write ref
 					write_aceinna_bas_file(raw.buffer + BAS_HEAD_LEN, raw.data_len);
 					ret = raw.type;
+					crc = rtcm_getbitu(raw.buffer + BAS_HEAD_LEN, (raw.data_len - 3) * 8, 24);
+					if (aceinna_log_file)fprintf(aceinna_log_file, "$BAS,%d,%03d, %d\n", 0, raw.data_len, crc);
 					if (outbuff && outlen) {
 						memcpy(outbuff, raw.buffer, raw.buffer_len);
 						*outlen = raw.buffer_len;

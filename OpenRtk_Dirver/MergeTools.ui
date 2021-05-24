@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>710</width>
-    <height>125</height>
+    <width>578</width>
+    <height>153</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,11 +15,42 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QComboBox" name="fileformat_cmb">
+       <item>
+        <property name="text">
+         <string>rover&amp;base</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>rtcm&amp;imu</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QGridLayout" name="gridLayout">
      <item row="0" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>rtcm:</string>
+        <string>rover:</string>
        </property>
       </widget>
      </item>
@@ -36,7 +67,7 @@
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>imu:</string>
+        <string>base:</string>
        </property>
       </widget>
      </item>

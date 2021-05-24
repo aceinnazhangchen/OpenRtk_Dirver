@@ -29,4 +29,5 @@ public slots:
 	void onMergeClicked();
 	void onProcess(int present, int msecs);
 	void onFinished();
+	void onFileFormatChanged(int index);
 };
