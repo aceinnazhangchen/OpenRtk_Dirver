@@ -97,6 +97,9 @@
     <ClCompile Include="decoder\rtkcmn.c">
       <Filter>decoder</Filter>
     </ClCompile>
+    <ClCompile Include="decoder\openrtk_inceptio.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="StreamManager.h">
@@ -164,6 +167,9 @@
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="decoder\gnss_datatype.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="decoder\openrtk_inceptio.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>

@@ -20,7 +20,12 @@
       <widget class="QComboBox" name="fileformat_cmb">
        <item>
         <property name="text">
-         <string>openrtk</string>
+         <string>openrtk-user</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>openrtk-inceptio</string>
         </property>
        </item>
        <item>

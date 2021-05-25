@@ -7,24 +7,8 @@
 #include "rtklib_core.h" //R2D
 #include "rtcm.h"
 
-#define USER_PREAMB 0x55
-#ifndef NEAM_HEAD
-#define NEAM_HEAD 0x24
-#endif // !NEAM_HEAD
-
-#define MAX_NMEA_TYPES 14
-#define MAX_PACKET_TYPES 5+4
-
-#define HEADKML1 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-#define HEADKML2 "<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n"
-#define MARKICON "http://maps.google.com/mapfiles/kml/shapes/track.png"
-//#define R2D   (180/3.1415926)
-#define SIZP     0.3            /* mark size of rover positions */
-#define SIZR     0.3            /* mark size of reference position */
-#define TINT     30.0           /* time label interval (sec) */
-
+const char* userPacketsTypeList[MAX_PACKET_TYPES] = { "s1", "g1", "i1", "o1", "y1" };
 const char* userNMEAList[MAX_NMEA_TYPES] = { "$GPGGA", "$GPRMC", "$GPGSV", "$GLGSV", "$GAGSV", "$BDGSV", "$GPGSA", "$GLGSA", "$GAGSA", "$BDGSA", "$GPZDA", "$GPVTG", "$PASHR", "$GNINS" };
-const char* userPacketsTypeList[MAX_PACKET_TYPES] = { "s1", "g1", "i1", "o1", "y1","gN","iN","d1","sT" };
 const char* gnss_postype[6] = {"NONE", "PSRSP", "PSRDIFF", "UNDEFINED", "RTKFIXED", "RTKFLOAT"};
 const char* ins_status[6] = { "INS_INACTIVE", "INS_ALIGNING", "INS_HIGH_VARIANCE", "INS_SOLUTION_GOOD", "INS_SOLUTION_FREE", "INS_ALIGNMENT_COMPLETE" };
 const char* ins_postype[6] = { "INS_NONE", "INS_PSRSP", "INS_PSRDIFF", "INS_PROPOGATED", "INS_RTKFIXED", "INS_RTKFLOAT" };
@@ -54,17 +38,38 @@ static int save_bin = 0;
 static FILE* fs1_b = NULL;
 int kml_description = 1;
 static char base_user_file_name[256] = { 0 };
-extern void set_base_user_file_name(char* file_name)
-{
-	strcpy(base_user_file_name, file_name);
-}
+
 extern void set_save_bin(int save) {
 	save_bin = save;
 }
-extern void set_output_file(int output) {
+extern void set_output_user_file(int output) {
 	output_user_file = output;
 }
-void print_kml_header(FILE *kml_file,int ntype) {//ntype 0:gnss 1:ins
+extern void set_base_user_file_name(char* file_name)
+{
+	strcpy(base_user_file_name, file_name);
+	memset(&user_raw, 0, sizeof(usrRaw));
+}
+
+extern uint16_t calc_crc(uint8_t* buff, uint32_t nbyte) {
+	uint16_t crc = 0x1D0F;
+	int i, j;
+	for (i = 0; i < nbyte; i++) {
+		crc = crc ^ (buff[i] << 8);
+		for (j = 0; j < 8; j++) {
+			if (crc & 0x8000) {
+				crc = (crc << 1) ^ 0x1021;
+			}
+			else {
+				crc = crc << 1;
+			}
+		}
+	}
+	crc = crc & 0xffff;
+	return crc;
+}
+
+extern void print_kml_header(FILE *kml_file,int ntype) {//ntype 0:gnss 1:ins
 	if (kml_file) {
 		const char* color_gnss[6] = {
 			"ffffffff","ff0000ff","ffff00ff","50FF78F0","ff00ff00","ff00aaff"
@@ -94,7 +99,7 @@ void print_kml_header(FILE *kml_file,int ntype) {//ntype 0:gnss 1:ins
 		fprintf(kml_file, "<name>Rover Position</name>\n");
 	}
 }
-void print_kml_end(FILE *kml_file) {
+extern void print_kml_end(FILE *kml_file) {
 	if (kml_file) {
 		fprintf(kml_file, "</Folder>\n");
 		fprintf(kml_file, "</Document>\n");
@@ -102,6 +107,7 @@ void print_kml_end(FILE *kml_file) {
 	}
 }
 extern void close_user_all_log_file() {
+	memset(&user_raw, 0, sizeof(usrRaw));
 	if (fnmea)fclose(fnmea); fnmea = NULL;
 	if (fs1)fclose(fs1); fs1 = NULL;
 	if (fg1)fclose(fg1); fg1 = NULL;
@@ -227,7 +233,6 @@ void write_ins_kml_file(user_i1_t* pak_ins) {
 	if (fabs(pak_ins->latitude*pak_ins->longitude) < 0.00000001) return;
 	if ((((pak_ins->GPS_TimeOfWeek+5)/10)*10)  % 500 != 0) return;//1000 = 1hz;500 = 2hz;200 = 5hz;100 = 10hz;  x hz = 1000/x
 	if (f_ins_kml) {
-		int pcolor = 0;
 		double ep[6] = { 0 };
 		gtime_t gpstime = gpst2time(pak_ins->GPS_Week, (double)pak_ins->GPS_TimeOfWeek / 1000.0);
 		gtime_t utctime = gpst2utc(gpstime);
@@ -386,22 +391,78 @@ void write_user_bin_file(int index, uint8_t* buff, uint32_t nbyte) {
 	}
 }
 
-extern uint16_t calc_crc(uint8_t* buff, uint32_t nbyte) {
-	uint16_t crc = 0x1D0F;
-	int i, j;
-	for (i = 0; i < nbyte; i++) {
-		crc = crc ^ (buff[i] << 8);
-		for (j = 0; j < 8; j++) {
-			if (crc & 0x8000) {
-				crc = (crc << 1) ^ 0x1021;
-			}
-			else {
-				crc = crc << 1;
-			}
-		}
+void output_user_s1() {
+	//csv
+	sprintf(user_output_msg, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", pak_s1.GPS_Week, (double)pak_s1.GPS_TimeOfWeek / 1000.0,
+		pak_s1.x_accel, pak_s1.y_accel, pak_s1.z_accel, pak_s1.x_gyro, pak_s1.y_gyro, pak_s1.z_gyro);
+	write_user_log_file(USR_OUT_RAWIMU, user_output_msg);
+	//txt
+	sprintf(user_output_msg, "%d,%11.4f,    ,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", pak_s1.GPS_Week, (double)pak_s1.GPS_TimeOfWeek / 1000.0,
+		pak_s1.x_accel, pak_s1.y_accel, pak_s1.z_accel, pak_s1.x_gyro, pak_s1.y_gyro, pak_s1.z_gyro);
+	write_user_ex_file(USR_OUT_RAWIMU, user_output_msg);
+	//process
+	write_user_process_file(USR_OUT_RAWIMU, 0, user_output_msg);
+}
+
+void output_user_g1() {
+	double horizontal_speed = sqrt(pak_g1.north_vel * pak_g1.north_vel + pak_g1.east_vel * pak_g1.east_vel);
+	double track_over_ground = atan2(pak_g1.east_vel, pak_g1.north_vel)*R2D;
+	//csv
+	sprintf(user_output_msg, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%3d,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n",
+		pak_g1.GPS_Week, (double)pak_g1.GPS_TimeOfWeek / 1000.0, pak_g1.position_type, pak_g1.latitude, pak_g1.longitude, pak_g1.height,
+		pak_g1.latitude_standard_deviation, pak_g1.longitude_standard_deviation, pak_g1.height_standard_deviation,
+		pak_g1.number_of_satellites, pak_g1.number_of_satellites_in_solution, pak_g1.hdop, pak_g1.diffage, pak_g1.north_vel, pak_g1.east_vel, pak_g1.up_vel,
+		pak_g1.north_vel_standard_deviation, pak_g1.east_vel_standard_deviation, pak_g1.up_vel_standard_deviation);
+	write_user_log_file(USR_OUT_BESTGNSS, user_output_msg);
+	//txt
+	sprintf(user_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%10.4f,%10.4f\n",
+		pak_g1.GPS_Week, (double)pak_g1.GPS_TimeOfWeek / 1000.0, pak_g1.latitude, pak_g1.longitude, pak_g1.height,
+		pak_g1.latitude_standard_deviation, pak_g1.longitude_standard_deviation, pak_g1.height_standard_deviation,
+		pak_g1.position_type, pak_g1.north_vel, pak_g1.east_vel, pak_g1.up_vel, track_over_ground);
+	write_user_ex_file(USR_OUT_BESTGNSS, user_output_msg);
+	//process $GPGNSS
+	sprintf(user_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d\n",
+		pak_g1.GPS_Week, (double)pak_g1.GPS_TimeOfWeek / 1000.0, pak_g1.latitude, pak_g1.longitude, pak_g1.height,
+		pak_g1.latitude_standard_deviation, pak_g1.longitude_standard_deviation, pak_g1.height_standard_deviation,
+		pak_g1.position_type);
+	write_user_process_file(USR_OUT_BESTGNSS, 0, user_output_msg);
+	//process $GPVEL
+	sprintf(user_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n",
+		pak_g1.GPS_Week, (double)pak_g1.GPS_TimeOfWeek / 1000.0, horizontal_speed, track_over_ground, pak_g1.up_vel);
+	write_user_process_file(USR_OUT_BESTGNSS, 1, user_output_msg);
+	//kml
+	write_gnss_kml_file(&pak_g1);
+}
+
+void output_user_i1() {
+	//csv
+	sprintf(user_output_msg, "%d,%11.4f,%3d,%3d,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f\n",
+		pak_i1.GPS_Week, (double)pak_i1.GPS_TimeOfWeek / 1000.0, pak_i1.ins_status, pak_i1.ins_position_type, pak_i1.latitude, pak_i1.longitude, pak_i1.height,
+		pak_i1.north_velocity, pak_i1.east_velocity, pak_i1.up_velocity, pak_i1.roll, pak_i1.pitch, pak_i1.heading, pak_i1.latitude_std, pak_i1.longitude_std, pak_i1.height_std,
+		pak_i1.north_velocity_std, pak_i1.east_velocity_std, pak_i1.up_velocity_std, pak_i1.roll_std, pak_i1.pitch_std, pak_i1.heading_std);
+	write_user_log_file(USR_OUT_INSPVAX, user_output_msg);
+	if (pak_i1.GPS_TimeOfWeek % 100 == 0) {
+		//txt
+		sprintf(user_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n",
+			pak_i1.GPS_Week, (double)pak_i1.GPS_TimeOfWeek / 1000.0, pak_i1.latitude, pak_i1.longitude, pak_i1.height,
+			pak_i1.north_velocity, pak_i1.east_velocity, pak_i1.up_velocity,
+			pak_i1.roll, pak_i1.pitch, pak_i1.heading, pak_i1.ins_position_type, pak_i1.ins_status);
+		write_user_ex_file(USR_OUT_INSPVAX, user_output_msg);
+		//process
+		sprintf(user_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d\n",
+			pak_i1.GPS_Week, (double)pak_i1.GPS_TimeOfWeek / 1000.0, pak_i1.latitude, pak_i1.longitude, pak_i1.height,
+			pak_i1.north_velocity, pak_i1.east_velocity, pak_i1.up_velocity,
+			pak_i1.roll, pak_i1.pitch, pak_i1.heading, pak_i1.ins_position_type);
+		write_user_process_file(USR_OUT_INSPVAX, 0, user_output_msg);
 	}
-	crc = crc & 0xffff;
-	return crc;
+	//kml
+	write_ins_kml_file(&pak_i1);
+}
+
+void output_user_o1() {
+	sprintf(user_output_msg, "%d,%11.4f,%d,%10.4f,%d,%I64d\n",
+		pak_o1.GPS_Week, (double)pak_o1.GPS_TimeOfWeek / 1000.0, pak_o1.mode, pak_o1.speed, pak_o1.fwd, pak_o1.wheel_tick);
+	write_user_log_file(USR_OUT_ODO, user_output_msg);
 }
 
 void parse_user_packet_payload(uint8_t* buff, uint32_t nbyte) {
@@ -416,13 +477,7 @@ void parse_user_packet_payload(uint8_t* buff, uint32_t nbyte) {
 		if (payload_lenth == packet_size) {
 			memcpy(&pak_s1, payload, packet_size);
 			if (output_user_file) {
-				sprintf(user_output_msg, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", pak_s1.GPS_Week, (double)pak_s1.GPS_TimeOfWeek / 1000.0,
-					pak_s1.x_accel, pak_s1.y_accel, pak_s1.z_accel, pak_s1.x_gyro, pak_s1.y_gyro, pak_s1.z_gyro);
-				write_user_log_file(USR_OUT_RAWIMU, user_output_msg);
-				sprintf(user_output_msg, "%d,%11.4f,    ,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", pak_s1.GPS_Week, (double)pak_s1.GPS_TimeOfWeek / 1000.0,
-					pak_s1.x_accel, pak_s1.y_accel, pak_s1.z_accel, pak_s1.x_gyro, pak_s1.y_gyro, pak_s1.z_gyro);
-				write_user_ex_file(USR_OUT_RAWIMU, user_output_msg);
-				write_user_process_file(USR_OUT_RAWIMU, 0, user_output_msg);
+				output_user_s1();
 				write_user_bin_file(USR_OUT_RAWIMU, buff, nbyte);
 			}
 		}
@@ -433,28 +488,7 @@ void parse_user_packet_payload(uint8_t* buff, uint32_t nbyte) {
 		if (payload_lenth == packet_size) {
 			memcpy(&pak_g1, payload, packet_size);
 			if (output_user_file) {
-				double horizontal_speed = sqrt(pak_g1.north_vel * pak_g1.north_vel + pak_g1.east_vel * pak_g1.east_vel);
-				double track_over_ground = atan2(pak_g1.east_vel, pak_g1.north_vel)*R2D;
-				sprintf(user_output_msg, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%3d,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n",
-					pak_g1.GPS_Week, (double)pak_g1.GPS_TimeOfWeek / 1000.0, pak_g1.position_type, pak_g1.latitude, pak_g1.longitude, pak_g1.height,
-					pak_g1.latitude_standard_deviation, pak_g1.longitude_standard_deviation, pak_g1.height_standard_deviation,
-					pak_g1.number_of_satellites, pak_g1.number_of_satellites_in_solution, pak_g1.hdop, pak_g1.diffage, pak_g1.north_vel, pak_g1.east_vel, pak_g1.up_vel,
-					pak_g1.north_vel_standard_deviation, pak_g1.east_vel_standard_deviation, pak_g1.up_vel_standard_deviation);
-				write_user_log_file(USR_OUT_BESTGNSS, user_output_msg);
-				sprintf(user_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%10.4f,%10.4f\n",
-					pak_g1.GPS_Week, (double)pak_g1.GPS_TimeOfWeek / 1000.0, pak_g1.latitude, pak_g1.longitude, pak_g1.height,
-					pak_g1.latitude_standard_deviation, pak_g1.longitude_standard_deviation, pak_g1.height_standard_deviation,
-					pak_g1.position_type, pak_g1.north_vel, pak_g1.east_vel, pak_g1.up_vel, track_over_ground);
-				write_user_ex_file(USR_OUT_BESTGNSS, user_output_msg);
-				sprintf(user_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d\n",
-					pak_g1.GPS_Week, (double)pak_g1.GPS_TimeOfWeek / 1000.0, pak_g1.latitude, pak_g1.longitude, pak_g1.height,
-					pak_g1.latitude_standard_deviation, pak_g1.longitude_standard_deviation, pak_g1.height_standard_deviation,
-					pak_g1.position_type);
-				write_user_process_file(USR_OUT_BESTGNSS, 0, user_output_msg);
-				sprintf(user_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n",
-					pak_g1.GPS_Week, (double)pak_g1.GPS_TimeOfWeek / 1000.0, horizontal_speed, track_over_ground, pak_g1.up_vel);
-				write_user_process_file(USR_OUT_BESTGNSS, 1, user_output_msg);
-				write_gnss_kml_file(&pak_g1);
+				output_user_g1();
 			}
 		}
 	}
@@ -464,24 +498,7 @@ void parse_user_packet_payload(uint8_t* buff, uint32_t nbyte) {
 		if (payload_lenth == packet_size) {
 			memcpy(&pak_i1, payload, packet_size);
 			if (output_user_file) {
-				sprintf(user_output_msg, "%d,%11.4f,%3d,%3d,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f\n",
-					pak_i1.GPS_Week, (double)pak_i1.GPS_TimeOfWeek / 1000.0, pak_i1.ins_status, pak_i1.ins_position_type, pak_i1.latitude, pak_i1.longitude, pak_i1.height,
-					pak_i1.north_velocity, pak_i1.east_velocity, pak_i1.up_velocity, pak_i1.roll, pak_i1.pitch, pak_i1.heading, pak_i1.latitude_std, pak_i1.longitude_std, pak_i1.height_std,
-					pak_i1.north_velocity_std, pak_i1.east_velocity_std, pak_i1.up_velocity_std, pak_i1.roll_std, pak_i1.pitch_std, pak_i1.heading_std);
-				write_user_log_file(USR_OUT_INSPVAX, user_output_msg);
-				if (pak_i1.GPS_TimeOfWeek % 100 == 0) {
-					sprintf(user_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n",
-						pak_i1.GPS_Week, (double)pak_i1.GPS_TimeOfWeek / 1000.0, pak_i1.latitude, pak_i1.longitude, pak_i1.height,
-						pak_i1.north_velocity, pak_i1.east_velocity, pak_i1.up_velocity,
-						pak_i1.roll, pak_i1.pitch, pak_i1.heading, pak_i1.ins_position_type, pak_i1.ins_status);
-					write_user_ex_file(USR_OUT_INSPVAX, user_output_msg);
-					sprintf(user_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d\n",
-						pak_i1.GPS_Week, (double)pak_i1.GPS_TimeOfWeek / 1000.0, pak_i1.latitude, pak_i1.longitude, pak_i1.height,
-						pak_i1.north_velocity, pak_i1.east_velocity, pak_i1.up_velocity,
-						pak_i1.roll, pak_i1.pitch, pak_i1.heading, pak_i1.ins_position_type);
-					write_user_process_file(USR_OUT_INSPVAX, 0, user_output_msg);
-				}
-				write_ins_kml_file(&pak_i1);
+				output_user_i1();
 			}
 		}
 	}
@@ -491,9 +508,7 @@ void parse_user_packet_payload(uint8_t* buff, uint32_t nbyte) {
 		if (payload_lenth == packet_size) {
 			memcpy(&pak_o1, payload, packet_size);
 			if (output_user_file) {
-				sprintf(user_output_msg, "%d,%11.4f,%d,%10.4f,%d,%I64d\n",
-					pak_o1.GPS_Week, (double)pak_o1.GPS_TimeOfWeek / 1000.0, pak_o1.mode, pak_o1.speed, pak_o1.fwd, pak_o1.wheel_tick);
-				write_user_log_file(USR_OUT_ODO, user_output_msg);
+				output_user_o1();
 			}
 		}
 	}
@@ -519,7 +534,7 @@ void parse_user_packet_payload(uint8_t* buff, uint32_t nbyte) {
 	}
 }
 
-int parse_nmea(uint8_t data) {
+int parse_user_nmea(uint8_t data) {
 	if (user_raw.nmea_flag == 0) {
 		if (NEAM_HEAD == data) {
 			user_raw.nmea_flag = 1;
@@ -586,7 +601,7 @@ extern int input_user_raw(uint8_t data) {
 			}
 			user_raw.header_len = 0;
 		}
-		return parse_nmea(data);
+		return parse_user_nmea(data);
 	}
 	else {
 		user_raw.buff[user_raw.nbyte++] = data;

@@ -4,7 +4,8 @@
 #include <QTime>
 
 enum emDecodeFormat {
-	emDecodeFormat_openrtk,
+	emDecodeFormat_openrtk_user,
+	emDecodeFormat_openrtk_inceptio,
 	emDecodeFormat_mixed_raw,
 	emDecodeFormat_imu,
 };
@@ -22,7 +23,8 @@ public:
 	void setFileName(QString file);
 	void makeOutPath(QString filename);
 protected:
-	void decode_openrtk();
+	void decode_openrtk_user();
+	void decode_openrtk_inceptio();
 	void decode_mixed_raw();
 	void decode_imu();
 private:

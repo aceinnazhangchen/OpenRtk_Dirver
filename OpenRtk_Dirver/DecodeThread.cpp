@@ -1,6 +1,7 @@
 #include "DecodeThread.h"
 #include "StreamManager.h"
 #include "decoder\openrtk_user.h"
+#include "decoder\openrtk_inceptio.h"
 #include "decoder\mixed_raw.h"
 #include "decoder\imu_raw.h"
 
@@ -9,7 +10,7 @@
 DecodeThread::DecodeThread(QObject *parent)
 	: QThread(parent)
 	, m_isStop(false)
-	, m_FileFormat(emDecodeFormat_openrtk)
+	, m_FileFormat(emDecodeFormat_openrtk_user)
 {
 }
 
@@ -25,8 +26,11 @@ void DecodeThread::run()
 		makeOutPath(m_FileName);
 		switch (m_FileFormat)
 		{
-		case emDecodeFormat_openrtk:
-			decode_openrtk();
+		case emDecodeFormat_openrtk_user:
+			decode_openrtk_user();
+			break;
+		case emDecodeFormat_openrtk_inceptio:
+			decode_openrtk_inceptio();
 			break;
 		case emDecodeFormat_mixed_raw:
 			decode_mixed_raw();
@@ -70,7 +74,7 @@ void DecodeThread::makeOutPath(QString filename)
 	}
 }
 
-void DecodeThread::decode_openrtk()
+void DecodeThread::decode_openrtk_user()
 {
 	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
 	if (file) {
@@ -78,7 +82,7 @@ void DecodeThread::decode_openrtk()
 		int read_size = 0;
 		int readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
-		set_output_file(1);
+		set_output_user_file(1);
 		set_save_bin(1);
 		set_base_user_file_name(m_OutBaseName.toLocal8Bit().data());
 		while (!feof(file)) {
@@ -92,6 +96,31 @@ void DecodeThread::decode_openrtk()
 			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
 		}
 		close_user_all_log_file();
+		fclose(file);
+	}
+}
+
+void DecodeThread::decode_openrtk_inceptio()
+{
+	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
+	if (file) {
+		int file_size = getFileSize(file);
+		int read_size = 0;
+		int readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		set_output_inceptio_file(1);
+		set_base_inceptio_file_name(m_OutBaseName.toLocal8Bit().data());
+		while (!feof(file)) {
+			if (m_isStop) break;
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (int i = 0; i < readcount; i++) {
+				input_inceptio_raw(read_cache[i]);
+			}
+			double percent = (double)read_size / (double)file_size * 10000;
+			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		close_inceptio_all_log_file();
 		fclose(file);
 	}
 }

@@ -5,6 +5,22 @@ extern "C"
 {
 #endif
 
+#define USER_PREAMB 0x55
+#ifndef NEAM_HEAD
+#define NEAM_HEAD 0x24
+#endif // !NEAM_HEAD
+
+#define MAX_NMEA_TYPES 14
+#define MAX_PACKET_TYPES 5
+
+#define HEADKML1 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+#define HEADKML2 "<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n"
+#define MARKICON "http://maps.google.com/mapfiles/kml/shapes/track.png"
+	//#define R2D   (180/3.1415926)
+#define SIZP     0.3            /* mark size of rover positions */
+#define SIZR     0.3            /* mark size of reference position */
+#define TINT     30.0           /* time label interval (sec) */
+
 #pragma pack(push, 1)
 
 	typedef struct {
@@ -110,95 +126,17 @@ extern "C"
 		USR_OUT_INSPVAX,
 		USR_OUT_ODO,
 		USR_OUT_SATELLITES,
-		USR_OUT_INCEPTIO_SCALED1,
-		USR_OUT_INCEPTIO_INSPVA,
-		USR_OUT_INCEPTIO_STD1,
-		USR_OUT_INCEPTIO_GNSS,
-		USR_OUT_INCEPTIO_STATUS,
 		USR_OUT_MAX
 	} UserOutPacketType;
-
-	typedef struct
-	{
-		uint32_t GPS_Week;
-		double	 GPS_TimeOfWeek;
-		float	 x_accel;
-		float	 y_accel;
-		float	 z_accel;
-		float	 x_gyro;
-		float	 y_gyro;
-		float	 z_gyro;
-	} inceptio_s1_t;
-
-	typedef struct
-	{
-		uint32_t GPS_Week;
-		double	 GPS_TimeOfWeek;
-		uint8_t	 positionMode;
-		uint32_t latitude;
-		uint32_t longitude;
-		float	 height;
-		uint8_t  numberOfSVs;
-		float    hdop;
-		uint16_t diffage;
-		int16_t	 velocityNorth;
-		int16_t  velocityEast;
-		int16_t  velocityUp;
-	} inceptio_gN_t;
-
-	typedef struct
-	{
-		uint32_t GPS_Week;
-		double	 GPS_TimeOfWeek;
-		uint8_t  insStatus;
-		uint8_t  insPositionType;
-		int32_t	 latitude;
-		int32_t	 longitude;
-		float	 height;
-		int16_t	 velocityNorth;
-		int16_t  velocityEast;
-		int16_t  velocityUp;
-		int16_t  roll;
-		int16_t  pitch;
-		int16_t  heading;
-	} inceptio_iN_t;
-
-	typedef struct
-	{
-		uint32_t GPS_Week;
-		double	 GPS_TimeOfWeek;
-		int16_t	 latitude_std;
-		int16_t	 longitude_std;
-		int16_t	 height_std;
-		int16_t	 north_vel_std;
-		int16_t  east_vel_std;
-		int16_t  up_vel_std;
-		int16_t  roll_std;
-		int16_t  pitch_std;
-		int16_t  heading_std;
-	} inceptio_d1_t;
-
-	typedef struct
-	{
-		uint32_t GPS_Week;
-		double	 GPS_TimeOfWeek;
-		uint16_t year;
-		uint8_t	 mouth;
-		uint8_t	 day;
-		uint8_t	 hour;
-		uint8_t  min;
-		uint8_t  sec;
-		uint32_t imu_status;
-		float  imu_temperature;
-		float  mcu_temperature;
-	} inceptio_sT_t;
 
 #pragma pack(pop)
 
 	extern uint16_t calc_crc(uint8_t* buff, uint32_t nbyte);
+	extern void print_kml_header(FILE *kml_file, int ntype);
+	extern void print_kml_end(FILE *kml_file);
 
 	extern void set_save_bin(int save);
-	extern void set_output_file(int output);
+	extern void set_output_user_file(int output);
 	extern void set_base_user_file_name(char* file_name);
 	extern void close_user_all_log_file();
 	extern int get_packet_type();
