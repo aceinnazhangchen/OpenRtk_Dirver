@@ -9,7 +9,7 @@
 
 #define MAX_INT 2147483648.0
 
-const char* inceptioPacketsTypeList[MAX_PACKET_TYPES] = { "s1", "gN","iN","d1","sT" };
+const char* inceptioPacketsTypeList[MAX_INCEPTIO_PACKET_TYPES] = { "s1", "gN","iN","d1","sT","o1"};
 const char* inceptioNMEAList[MAX_NMEA_TYPES] = { "$GPGGA", "$GPRMC", "$GPGSV", "$GLGSV", "$GAGSV", "$BDGSV", "$GPGSA", "$GLGSA", "$GAGSA", "$BDGSA", "$GPZDA", "$GPVTG", "$PASHR", "$GNINS" };
 
 static usrRaw inceptio_raw = { 0 };
@@ -19,6 +19,7 @@ static inceptio_gN_t inceptio_pak_gN = { 0 };
 static inceptio_iN_t inceptio_pak_iN = { 0 };
 static inceptio_d1_t inceptio_pak_d1 = { 0 };
 static inceptio_sT_t inceptio_pak_sT = { 0 };
+static inceptio_o1_t inceptio_pak_o1 = { 0 };
 
 static int output_inceptio_file = 0;
 static FILE* fnmea = NULL;
@@ -27,10 +28,12 @@ static FILE* fgN = NULL;
 static FILE* fiN = NULL;
 static FILE* fd1 = NULL;
 static FILE* fsT = NULL;
+static FILE* fo1 = NULL;
 static FILE* f_process = NULL;
 static FILE* f_gnssposvel = NULL;
 static FILE* f_imu = NULL;
 static FILE* f_ins = NULL;
+static FILE* f_odo = NULL;
 static FILE* f_gnss_kml = NULL;
 static FILE* f_ins_kml = NULL;
 int inceptio_kml_description = 1;
@@ -52,11 +55,13 @@ extern void close_inceptio_all_log_file() {
 	if (fiN)fclose(fiN); fiN = NULL;
 	if (fd1)fclose(fd1); fd1 = NULL;
 	if (fsT)fclose(fsT); fsT = NULL;
+	if (fo1)fclose(fo1); fo1 = NULL;
 
 	if (f_process)fclose(f_process); f_process = NULL;
 	if (f_gnssposvel)fclose(f_gnssposvel); f_gnssposvel = NULL;
 	if (f_imu)fclose(f_imu); f_imu = NULL;
 	if (f_ins)fclose(f_ins); f_ins = NULL;
+	if (f_odo)fclose(f_odo); f_odo = NULL;
 	if (f_gnss_kml) { print_kml_end(f_gnss_kml); fclose(f_gnss_kml); } f_gnss_kml = NULL;
 	if (f_ins_kml) { print_kml_end(f_ins_kml); fclose(f_ins_kml); } f_ins_kml = NULL;
 }
@@ -125,6 +130,16 @@ void write_inceptio_log_file(int index, char* log) {
 		if (fsT) fprintf(fsT, log);
 	}
 	break;
+	case INCEPTIO_OUT_ODO:
+	{
+		if (fo1 == NULL) {
+			sprintf(file_name, "%s_o1.csv", base_inceptio_file_name);
+			fo1 = fopen(file_name, "w");
+			if (fo1) fprintf(fo1, "GPS_Week(),GPS_TimeOfWeek(s),mode(),speed(m/s),fwd(),wheel_tick()\n");
+		}
+		if (fo1) fprintf(fo1, log);
+	}
+	break;
 	}
 }
 
@@ -160,6 +175,15 @@ void write_inceptio_ex_file(int index, char* log) {
 		if (f_ins) fprintf(f_ins, log);
 	}
 	break;
+	case INCEPTIO_OUT_ODO:
+	{
+		if (f_odo == NULL) {
+			sprintf(file_name, "%s-odo.txt", base_inceptio_file_name);
+			f_odo = fopen(file_name, "w");
+		}
+		if (f_odo) fprintf(f_odo, log);
+	}
+	break;
 	}
 }
 
@@ -190,6 +214,11 @@ void write_inceptio_process_file(int index, int type, char* log) {
 	case INCEPTIO_OUT_INSPVA:
 	{
 		if (f_process) fprintf(f_process, "$GPINS,%s", log);
+	}
+	break;
+	case INCEPTIO_OUT_ODO:
+	{
+		if (f_process) fprintf(f_process, "$GPODO,%s", log);
 	}
 	break;
 	}
@@ -392,6 +421,17 @@ void output_inceptio_sT() {
 	write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
 }
 
+void output_inceptio_o1() {
+	//csv
+	sprintf(inceptio_output_msg, "%d,%11.4f,%3d,%10.4f,%3d,%16I64d\n", inceptio_pak_o1.GPS_Week, (double)inceptio_pak_o1.GPS_TimeOfWeek/1000.0, inceptio_pak_o1.mode,
+		inceptio_pak_o1.speed, inceptio_pak_o1.fwd, inceptio_pak_o1.wheel_tick);
+	write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
+	//txt
+	write_inceptio_ex_file(inceptio_raw.ntype, inceptio_output_msg);
+	//process
+	write_inceptio_process_file(inceptio_raw.ntype, 0, inceptio_output_msg);
+}
+
 void parse_inceptio_packet_payload(uint8_t* buff, uint32_t nbyte) {
 	uint8_t payload_lenth = buff[2];
 	char packet_type[4] = { 0 };
@@ -431,6 +471,14 @@ void parse_inceptio_packet_payload(uint8_t* buff, uint32_t nbyte) {
 		if (payload_lenth == sizeof(inceptio_sT_t)) {
 			memcpy(&inceptio_pak_sT, payload, sizeof(inceptio_sT_t));
 			output_inceptio_sT();
+		}
+	}
+	else if (strcmp(packet_type, "o1") == 0) {
+		inceptio_raw.ntype = INCEPTIO_OUT_ODO;
+		size_t psize = sizeof(inceptio_o1_t);
+		if (payload_lenth == sizeof(inceptio_o1_t)) {
+			memcpy(&inceptio_pak_o1, payload, sizeof(inceptio_o1_t));
+			output_inceptio_o1();
 		}
 	}
 }
@@ -492,7 +540,7 @@ int input_inceptio_raw(uint8_t data)
 		}
 		if (inceptio_raw.header_len == 4) {
 			int i = 0;
-			for (i = 0; i < MAX_PACKET_TYPES; i++) {
+			for (i = 0; i < MAX_INCEPTIO_PACKET_TYPES; i++) {
 				const char* packetType = inceptioPacketsTypeList[i];
 				if (packetType[0] == inceptio_raw.header[2] && packetType[1] == inceptio_raw.header[3]) {
 					inceptio_raw.flag = 1;

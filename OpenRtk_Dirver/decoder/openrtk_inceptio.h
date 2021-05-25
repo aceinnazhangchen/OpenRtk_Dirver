@@ -6,6 +6,8 @@ extern "C"
 {
 #endif
 
+#define MAX_INCEPTIO_PACKET_TYPES 6
+
 #pragma pack(push, 1)
 
 	typedef struct
@@ -83,13 +85,24 @@ extern "C"
 		float  mcu_temperature;
 	} inceptio_sT_t;
 
+	typedef struct
+	{
+		uint16_t GPS_Week;
+		uint32_t GPS_TimeOfWeek;
+		uint8_t	 mode;
+		double	 speed;
+		uint8_t	 fwd;
+		uint64_t wheel_tick;
+	} inceptio_o1_t;
+
 	typedef enum {
 		INCEPTIO_OUT_NONE = 0,
 		INCEPTIO_OUT_SCALED1,
 		INCEPTIO_OUT_INSPVA,
 		INCEPTIO_OUT_STD1,
 		INCEPTIO_OUT_GNSS,
-		INCEPTIO_OUT_STATUS
+		INCEPTIO_OUT_STATUS,
+		INCEPTIO_OUT_ODO
 	} InceptioOutPacketType;
 
 #pragma pack(pop)
