@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-#define MAX_INCEPTIO_PACKET_TYPES 6
+#define MAX_INCEPTIO_PACKET_TYPES 8
 
 #pragma pack(push, 1)
 
@@ -36,6 +36,9 @@ extern "C"
 		int16_t	 velocityNorth;
 		int16_t  velocityEast;
 		int16_t  velocityUp;
+		int16_t	 latitude_std;
+		int16_t	 longitude_std;
+		int16_t	 height_std;
 	} inceptio_gN_t;
 
 	typedef struct
@@ -110,6 +113,10 @@ extern "C"
 	extern void set_output_inceptio_file(int output);
 	extern void set_base_inceptio_file_name(char* file_name);
 	extern void close_inceptio_all_log_file();
+
+	extern int get_inceptio_packet_type();
+	extern inceptio_gN_t* get_inceptio_packet_gN();
+	extern inceptio_iN_t* get_inceptio_packet_iN();
 
 	extern int input_inceptio_raw(uint8_t data);
 

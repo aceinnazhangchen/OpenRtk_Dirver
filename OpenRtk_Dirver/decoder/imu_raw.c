@@ -29,7 +29,7 @@ void write_imu_log_file(char* log) {
 	if (imu_out == NULL) {
 		sprintf(file_name, "%s_imu.csv", base_imu_file_name);
 		imu_out = fopen(file_name, "w");
-		if (imu_out) fprintf(imu_out, "GPS_Time(s),x_accel(m/s^2),y_accel(m/s^2),z_accel(m/s^2),x_gyro(deg/s),y_gyro(deg/s),z_gyro(deg/s)\n");
+		if (imu_out) fprintf(imu_out, "GPS_Week(),GPS_TimeOfWeek(s),x_accel(m/s^2),y_accel(m/s^2),z_accel(m/s^2),x_gyro(deg/s),y_gyro(deg/s),z_gyro(deg/s)\n");
 	}
 	if (imu_out) fprintf(imu_out, log);
 }
@@ -42,8 +42,8 @@ void parse_imu_packet_payload(uint8_t* buff, uint32_t nbyte, char* out_msg) {
 	if (out_msg == NULL) return;
 	if (payload_lenth == packet_size) {
 		memcpy(&pak, payload, packet_size);
-		gtime_t gtime = gpst2time(pak.GPS_Week, (double)pak.GPS_TimeOfWeek / 1000.0);
-		sprintf(out_msg, "%13.3f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", (double)gtime.time+gtime.sec,
+		//gtime_t gtime = gpst2time(pak.GPS_Week, (double)pak.GPS_TimeOfWeek / 1000.0);
+		sprintf(out_msg, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", pak.GPS_Week, (double)pak.GPS_TimeOfWeek / 1000.0,
 			pak.x_accel, pak.y_accel, pak.z_accel, pak.x_gyro, pak.y_gyro, pak.z_gyro);
 		write_imu_log_file(out_msg);
 	}

@@ -134,14 +134,21 @@ extern "C"
 	extern uint16_t calc_crc(uint8_t* buff, uint32_t nbyte);
 	extern void print_kml_header(FILE *kml_file, int ntype);
 	extern void print_kml_end(FILE *kml_file);
+	//begin_end : begin = 1 end = -1 other = 0
+	extern void write_gnss_kml_line(user_g1_t* pak_gnss, int begin_end);
+	extern void write_gnss_kml_file(user_g1_t* pak_gnss, int begin_end);
+	extern void write_ins_kml_line(user_i1_t* pak_ins, int begin_end);
+	extern void write_ins_kml_file(user_i1_t* pak_ins, int begin_end);
 
 	extern void set_save_bin(int save);
 	extern void set_output_user_file(int output);
 	extern void set_base_user_file_name(char* file_name);
 	extern void close_user_all_log_file();
-	extern int get_packet_type();
-	extern user_s1_t* get_packet_s1();
-	extern user_g1_t* get_packet_g1();
+
+	extern int get_user_packet_type();
+	extern user_s1_t* get_user_packet_s1();
+	extern user_g1_t* get_user_packet_g1();
+	extern user_i1_t* get_user_packet_i1();
 
 	extern int input_user_raw(uint8_t data);
 
