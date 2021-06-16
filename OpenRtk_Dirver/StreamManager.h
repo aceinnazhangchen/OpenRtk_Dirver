@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <mutex>
 #include <vector>
 #include "SingleStream.h"
 #include <QDir>
@@ -24,6 +25,11 @@ enum emStreamType
 enum emRtkAction {
 	emRtkLogFile = 0,
 	emRtkReplayFile = 1,
+};
+
+enum emModelType {
+	emModel_OpenRTK330LI = 1,
+	emModel_RTK330LA = 2,
 };
 
 struct SerialConfig {
@@ -70,6 +76,7 @@ public:
 	StreamConfig& GetStreamConfig(int index);
 	bool Open();
 	void Close();
+	void SetModelType(int model);
 	void MakeLogPath();
 	QDir GetLogPath();
 	void LogOpenRTK();
@@ -90,6 +97,7 @@ public slots:
 	void onStream(int index, const QByteArray& data);
 	void onTimerTimeout();
 private:
+	int m_ModelType;
 	QDir logPath;
 	StreamConfig m_StreamConfigList[MAX_STREAM_NUM];
 	SingleStream* m_StreamList[MAX_STREAM_NUM];

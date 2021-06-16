@@ -18,6 +18,7 @@ std::once_flag      StreamManager::m_flag;
 StreamManager::StreamManager(QObject *parent)
 	: QObject(parent)
 	, m_RtkAction(emRtkLogFile)
+	, m_ModelType(emModel_OpenRTK330LI)
 	, m_ReplayFileSize(0)
 	, m_ReplayFileReadSize(0)
 	, m_logFile(NULL)
@@ -108,6 +109,11 @@ void StreamManager::Close()
 	set_aceinna_decoding(0);
 }
 
+void StreamManager::SetModelType(int model)
+{
+	m_ModelType = model;
+}
+
 void StreamManager::MakeLogPath()
 {
 	QDateTime currentTime = QDateTime::currentDateTime();
@@ -124,23 +130,33 @@ QDir StreamManager::GetLogPath() {
 
 void StreamManager::LogOpenRTK()
 {
-	m_StreamList[emPort_3]->SendCmdAndWait(CMD_GET_CONFIG);
-	cmd_response.clear();
+	if (m_ModelType == emModel_OpenRTK330LI) {
+		m_StreamList[emPort_3]->SendCmdAndWait(CMD_GET_CONFIG);
+		cmd_response.clear();
+	}
 }
 
 void StreamManager::StartReplayOpenRTK()
 {
-	m_StreamList[emPort_2]->SendCmdAndWait(CMD_REPLAY_ON);
-	m_StreamList[emPort_3]->SendCmdAndWait(CMD_REPLAY_ON);
-	m_replayPort2Ready = false;
-	m_replayPort3Ready = false;
+	if (m_ModelType == emModel_OpenRTK330LI) {
+		m_StreamList[emPort_2]->SendCmdAndWait(CMD_REPLAY_ON);
+		m_StreamList[emPort_3]->SendCmdAndWait(CMD_REPLAY_ON);
+		m_replayPort2Ready = false;
+		m_replayPort3Ready = false;
+	}
+	else if (m_ModelType == emModel_RTK330LA) {
+		OpenReplayFile();
+		m_timer->start();
+	}
 }
 
 void StreamManager::StopReplayOpenRTK()
 {
 	if (m_timer->isActive()) m_timer->stop();
 	if (m_ReplayFile.isOpen()) m_ReplayFile.close();
-	m_StreamList[emPort_2]->SendCmd(CMD_REPLAY_OFF);
+	if (m_ModelType == emModel_OpenRTK330LI) {
+		m_StreamList[emPort_2]->SendCmd(CMD_REPLAY_OFF);
+	}
 	if (m_logFile) fclose(m_logFile); m_logFile = NULL;
 }
 
@@ -248,7 +264,12 @@ void StreamManager::SendPackage(int stn) {
 	if (TYPE_IMU == stn) {
 		if (m_imubuff.size() > 0) {
 			UpdateProcess(m_imubuff.size());
-			m_StreamList[emPort_3]->Write(m_imubuff);
+			if (m_ModelType == emModel_OpenRTK330LI) {
+				m_StreamList[emPort_3]->Write(m_imubuff);
+			}
+			else if (m_ModelType == emModel_RTK330LA) {
+				m_StreamList[emPort_1]->Write(m_imubuff);
+			}
 			m_imubuff.clear();
 		}
 	}
@@ -257,7 +278,12 @@ void StreamManager::SendPackage(int stn) {
 			UpdateProcess(m_roverbuff.size());
 			if (m_logFile) fprintf(m_logFile, "rover,time:%f,size:%d\n", gnss.rcv[stn - 1].time.time + gnss.rcv[stn - 1].time.sec, m_roverbuff.size());
 			//send data;
-			m_StreamList[emPort_2]->Write(m_roverbuff);
+			if (m_ModelType == emModel_OpenRTK330LI) {
+				m_StreamList[emPort_2]->Write(m_roverbuff);
+			}
+			else if (m_ModelType == emModel_RTK330LA) {
+				m_StreamList[emPort_1]->Write(m_roverbuff);
+			}
 			m_roverbuff.clear();
 		}
 	}
@@ -266,7 +292,12 @@ void StreamManager::SendPackage(int stn) {
 			UpdateProcess(m_basebuff.size());
 			if (m_logFile) fprintf(m_logFile, "base,time:%f,size:%d\n", gnss.rcv[stn - 1].time.time + gnss.rcv[stn - 1].time.sec, m_basebuff.size());
 			//send data;
-			m_StreamList[emPort_2]->Write(m_basebuff);
+			if (m_ModelType == emModel_OpenRTK330LI) {
+				m_StreamList[emPort_2]->Write(m_basebuff);
+			}
+			else if (m_ModelType == emModel_RTK330LA) {
+				m_StreamList[emPort_1]->Write(m_basebuff);
+			}
 			m_basebuff.clear();
 		}
 	}

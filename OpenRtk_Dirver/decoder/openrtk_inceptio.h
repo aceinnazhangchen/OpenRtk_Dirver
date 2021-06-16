@@ -113,6 +113,11 @@ extern "C"
 	extern void set_output_inceptio_file(int output);
 	extern void set_base_inceptio_file_name(char* file_name);
 	extern void close_inceptio_all_log_file();
+	//begin_end : begin = 1 end = -1 other = 0
+	extern void write_inceptio_gnss_kml_line(inceptio_gN_t* pak_gnss, int begin_end);
+	extern void write_inceptio_gnss_kml_file(inceptio_gN_t* pak_gnss, int begin_end);
+	extern void write_inceptio_ins_kml_line(inceptio_iN_t* pak_ins, int begin_end);
+	extern void write_inceptio_ins_kml_file(inceptio_iN_t* pak_ins, int begin_end);
 
 	extern int get_inceptio_packet_type();
 	extern inceptio_gN_t* get_inceptio_packet_gN();

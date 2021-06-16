@@ -31,7 +31,9 @@ OpenRtk_Dirver::OpenRtk_Dirver(QWidget *parent)
 {
     ui.setupUi(this);
 	setAcceptDrops(true);
-	ui.BaudBox->setCurrentIndex(3);
+	ui.BaudBox_1->setCurrentIndex(3);
+	ui.BaudBox_2->setCurrentIndex(3);
+	ui.BaudBox_3->setCurrentIndex(3);
 	onSearchComPort();
 	ui.tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 	for (int i = 0; i < MAX_STREAM_NUM; i++) {
@@ -80,17 +82,23 @@ void OpenRtk_Dirver::dropEvent(QDropEvent *event)
 
 void OpenRtk_Dirver::getConfigFromUI()
 {
-	int baud = ui.BaudBox->currentText().toInt();
+	QString model_name = ui.ModelBox->currentText();
+	if (model_name == "OpenRTK330LI") {
+		StreamManager::Instance()->SetModelType(emModel_OpenRTK330LI);
+	}
+	else if (model_name == "RTK330LA") {
+		StreamManager::Instance()->SetModelType(emModel_RTK330LA);
+	}
 	StreamConfig & config_1 = StreamManager::Instance()->GetStreamConfig(0);
-	config_1.m_serial.baud = baud;
+	config_1.m_serial.baud = ui.BaudBox_1->currentText().toInt();
 	config_1.m_serial.port = ui.com1_box->currentText();
 	config_1.m_serial.port_index = ui.com1_box->currentIndex();
 	StreamConfig & config_2 = StreamManager::Instance()->GetStreamConfig(1);
-	config_2.m_serial.baud = baud;
+	config_2.m_serial.baud = ui.BaudBox_2->currentText().toInt();
 	config_2.m_serial.port = ui.com2_box->currentText();
 	config_2.m_serial.port_index = ui.com2_box->currentIndex();
 	StreamConfig & config_3 = StreamManager::Instance()->GetStreamConfig(2);
-	config_3.m_serial.baud = baud;
+	config_3.m_serial.baud = ui.BaudBox_3->currentText().toInt();;
 	config_3.m_serial.port = ui.com3_box->currentText();
 	config_3.m_serial.port_index = ui.com3_box->currentIndex();
 	if (ui.replay_chk->isChecked()) {
@@ -129,7 +137,10 @@ void OpenRtk_Dirver::onOpenClose()
 
 	if (m_nStates == emStart)
 	{
-		ui.BaudBox->setDisabled(true);
+		ui.ModelBox->setDisabled(true);
+		ui.BaudBox_1->setDisabled(true);
+		ui.BaudBox_2->setDisabled(true);
+		ui.BaudBox_3->setDisabled(true);
 		ui.com1_box->setDisabled(true);
 		ui.com2_box->setDisabled(true);
 		ui.com3_box->setDisabled(true);
@@ -141,7 +152,10 @@ void OpenRtk_Dirver::onOpenClose()
 	}
 	else
 	{
-		ui.BaudBox->setDisabled(false);
+		ui.ModelBox->setDisabled(false);
+		ui.BaudBox_1->setDisabled(false);
+		ui.BaudBox_2->setDisabled(false);
+		ui.BaudBox_3->setDisabled(false);
 		ui.com1_box->setDisabled(false);
 		ui.com2_box->setDisabled(false);
 		ui.com3_box->setDisabled(false);

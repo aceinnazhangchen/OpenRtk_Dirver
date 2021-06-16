@@ -174,11 +174,11 @@ void DecodeThread::decode_openrtk_inceptio()
 			for (int i = 0; i < readcount; i++) {
 				ret = input_inceptio_raw(read_cache[i]);
 				if (ret == 1) {
-					if (get_user_packet_type() == INCEPTIO_OUT_GNSS) {
+					if (get_inceptio_packet_type() == INCEPTIO_OUT_GNSS) {
 						inceptio_gN_t* g1 = get_inceptio_packet_gN();
 						gnss_list << *g1;
 					}
-					else if (get_user_packet_type() == INCEPTIO_OUT_INSPVA) {
+					else if (get_inceptio_packet_type() == INCEPTIO_OUT_INSPVA) {
 						inceptio_iN_t* i1 = get_inceptio_packet_iN();
 						ins_list << *i1;
 					}
@@ -186,6 +186,52 @@ void DecodeThread::decode_openrtk_inceptio()
 			}
 			double percent = (double)read_size / (double)file_size * 10000;
 			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		//gnss kml
+		for (int i = 0; i < gnss_list.size(); ++i) {
+			if (i == 0) {
+				write_inceptio_gnss_kml_line(&gnss_list[i], 1);
+			}
+			else if (i == gnss_list.size() - 1) {
+				write_inceptio_gnss_kml_line(&gnss_list[i], -1);
+			}
+			else {
+				write_inceptio_gnss_kml_line(&gnss_list[i], 0);
+			}
+		}
+		for (int i = 0; i < gnss_list.size(); ++i) {
+			if (i == 0) {
+				write_inceptio_gnss_kml_file(&gnss_list[i], 1);
+			}
+			else if (i == gnss_list.size() - 1) {
+				write_inceptio_gnss_kml_file(&gnss_list[i], -1);
+			}
+			else {
+				write_inceptio_gnss_kml_file(&gnss_list[i], 0);
+			}
+		}
+		//ins kml
+		for (int i = 0; i < ins_list.size(); ++i) {
+			if (i == 0) {
+				write_inceptio_ins_kml_line(&ins_list[i], 1);
+			}
+			else if (i == ins_list.size() - 1) {
+				write_inceptio_ins_kml_line(&ins_list[i], -1);
+			}
+			else {
+				write_inceptio_ins_kml_line(&ins_list[i], 0);
+			}
+		}
+		for (int i = 0; i < ins_list.size(); ++i) {
+			if (i == 0) {
+				write_inceptio_ins_kml_file(&ins_list[i], 1);
+			}
+			else if (i == ins_list.size() - 1) {
+				write_inceptio_ins_kml_file(&ins_list[i], -1);
+			}
+			else {
+				write_inceptio_ins_kml_file(&ins_list[i], 0);
+			}
 		}
 		gnss_list.clear();
 		ins_list.clear();
