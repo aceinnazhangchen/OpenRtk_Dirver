@@ -117,7 +117,7 @@ void MergeThread::mergeRtcmImuFile() {
 					}
 					if (TYPE_ROV == stn) {
 						int week = 0;
-						double second = time2gpst(m_gnss.rcv[0].time, &week);
+						double second = time2gpst(m_gnss.obs[0].time, &week);
 						uint32_t nsec = second * 1000;
 						if (week == pak->GPS_Week) {
 							if (last_TimeOfWeek <= nsec && nsec <= pak->GPS_TimeOfWeek) {
@@ -142,10 +142,12 @@ void MergeThread::mergeRtcmImuFile() {
 					}
 					else if (TYPE_BAS == stn) {
 						int week = 0;
-						double second = time2gpst(m_gnss.rcv[1].time, &week);
-						uint32_t nsec = second * 10000;
-						fwrite(m_basebuff.data(), 1, m_basebuff.size(), m_outFile);
-						fprintf(m_logFile, "base,week:%d,sec:%d,size:%d\n", week, nsec, m_basebuff.size());
+						double second = time2gpst(m_gnss.obs[1].time, &week);
+						uint32_t nsec = second * 1000;
+						if (m_gnss.obs[0].time.time - 5 < m_gnss.obs[1].time.time && m_gnss.obs[1].time.time < m_gnss.obs[0].time.time + 5) {
+							fwrite(m_basebuff.data(), 1, m_basebuff.size(), m_outFile);
+							fprintf(m_logFile, "base,week:%d,sec:%d,size:%d\n", week, nsec, m_basebuff.size());
+						}
 						m_basebuff.clear();
 					}
 				}
@@ -266,13 +268,13 @@ void MergeThread::readOneRover()
 			fprintf(m_outFile, "%s1%03d", ROV_FLAG, m_roverbuff.size());
 			fwrite(m_roverbuff.data(), 1, m_roverbuff.size(), m_outFile);
 			//fprintf(m_logFile, "%s,1,%03d,%03d\n", ROV_FLAG, m_roverbuff.size(), m_roverbuff.size() + 8);
-			buffer = (uint8_t*)m_roverbuff.data();
-			len = m_roverbuff.size() - 3;
-			fprintf(m_logFile, "%s,1,%03d, %d\n", ROV_FLAG, m_roverbuff.size(),rtcm_getbitu(buffer, len * 8, 24));
+			//buffer = (uint8_t*)m_roverbuff.data();
+			//len = m_roverbuff.size() - 3;
+			//fprintf(m_logFile, "%s,1,%03d, %d\n", ROV_FLAG, m_roverbuff.size(),rtcm_getbitu(buffer, len * 8, 24));
 			m_roverbuff.clear();
 		}
 		if (ret == 1) {
-			//fprintf(m_logFile, "rover,%f\n", m_gnss.rcv[0].time.time + m_gnss.rcv[0].time.sec);
+			fprintf(m_logFile, "rover,%f\n", m_gnss.obs[0].time.time + m_gnss.obs[0].time.sec);
 			break;
 		}
 	}
@@ -284,24 +286,31 @@ void MergeThread::readOneBase()
 	int ret = 0;
 	uint8_t* buffer = NULL;
 	int len = 0;
-	if (m_gnss.rcv[1].time.time >= m_gnss.rcv[0].time.time) return;
+	char flag[16] = { 0 };
+	if (m_gnss.obs[1].time.time >= m_gnss.obs[0].time.time) return;
+	QByteArray writeBuffer;
 	while (!feof(m_baseFile)) {
 		fread(&c, sizeof(char), 1, m_baseFile);
 		m_basebuff.append(c);
 		ret = input_rtcm3(c, 1, &m_gnss);
 		if (is_complete_rtcm()) {
 			UpdateProcess(m_basebuff.size());
-			fprintf(m_outFile, "%s%03d", BAS_FLAG, m_basebuff.size());
-			fwrite(m_basebuff.data(), 1, m_basebuff.size(), m_outFile);
+			sprintf(flag, "%s%03d", BAS_FLAG, m_basebuff.size());
+			writeBuffer.append(flag);
+			writeBuffer.append(m_basebuff);
 			//fprintf(m_logFile, "%s,0,%03d,%03d\n", BAS_FLAG, m_basebuff.size(), m_basebuff.size() + 8);
-			buffer = (uint8_t*)m_basebuff.data();
-			len = m_basebuff.size() - 3;
-			fprintf(m_logFile, "%s,0,%03d, %d\n", BAS_FLAG, m_basebuff.size(), rtcm_getbitu(buffer, len * 8, 24));
+			//buffer = (uint8_t*)m_basebuff.data();
+			//len = m_basebuff.size() - 3;
+			//fprintf(m_logFile, "%s,0,%03d, %d\n", BAS_FLAG, m_basebuff.size(), rtcm_getbitu(buffer, len * 8, 24));
 			m_basebuff.clear();
 		}
 		if (ret == 1) {
-			//fprintf(m_logFile, "base,%f\n", m_gnss.rcv[1].time.time + m_gnss.rcv[1].time.sec);
-			break;
+			if (m_gnss.obs[1].time.time >= m_gnss.obs[0].time.time) {
+				fprintf(m_logFile, "base,%f\n", m_gnss.obs[1].time.time + m_gnss.obs[1].time.sec);
+				fwrite(writeBuffer.data(), 1, writeBuffer.size(), m_outFile);
+				break;
+			}
+			writeBuffer.clear();
 		}
 	}
 }
