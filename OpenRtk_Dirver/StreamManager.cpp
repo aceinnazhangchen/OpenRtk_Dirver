@@ -4,7 +4,7 @@
 #include <QDebug>
 #include <QDateTime>
 #include <QJsonDocument>
-#include "decoder\mixed_raw.h"
+#include "mixed_raw.h"
 
 #define CMD_GET_CONFIG "get configuration\r\n"
 #define CMD_LOG_ON "log debug on\r\n"

@@ -7,8 +7,8 @@
 #include <QDir>
 #include <QTimer>
 #include <QTime>
-#include "decoder\rtcm.h"
-#include "decoder\openrtk_user.h"
+#include "rtcm.h"
+#include "openrtk_user.h"
 
 #define MAX_STREAM_NUM 3
 enum emPort {

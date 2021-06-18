@@ -64,18 +64,6 @@
     <ClCompile Include="SingleStream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="decoder\mixed_raw.c">
-      <Filter>decoder</Filter>
-    </ClCompile>
-    <ClCompile Include="decoder\rtcm.c">
-      <Filter>decoder</Filter>
-    </ClCompile>
-    <ClCompile Include="decoder\openrtk_user.c">
-      <Filter>decoder</Filter>
-    </ClCompile>
-    <ClCompile Include="decoder\imu_raw.c">
-      <Filter>decoder</Filter>
-    </ClCompile>
     <ClCompile Include="DecodeThread.cpp">
       <Filter>Source Files\Thread</Filter>
     </ClCompile>
@@ -94,10 +82,22 @@
     <ClCompile Include="AnalysisThread.cpp">
       <Filter>Source Files\Thread</Filter>
     </ClCompile>
-    <ClCompile Include="decoder\rtkcmn.c">
+    <ClCompile Include="..\decoder\imu_raw.c">
       <Filter>decoder</Filter>
     </ClCompile>
-    <ClCompile Include="decoder\openrtk_inceptio.c">
+    <ClCompile Include="..\decoder\mixed_raw.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\openrtk_inceptio.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\openrtk_user.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\rtcm.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\rtkcmn.c">
       <Filter>decoder</Filter>
     </ClCompile>
   </ItemGroup>
@@ -145,31 +145,31 @@
     </QtUic>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="decoder\mixed_raw.h">
-      <Filter>decoder</Filter>
-    </ClInclude>
-    <ClInclude Include="decoder\rtcm.h">
-      <Filter>decoder</Filter>
-    </ClInclude>
-    <ClInclude Include="decoder\rtklib_core.h">
-      <Filter>decoder</Filter>
-    </ClInclude>
-    <ClInclude Include="decoder\openrtk_user.h">
-      <Filter>decoder</Filter>
-    </ClInclude>
-    <ClInclude Include="decoder\imu_raw.h">
-      <Filter>decoder</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="decoder\rtkcmn.h">
+    <ClInclude Include="..\decoder\gnss_datatype.h">
       <Filter>decoder</Filter>
     </ClInclude>
-    <ClInclude Include="decoder\gnss_datatype.h">
+    <ClInclude Include="..\decoder\imu_raw.h">
       <Filter>decoder</Filter>
     </ClInclude>
-    <ClInclude Include="decoder\openrtk_inceptio.h">
+    <ClInclude Include="..\decoder\mixed_raw.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\openrtk_inceptio.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\openrtk_user.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\rtcm.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\rtkcmn.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\rtklib_core.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>

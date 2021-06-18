@@ -1,9 +1,9 @@
 #include "DecodeThread.h"
 #include "StreamManager.h"
-#include "decoder\openrtk_user.h"
-#include "decoder\openrtk_inceptio.h"
-#include "decoder\mixed_raw.h"
-#include "decoder\imu_raw.h"
+#include "openrtk_user.h"
+#include "openrtk_inceptio.h"
+#include "mixed_raw.h"
+#include "imu_raw.h"
 #include <QList>
 
 #define READ_CACHE_SIZE 4*1024

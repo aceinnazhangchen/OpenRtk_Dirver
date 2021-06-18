@@ -2,9 +2,9 @@
 
 #include <QThread>
 #include <QTime>
-#include "decoder\mixed_raw.h"
-#include "decoder\rtcm.h"
-#include "decoder\imu_raw.h"
+#include "mixed_raw.h"
+#include "rtcm.h"
+#include "imu_raw.h"
 
 enum emMergeFromat
 {

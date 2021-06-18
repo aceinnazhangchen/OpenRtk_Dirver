@@ -58,6 +58,16 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\decoder;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\decoder;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
@@ -85,14 +95,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\decoder\imu_raw.c" />
+    <ClCompile Include="..\decoder\mixed_raw.c" />
+    <ClCompile Include="..\decoder\openrtk_inceptio.c" />
+    <ClCompile Include="..\decoder\openrtk_user.c" />
+    <ClCompile Include="..\decoder\rtcm.c" />
+    <ClCompile Include="..\decoder\rtkcmn.c" />
     <ClCompile Include="AnalysisThread.cpp" />
     <ClCompile Include="AnalysisTools.cpp" />
-    <ClCompile Include="decoder\imu_raw.c" />
-    <ClCompile Include="decoder\mixed_raw.c" />
-    <ClCompile Include="decoder\openrtk_inceptio.c" />
-    <ClCompile Include="decoder\openrtk_user.c" />
-    <ClCompile Include="decoder\rtcm.c" />
-    <ClCompile Include="decoder\rtkcmn.c" />
     <ClCompile Include="DecodeThread.cpp" />
     <ClCompile Include="DecodeTools.cpp" />
     <ClCompile Include="MergeThread.cpp" />
@@ -120,17 +130,17 @@
     <QtMoc Include="SingleStream.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="decoder\gnss_datatype.h" />
-    <ClInclude Include="decoder\openrtk_inceptio.h" />
-    <ClInclude Include="decoder\rtkcmn.h" />
+    <ClInclude Include="..\decoder\gnss_datatype.h" />
+    <ClInclude Include="..\decoder\imu_raw.h" />
+    <ClInclude Include="..\decoder\mixed_raw.h" />
+    <ClInclude Include="..\decoder\openrtk_inceptio.h" />
+    <ClInclude Include="..\decoder\openrtk_user.h" />
+    <ClInclude Include="..\decoder\rtcm.h" />
+    <ClInclude Include="..\decoder\rtkcmn.h" />
+    <ClInclude Include="..\decoder\rtklib_core.h" />
     <ClInclude Include="resource.h" />
     <QtMoc Include="AnalysisTools.h" />
     <QtMoc Include="AnalysisThread.h" />
-    <ClInclude Include="decoder\imu_raw.h" />
-    <ClInclude Include="decoder\mixed_raw.h" />
-    <ClInclude Include="decoder\openrtk_user.h" />
-    <ClInclude Include="decoder\rtcm.h" />
-    <ClInclude Include="decoder\rtklib_core.h" />
     <QtMoc Include="MergeThread.h" />
     <QtMoc Include="MergeTools.h" />
     <QtMoc Include="DecodeTools.h" />

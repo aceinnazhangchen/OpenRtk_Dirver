@@ -1,6 +1,6 @@
 #include "AnalysisThread.h"
 #include "StreamManager.h"
-#include "decoder\mixed_raw.h"
+#include "mixed_raw.h"
 
 AnalysisThread::AnalysisThread(QObject *parent)
 	: QThread(parent)
