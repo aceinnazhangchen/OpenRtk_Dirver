@@ -1,0 +1,11 @@
+#pragma once
+
+#ifdef USERDECODERLIB_EXPORTS
+#define USERDECODERLIB_API __declspec(dllexport)
+#else
+#define USERDECODERLIB_API __declspec(dllimport)
+#endif
+
+extern "C" USERDECODERLIB_API void decode_openrtk_user(char* filename);
+
+extern "C" USERDECODERLIB_API void decode_openrtk_inceptio(char* filename);
