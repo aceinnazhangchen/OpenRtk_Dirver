@@ -291,7 +291,7 @@ void write_ins_kml_line(user_i1_t* pak_ins, int begin_end) {
 		}
 		do {
 			if (fabs(pak_ins->latitude*pak_ins->longitude) < 0.00000001) break;
-			if ((((pak_ins->GPS_TimeOfWeek + 5) / 10) * 10) % 500 != 0) break;//1000 = 1hz;500 = 2hz;200 = 5hz;100 = 10hz;  x hz = 1000/x
+			if ((((pak_ins->GPS_TimeOfWeek + 5) / 10) * 10) % 1000 != 0) break;//1000 = 1hz;500 = 2hz;200 = 5hz;100 = 10hz;  x hz = 1000/x
 			fprintf(f_ins_kml, "%.9f,%.9f,%.9f\n", pak_ins->longitude, pak_ins->latitude, pak_ins->height);
 		} while(0);
 		if (begin_end == -1) {
@@ -316,7 +316,7 @@ void write_ins_kml_file(user_i1_t* pak_ins, int begin_end) {
 			fprintf(f_ins_kml, "<name>Rover Position</name>\n");
 		}
 		if (fabs(pak_ins->latitude*pak_ins->longitude) > 0.00000001 &&
-			(((pak_ins->GPS_TimeOfWeek + 5) / 10) * 10) % 500 == 0)//1000 = 1hz;500 = 2hz;200 = 5hz;100 = 10hz;  x hz = 1000/x
+			(((pak_ins->GPS_TimeOfWeek + 5) / 10) * 10) % 1000 == 0)//1000 = 1hz;500 = 2hz;200 = 5hz;100 = 10hz;  x hz = 1000/x
 		{
 			double ep[6] = { 0 };
 			gtime_t gpstime = gpst2time(pak_ins->GPS_Week, (double)pak_ins->GPS_TimeOfWeek / 1000.0);
