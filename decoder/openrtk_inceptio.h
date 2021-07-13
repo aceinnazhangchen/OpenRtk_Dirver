@@ -39,7 +39,17 @@ extern "C"
 		int16_t	 latitude_std;
 		int16_t	 longitude_std;
 		int16_t	 height_std;
+		//struct extend at 2021-07-13
+		uint16_t pos_hor_pl;
+		uint16_t pos_ver_pl;
+		uint8_t pos_status;
+		uint16_t vel_hor_pl;
+		uint16_t vel_ver_pl;
+		uint8_t vel_status;
 	} inceptio_gN_t;
+
+#define inceptio_gN_t_size_base			44
+#define inceptio_gN_t_size_20210713		54
 
 	typedef struct
 	{
@@ -110,6 +120,7 @@ extern "C"
 
 #pragma pack(pop)
 
+	extern void init_inceptio_data();
 	extern void set_output_inceptio_file(int output);
 	extern void set_base_inceptio_file_name(char* file_name);
 	extern void close_inceptio_all_log_file();

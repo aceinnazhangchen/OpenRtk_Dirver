@@ -49,8 +49,19 @@ extern void set_output_inceptio_file(int output) {
 extern void set_base_inceptio_file_name(char* file_name)
 {
 	strcpy(base_inceptio_file_name, file_name);
-	memset(&inceptio_raw, 0, sizeof(usrRaw));
+	init_inceptio_data();
 }
+
+extern void init_inceptio_data() {
+	memset(&inceptio_raw, 0, sizeof(usrRaw));
+	memset(&inceptio_pak_s1, 0, sizeof(inceptio_s1_t));
+	memset(&inceptio_pak_gN, 0, sizeof(inceptio_gN_t));
+	memset(&inceptio_pak_iN, 0, sizeof(inceptio_iN_t));
+	memset(&inceptio_pak_d1, 0, sizeof(inceptio_d1_t));
+	memset(&inceptio_pak_sT, 0, sizeof(inceptio_sT_t));
+	memset(&inceptio_pak_o1, 0, sizeof(inceptio_o1_t));
+}
+
 extern void close_inceptio_all_log_file() {
 	memset(&inceptio_raw, 0, sizeof(usrRaw));
 	if (fnmea)fclose(fnmea); fnmea = NULL;
@@ -113,7 +124,7 @@ void write_inceptio_log_file(int index, char* log) {
 		if (fgN == NULL) {
 			sprintf(file_name, "%s_gN.csv", base_inceptio_file_name);
 			fgN = fopen(file_name, "w");
-			if (fgN) fprintf(fgN, "GPS_Week(),GPS_TimeofWeek(s),positionMode(),latitude(deg),longitude(deg),height(m),numberOfSVs(),hdop(),diffage(),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),latitude_std(m),longitude_std(m),height_std(m)\n");
+			if (fgN) fprintf(fgN, "GPS_Week(),GPS_TimeofWeek(s),positionMode(),latitude(deg),longitude(deg),height(m),numberOfSVs(),hdop(),diffage(),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),latitude_std(m),longitude_std(m),height_std(m),pos_hor_pl(),pos_ver_pl(),pos_status(),vel_hor_pl(),vel_ver_pl(),vel_status()\n"); 
 		}
 		if (fgN) fprintf(fgN, log);
 	}
@@ -491,12 +502,18 @@ void output_inceptio_gN() {
 	float latitude_std = (float)inceptio_pak_gN.latitude_std / 1000.0;
 	float longitude_std = (float)inceptio_pak_gN.longitude_std / 1000.0;
 	float height_std = (float)inceptio_pak_gN.height_std / 1000.0;
+	float pos_hor_pl = (float)inceptio_pak_gN.pos_hor_pl / 1000.0;
+	float pos_ver_pl = (float)inceptio_pak_gN.pos_ver_pl / 1000.0;
+	float vel_hor_pl = (float)inceptio_pak_gN.vel_hor_pl / 1000.0;
+	float vel_ver_pl = (float)inceptio_pak_gN.vel_ver_pl / 1000.0;
 	double horizontal_speed = sqrt(north_vel * north_vel + east_vel * east_vel);
 	double track_over_ground = atan2(east_vel, north_vel) * R2D;
 	//csv
-	sprintf(inceptio_output_msg, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%3d,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n", inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek,
+	sprintf(inceptio_output_msg, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%3d,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%3d\n", 
+		inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek,
 		inceptio_pak_gN.positionMode, (double)inceptio_pak_gN.latitude*180.0 / MAX_INT, (double)inceptio_pak_gN.longitude*180.0 / MAX_INT, inceptio_pak_gN.height, 
-		inceptio_pak_gN.numberOfSVs,inceptio_pak_gN.hdop, (float)inceptio_pak_gN.diffage, north_vel, east_vel, up_vel, latitude_std, longitude_std, height_std);
+		inceptio_pak_gN.numberOfSVs,inceptio_pak_gN.hdop, (float)inceptio_pak_gN.diffage, north_vel, east_vel, up_vel, latitude_std, longitude_std, height_std,
+		pos_hor_pl, pos_ver_pl, inceptio_pak_gN.pos_status, vel_hor_pl, vel_ver_pl, inceptio_pak_gN.vel_status);
 	write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
 	//txt
 	sprintf(inceptio_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%10.4f,%10.4f\n",
@@ -584,8 +601,9 @@ void parse_inceptio_packet_payload(uint8_t* buff, uint32_t nbyte) {
 	}
 	else if (strcmp(packet_type, "gN") == 0) {
 		inceptio_raw.ntype = INCEPTIO_OUT_GNSS;
-		if (payload_lenth == sizeof(inceptio_gN_t)) {
-			memcpy(&inceptio_pak_gN, payload, sizeof(inceptio_gN_t));
+		if (payload_lenth == inceptio_gN_t_size_base ||
+			payload_lenth == inceptio_gN_t_size_20210713) {
+			memcpy(&inceptio_pak_gN, payload, payload_lenth);
 			output_inceptio_gN();
 		}
 	}
