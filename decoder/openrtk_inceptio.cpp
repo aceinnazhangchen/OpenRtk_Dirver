@@ -9,16 +9,21 @@
 
 #define MAX_INT 2147483648.0
 
-const char* inceptioPacketsTypeList[MAX_INCEPTIO_PACKET_TYPES] = { "s1", "gN","iN","d1","sT","o1","fM","rt"};
+#define VERSION_EARLY		0
+#define VERSION_24_01_21	1
+
+const char* inceptioPacketsTypeList[MAX_INCEPTIO_PACKET_TYPES] = { "s1", "gN","iN","d1","d2","sT","o1","fM","rt"};
 const char* inceptioNMEAList[MAX_NMEA_TYPES] = { "$GPGGA", "$GPRMC", "$GPGSV", "$GLGSV", "$GAGSV", "$BDGSV", "$GPGSA", "$GLGSA", "$GAGSA", "$BDGSA", "$GPZDA", "$GPVTG", "$PASHR", "$GNINS" };
 extern const char* gnss_postype[6];
 extern const char* ins_status[6];
 extern const char* ins_postype[6];
 
+static int data_version = 0;
 static usrRaw inceptio_raw = { 0 };
 static char inceptio_output_msg[1024] = { 0 };
 static inceptio_s1_t inceptio_pak_s1 = { 0 };
-static inceptio_gN_t inceptio_pak_gN = { 0 };
+static inceptio_gN_early_t inceptio_pak_gN_early;
+static inceptio_gN_t inceptio_pak_gN;
 static inceptio_iN_t inceptio_pak_iN = { 0 };
 static inceptio_d1_t inceptio_pak_d1 = { 0 };
 static inceptio_sT_t inceptio_pak_sT = { 0 };
@@ -55,6 +60,7 @@ extern void set_base_inceptio_file_name(char* file_name)
 extern void init_inceptio_data() {
 	memset(&inceptio_raw, 0, sizeof(usrRaw));
 	memset(&inceptio_pak_s1, 0, sizeof(inceptio_s1_t));
+	memset(&inceptio_pak_gN_early, 0, sizeof(inceptio_gN_early_t));
 	memset(&inceptio_pak_gN, 0, sizeof(inceptio_gN_t));
 	memset(&inceptio_pak_iN, 0, sizeof(inceptio_iN_t));
 	memset(&inceptio_pak_d1, 0, sizeof(inceptio_d1_t));
@@ -124,7 +130,12 @@ void write_inceptio_log_file(int index, char* log) {
 		if (fgN == NULL) {
 			sprintf(file_name, "%s_gN.csv", base_inceptio_file_name);
 			fgN = fopen(file_name, "w");
-			if (fgN) fprintf(fgN, "GPS_Week(),GPS_TimeofWeek(s),positionMode(),latitude(deg),longitude(deg),height(m),numberOfSVs(),hdop(),diffage(),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),latitude_std(m),longitude_std(m),height_std(m),pos_hor_pl(),pos_ver_pl(),pos_status(),vel_hor_pl(),vel_ver_pl(),vel_status()\n"); 
+			if (VERSION_EARLY == data_version) {
+				if (fgN) fprintf(fgN, "GPS_Week(),GPS_TimeofWeek(s),positionMode(),latitude(deg),longitude(deg),height(m),numberOfSVs(),hdop(),diffage(),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),latitude_std(m),longitude_std(m),height_std(m)\n");
+			}
+			else if (VERSION_24_01_21 == data_version) {
+				if (fgN) fprintf(fgN, "GPS_Week(),GPS_TimeofWeek(s),positionMode(),latitude(deg),longitude(deg),height(m),numberOfSVs(),hdop(),vdop(),tdop(),diffage(),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),latitude_std(m),longitude_std(m),height_std(m),pos_hor_pl(m),pos_ver_pl(m),pos_status(),vel_hor_pl(m/s),vel_ver_pl(m/s),vel_status()\n");
+			}
 		}
 		if (fgN) fprintf(fgN, log);
 	}
@@ -495,6 +506,38 @@ void output_inceptio_s1() {
 	write_inceptio_process_file(inceptio_raw.ntype, 0, inceptio_output_msg);
 }
 
+void output_inceptio_gN_early() {
+	float north_vel = (float)inceptio_pak_gN_early.velocityNorth / 100.0;
+	float east_vel = (float)inceptio_pak_gN_early.velocityEast / 100.0;
+	float up_vel = (float)inceptio_pak_gN_early.velocityUp / 100.0;
+	float latitude_std = (float)inceptio_pak_gN_early.latitude_std / 1000.0;
+	float longitude_std = (float)inceptio_pak_gN_early.longitude_std / 1000.0;
+	float height_std = (float)inceptio_pak_gN_early.height_std / 1000.0;
+	double horizontal_speed = sqrt(north_vel * north_vel + east_vel * east_vel);
+	double track_over_ground = atan2(east_vel, north_vel) * R2D;
+	//csv
+	sprintf(inceptio_output_msg, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%3d,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n",
+		inceptio_pak_gN_early.GPS_Week, inceptio_pak_gN_early.GPS_TimeOfWeek,
+		inceptio_pak_gN_early.positionMode, (double)inceptio_pak_gN_early.latitude * 180.0 / MAX_INT, (double)inceptio_pak_gN_early.longitude * 180.0 / MAX_INT, inceptio_pak_gN_early.height,
+		inceptio_pak_gN_early.numberOfSVs, inceptio_pak_gN_early.hdop, (float)inceptio_pak_gN_early.diffage,
+		north_vel, east_vel, up_vel, latitude_std, longitude_std, height_std);
+	write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
+	//txt
+	sprintf(inceptio_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%10.4f,%10.4f\n",
+		inceptio_pak_gN_early.GPS_Week, inceptio_pak_gN_early.GPS_TimeOfWeek, inceptio_pak_gN_early.latitude * 180.0 / MAX_INT, inceptio_pak_gN_early.longitude * 180.0 / MAX_INT, inceptio_pak_gN_early.height,
+		latitude_std, longitude_std, height_std, inceptio_pak_gN_early.positionMode, north_vel, east_vel, up_vel, track_over_ground);
+	write_inceptio_ex_file(inceptio_raw.ntype, inceptio_output_msg);
+	//process $GPGNSS
+	sprintf(inceptio_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d\n", inceptio_pak_gN_early.GPS_Week, inceptio_pak_gN_early.GPS_TimeOfWeek,
+		(double)inceptio_pak_gN_early.latitude * 180.0 / MAX_INT, (double)inceptio_pak_gN_early.longitude * 180.0 / MAX_INT, inceptio_pak_gN_early.height, latitude_std, longitude_std, height_std, inceptio_pak_gN_early.positionMode);
+	write_inceptio_process_file(inceptio_raw.ntype, 0, inceptio_output_msg);
+	//process $GPVEL
+	sprintf(inceptio_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n", inceptio_pak_gN_early.GPS_Week, inceptio_pak_gN_early.GPS_TimeOfWeek, horizontal_speed, track_over_ground, up_vel);
+	write_inceptio_process_file(inceptio_raw.ntype, 1, inceptio_output_msg);
+	//kml
+	//write_inceptio_gnss_kml_file(&inceptio_pak_gN_early);
+}
+
 void output_inceptio_gN() {
 	float north_vel = (float)inceptio_pak_gN.velocityNorth / 100.0;
 	float east_vel = (float)inceptio_pak_gN.velocityEast / 100.0;
@@ -509,10 +552,11 @@ void output_inceptio_gN() {
 	double horizontal_speed = sqrt(north_vel * north_vel + east_vel * east_vel);
 	double track_over_ground = atan2(east_vel, north_vel) * R2D;
 	//csv
-	sprintf(inceptio_output_msg, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%3d,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%3d\n", 
+	sprintf(inceptio_output_msg, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%3d,%5.1f,%5.1f,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%3d\n", 
 		inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek,
 		inceptio_pak_gN.positionMode, (double)inceptio_pak_gN.latitude*180.0 / MAX_INT, (double)inceptio_pak_gN.longitude*180.0 / MAX_INT, inceptio_pak_gN.height, 
-		inceptio_pak_gN.numberOfSVs,inceptio_pak_gN.hdop, (float)inceptio_pak_gN.diffage, north_vel, east_vel, up_vel, latitude_std, longitude_std, height_std,
+		inceptio_pak_gN.numberOfSVs,inceptio_pak_gN.hdop, inceptio_pak_gN.vdop, inceptio_pak_gN.tdop,(float)inceptio_pak_gN.diffage,
+		north_vel, east_vel, up_vel, latitude_std, longitude_std, height_std,
 		pos_hor_pl, pos_ver_pl, inceptio_pak_gN.pos_status, vel_hor_pl, vel_ver_pl, inceptio_pak_gN.vel_status);
 	write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
 	//txt
@@ -601,8 +645,14 @@ void parse_inceptio_packet_payload(uint8_t* buff, uint32_t nbyte) {
 	}
 	else if (strcmp(packet_type, "gN") == 0) {
 		inceptio_raw.ntype = INCEPTIO_OUT_GNSS;
-		if (payload_lenth == inceptio_gN_t_size_base ||
-			payload_lenth == inceptio_gN_t_size_20210713) {
+		if (payload_lenth == sizeof(inceptio_gN_early_t)) {
+			data_version = VERSION_EARLY;
+			memcpy(&inceptio_pak_gN_early, payload, payload_lenth);
+			output_inceptio_gN_early();
+		}
+		if (payload_lenth == sizeof(inceptio_gN_24_01_21_t) ||
+			payload_lenth == sizeof(inceptio_gN_t)) {
+			data_version = VERSION_24_01_21;
 			memcpy(&inceptio_pak_gN, payload, payload_lenth);
 			output_inceptio_gN();
 		}

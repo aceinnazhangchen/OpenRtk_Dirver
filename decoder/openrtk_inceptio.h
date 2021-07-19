@@ -1,12 +1,8 @@
 #pragma once
 #include <stdint.h>
 #include "openrtk_user.h"
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
-#define MAX_INCEPTIO_PACKET_TYPES 8
+#define MAX_INCEPTIO_PACKET_TYPES 9
 
 #pragma pack(push, 1)
 
@@ -39,17 +35,38 @@ extern "C"
 		int16_t	 latitude_std;
 		int16_t	 longitude_std;
 		int16_t	 height_std;
-		//struct extend at 2021-07-13
+	} inceptio_gN_early_t;
+
+	struct inceptio_gN_24_01_21_t
+	{
+		uint32_t GPS_Week;
+		double	 GPS_TimeOfWeek;
+		uint8_t	 positionMode;
+		uint32_t latitude;
+		uint32_t longitude;
+		float	 height;
+		uint8_t  numberOfSVs;
+		float    hdop;
+		float	 vdop;
+		float	 tdop;
+		uint16_t diffage;
+		int16_t	 velocityNorth;
+		int16_t  velocityEast;
+		int16_t  velocityUp;
+	};
+
+	struct inceptio_gN_t : inceptio_gN_24_01_21_t
+	{
+		int16_t	 latitude_std;
+		int16_t	 longitude_std;
+		int16_t	 height_std;
 		uint16_t pos_hor_pl;
 		uint16_t pos_ver_pl;
 		uint8_t pos_status;
 		uint16_t vel_hor_pl;
 		uint16_t vel_ver_pl;
 		uint8_t vel_status;
-	} inceptio_gN_t;
-
-#define inceptio_gN_t_size_base			44
-#define inceptio_gN_t_size_20210713		54
+	};
 
 	typedef struct
 	{
@@ -136,6 +153,3 @@ extern "C"
 
 	extern int input_inceptio_raw(uint8_t data);
 
-#ifdef __cplusplus
-}
-#endif

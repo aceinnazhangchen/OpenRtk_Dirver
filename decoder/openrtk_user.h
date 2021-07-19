@@ -1,9 +1,5 @@
 #pragma once
 #include <stdint.h>
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #define USER_PREAMB 0x55
 #ifndef NEAM_HEAD
@@ -151,7 +147,3 @@ extern "C"
 	extern user_i1_t* get_user_packet_i1();
 
 	extern int input_user_raw(uint8_t data);
-
-#ifdef __cplusplus
-}
-#endif

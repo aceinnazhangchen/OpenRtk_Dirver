@@ -95,10 +95,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\decoder\imu_raw.c" />
+    <ClCompile Include="..\decoder\imu_raw.cpp" />
     <ClCompile Include="..\decoder\mixed_raw.c" />
-    <ClCompile Include="..\decoder\openrtk_inceptio.c" />
-    <ClCompile Include="..\decoder\openrtk_user.c" />
+    <ClCompile Include="..\decoder\openrtk_inceptio.cpp" />
+    <ClCompile Include="..\decoder\openrtk_user.cpp" />
     <ClCompile Include="..\decoder\rtcm.c" />
     <ClCompile Include="..\decoder\rtkcmn.c" />
     <ClCompile Include="AnalysisThread.cpp" />

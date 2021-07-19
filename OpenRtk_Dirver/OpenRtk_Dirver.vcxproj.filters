@@ -82,16 +82,16 @@
     <ClCompile Include="AnalysisThread.cpp">
       <Filter>Source Files\Thread</Filter>
     </ClCompile>
-    <ClCompile Include="..\decoder\imu_raw.c">
+    <ClCompile Include="..\decoder\imu_raw.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
     <ClCompile Include="..\decoder\mixed_raw.c">
       <Filter>decoder</Filter>
     </ClCompile>
-    <ClCompile Include="..\decoder\openrtk_inceptio.c">
+    <ClCompile Include="..\decoder\openrtk_inceptio.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
-    <ClCompile Include="..\decoder\openrtk_user.c">
+    <ClCompile Include="..\decoder\openrtk_user.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
     <ClCompile Include="..\decoder\rtcm.c">
