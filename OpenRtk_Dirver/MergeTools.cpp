@@ -13,6 +13,7 @@ MergeTools::MergeTools(QWidget *parent)
 
 	connect(ui.select_btn, SIGNAL(clicked()), this, SLOT(onSelectFileClicked()));
 	connect(ui.select2_btn, SIGNAL(clicked()), this, SLOT(onSelectFileClicked2()));
+	connect(ui.select3_btn, SIGNAL(clicked()), this, SLOT(onSelectFileClicked3()));
 	connect(ui.merge_btn, SIGNAL(clicked()), this, SLOT(onMergeClicked()));
 
 	connect(m_MergeThread, SIGNAL(sgnProgress(int, int)), this, SLOT(onProcess(int, int)));
@@ -35,6 +36,8 @@ void MergeTools::setOperable(bool enable)
 	ui.select_btn->setEnabled(enable);
 	ui.filepath2_edt->setEnabled(enable);
 	ui.select2_btn->setEnabled(enable);
+	ui.filepath3_edt->setEnabled(enable);
+	ui.select3_btn->setEnabled(enable);
 	ui.merge_btn->setEnabled(enable);
 }
 
@@ -52,6 +55,10 @@ void MergeTools::dropEvent(QDropEvent * event)
 	else if (ui.filepath2_edt->isEnabled() && ui.filepath2_edt->geometry().contains(event->pos())) {
 		QString name = event->mimeData()->urls().first().toLocalFile();
 		ui.filepath2_edt->setText(name);
+	}
+	else if (ui.filepath3_edt->isEnabled() && ui.filepath3_edt->geometry().contains(event->pos())) {
+		QString name = event->mimeData()->urls().first().toLocalFile();
+		ui.filepath3_edt->setText(name);
 	}
 }
 
@@ -80,6 +87,19 @@ void MergeTools::onSelectFileClicked2() {
 	ui.filepath2_edt->setText(path);
 }
 
+void MergeTools::onSelectFileClicked3() {
+	QString current_path = ".";
+	QString file_name = ui.filepath3_edt->text();
+	if (!file_name.isEmpty()) {
+		current_path = QDir(file_name).absolutePath();
+	}
+	QString path = QFileDialog::getOpenFileName(this, tr("Open Files"), current_path, tr("Data Files(*.* )"));
+	if (path.length() == 0) {
+		return;
+	}
+	ui.filepath3_edt->setText(path);
+}
+
 void MergeTools::onMergeClicked() {
 	if (m_MergeThread->isRunning())
 	{
@@ -87,6 +107,7 @@ void MergeTools::onMergeClicked() {
 	}
 	QString filename = ui.filepath_edt->text();
 	QString filename2 = ui.filepath2_edt->text();
+	QString filename3 = ui.filepath3_edt->text();
 	if (filename.isEmpty() || filename2.isEmpty()) {
 		return;
 	}
@@ -94,6 +115,7 @@ void MergeTools::onMergeClicked() {
 	m_MergeThread->setMergeFormat(ui.fileformat_cmb->currentIndex());
 	m_MergeThread->setMergeFileName1(filename);
 	m_MergeThread->setMergeFileName2(filename2);
+	m_MergeThread->setMergeFileName3(filename3);
 	m_MergeThread->start();
 	setOperable(false);
 }

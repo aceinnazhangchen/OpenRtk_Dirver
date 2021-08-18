@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>578</width>
-    <height>153</height>
+    <height>179</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -51,16 +51,6 @@
    </item>
    <item>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>rover:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="filepath_edt"/>
-     </item>
      <item row="0" column="2">
       <widget class="QToolButton" name="select_btn">
        <property name="text">
@@ -75,11 +65,38 @@
        </property>
       </widget>
      </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>rover:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="filepath_edt"/>
+     </item>
      <item row="1" column="1">
       <widget class="QLineEdit" name="filepath2_edt"/>
      </item>
      <item row="1" column="2">
       <widget class="QToolButton" name="select2_btn">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>rover2:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="filepath3_edt"/>
+     </item>
+     <item row="2" column="2">
+      <widget class="QToolButton" name="select3_btn">
        <property name="text">
         <string>...</string>
        </property>

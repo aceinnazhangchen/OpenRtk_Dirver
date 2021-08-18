@@ -26,6 +26,7 @@ static inceptio_gN_early_t inceptio_pak_gN_early;
 static inceptio_gN_t inceptio_pak_gN;
 static inceptio_iN_t inceptio_pak_iN = { 0 };
 static inceptio_d1_t inceptio_pak_d1 = { 0 };
+static inceptio_d2_t inceptio_pak_d2 = { 0 };
 static inceptio_sT_t inceptio_pak_sT = { 0 };
 static inceptio_o1_t inceptio_pak_o1 = { 0 };
 
@@ -35,6 +36,7 @@ static FILE* fs1 = NULL;
 static FILE* fgN = NULL;
 static FILE* fiN = NULL;
 static FILE* fd1 = NULL;
+static FILE* fd2 = NULL;
 static FILE* fsT = NULL;
 static FILE* fo1 = NULL;
 static FILE* f_process = NULL;
@@ -64,6 +66,7 @@ extern void init_inceptio_data() {
 	memset(&inceptio_pak_gN, 0, sizeof(inceptio_gN_t));
 	memset(&inceptio_pak_iN, 0, sizeof(inceptio_iN_t));
 	memset(&inceptio_pak_d1, 0, sizeof(inceptio_d1_t));
+	memset(&inceptio_pak_d2, 0, sizeof(inceptio_d2_t));
 	memset(&inceptio_pak_sT, 0, sizeof(inceptio_sT_t));
 	memset(&inceptio_pak_o1, 0, sizeof(inceptio_o1_t));
 }
@@ -75,6 +78,7 @@ extern void close_inceptio_all_log_file() {
 	if (fgN)fclose(fgN); fgN = NULL;
 	if (fiN)fclose(fiN); fiN = NULL;
 	if (fd1)fclose(fd1); fd1 = NULL;
+	if (fd2)fclose(fd2); fd2 = NULL;
 	if (fsT)fclose(fsT); fsT = NULL;
 	if (fo1)fclose(fo1); fo1 = NULL;
 
@@ -158,6 +162,16 @@ void write_inceptio_log_file(int index, char* log) {
 			if (fd1) fprintf(fd1, "GPS_Week(),GPS_TimeofWeek(s),latitude_std(),longitude_std(),height_std(),north_vel_std(),east_vel_std(),up_vel_std(),roll_std(),pitch_std(),heading_std()\n");
 		}
 		if (fd1) fprintf(fd1, log);
+	}
+	break;
+	case INCEPTIO_OUT_STD2:
+	{
+		if (fd2 == NULL) {
+			sprintf(file_name, "%s_d2.csv", base_inceptio_file_name);
+			fd2 = fopen(file_name, "w");
+			if (fd2) fprintf(fd2, "GPS_Week(),GPS_TimeofWeek(s),latitude_std(),longitude_std(),height_std(),north_vel_std(),east_vel_std(),up_vel_std(),hor_pos_pl(),ver_pos_pl(),hor_vel_pl(),ver_vel_pl(),pos_integrity_status(),vel_integrity_status()\n");
+		}
+		if (fd2) fprintf(fd2, log);
 	}
 	break;
 	case INCEPTIO_OUT_STATUS:
@@ -610,6 +624,15 @@ void output_inceptio_d1() {
 	write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
 }
 
+void output_inceptio_d2() {
+	//csv
+	sprintf(inceptio_output_msg, "%d,%11.4f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%3d,%3d\n", inceptio_pak_d2.GPS_Week, inceptio_pak_d2.GPS_TimeOfWeek,
+		(float)inceptio_pak_d2.latitude_std / 100.0, (float)inceptio_pak_d2.longitude_std / 100.0, (float)inceptio_pak_d2.height_std / 100.0,
+		(float)inceptio_pak_d2.north_vel_std / 100.0, (float)inceptio_pak_d2.east_vel_std / 100.0, (float)inceptio_pak_d2.up_vel_std / 100.0,
+		inceptio_pak_d2.hor_pos_pl, inceptio_pak_d2.ver_pos_pl, inceptio_pak_d2.hor_vel_pl, inceptio_pak_d2.ver_vel_pl, inceptio_pak_d2.pos_integrity_status, inceptio_pak_d2.vel_integrity_status);
+	write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
+}
+
 void output_inceptio_sT() {
 	//csv
 	sprintf(inceptio_output_msg, "%d,%11.4f,%5d,%5d,%5d,%5d,%5d,%5d,%5d,%8.3f,%8.3f\n", inceptio_pak_sT.GPS_Week, inceptio_pak_sT.GPS_TimeOfWeek,
@@ -669,6 +692,13 @@ void parse_inceptio_packet_payload(uint8_t* buff, uint32_t nbyte) {
 		if (payload_lenth == sizeof(inceptio_d1_t)) {
 			memcpy(&inceptio_pak_d1, payload, sizeof(inceptio_d1_t));
 			output_inceptio_d1();
+		}
+	}
+	else if (strcmp(packet_type, "d2") == 0) {
+		inceptio_raw.ntype = INCEPTIO_OUT_STD2;
+		if (payload_lenth == sizeof(inceptio_d2_t)) {
+			memcpy(&inceptio_pak_d2, payload, sizeof(inceptio_d2_t));
+			output_inceptio_d2();
 		}
 	}
 	else if (strcmp(packet_type, "sT") == 0) {

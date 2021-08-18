@@ -229,6 +229,11 @@ void StreamManager::onTimerTimeout()
 	}
 }
 
+void StreamManager::onStep()
+{
+	SendReplayData();
+}
+
 void StreamManager::InitTimer()
 {
 	m_timer = new QTimer(this);
@@ -335,11 +340,11 @@ int StreamManager::ReadOnePackage()
 		stn = input_aceinna_format_raw(bytes[0], outbuff, &outlen);
 		if (TYPE_ROV == stn) {
 			m_roverbuff.append((char*)outbuff, outlen);
-			if (m_logFile) fprintf(m_logFile, "$ROV,len:%d\n", outlen);
+			//if (m_logFile) fprintf(m_logFile, "$ROV,len:%d\n", outlen);
 		}
 		else if (TYPE_BAS == stn) {
 			m_basebuff.append((char*)outbuff, outlen);
-			if (m_logFile) fprintf(m_logFile, "$BAS,len:%d\n", outlen);
+			//if (m_logFile) fprintf(m_logFile, "$BAS,len:%d\n", outlen);
 		}
 		else if (TYPE_IMU == stn) {
 			//log
@@ -392,7 +397,7 @@ void StreamManager::OpenReplayFile()
 	m_TimeCounter.start();
 	set_output_aceinna_file(0);
 	memset(&gnss, 0, sizeof(gnss_rtcm_t));
-	QString logFileName = m_ReplayFileName + ".log";
+	QString logFileName = m_ReplayFileName + ".out";
 	m_logFile = fopen(logFileName.toLocal8Bit().data(), "w");
 }
 

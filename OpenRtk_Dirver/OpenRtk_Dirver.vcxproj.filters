@@ -100,6 +100,9 @@
     <ClCompile Include="..\decoder\rtkcmn.c">
       <Filter>decoder</Filter>
     </ClCompile>
+    <ClCompile Include="..\decoder\ins401.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="StreamManager.h">
@@ -170,6 +173,9 @@
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\rtklib_core.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\ins401.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>

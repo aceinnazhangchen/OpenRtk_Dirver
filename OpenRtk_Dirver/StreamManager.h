@@ -96,6 +96,7 @@ public:
 public slots:
 	void onStream(int index, const QByteArray& data);
 	void onTimerTimeout();
+	void onStep();
 private:
 	int m_ModelType;
 	QDir logPath;

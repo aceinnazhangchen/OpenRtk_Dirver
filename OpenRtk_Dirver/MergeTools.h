@@ -26,6 +26,7 @@ private:
 public slots:
 	void onSelectFileClicked();
 	void onSelectFileClicked2();
+	void onSelectFileClicked3();
 	void onMergeClicked();
 	void onProcess(int present, int msecs);
 	void onFinished();

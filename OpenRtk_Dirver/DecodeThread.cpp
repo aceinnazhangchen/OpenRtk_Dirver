@@ -13,6 +13,7 @@ DecodeThread::DecodeThread(QObject *parent)
 	, m_isStop(false)
 	, m_FileFormat(emDecodeFormat_openrtk_user)
 {
+	ins401_decoder = new Ins401::Ins401_decoder();
 }
 
 DecodeThread::~DecodeThread()
@@ -38,6 +39,9 @@ void DecodeThread::run()
 			break;
 		case emDecodeFormat_imu:
 			decode_imu();
+			break;
+		case emDecodeFormat_ins401:
+			decode_ins401();
 			break;
 		default:
 			break;
@@ -290,6 +294,32 @@ void DecodeThread::decode_imu()
 			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
 		}
 		close_imu_all_log_file();
+		fclose(file);
+	}
+}
+
+void DecodeThread::decode_ins401()
+{
+	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
+	if (file && ins401_decoder) {
+		int ret = 0;
+		int file_size = getFileSize(file);
+		int read_size = 0;
+		int readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		ins401_decoder->init();
+		ins401_decoder->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
+		while (!feof(file)) {
+			if (m_isStop) break;
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (int i = 0; i < readcount; i++) {
+				ret = ins401_decoder->input_data(read_cache[i]);
+			}
+			double percent = (double)read_size / (double)file_size * 10000;
+			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		ins401_decoder->finish();
 		fclose(file);
 	}
 }

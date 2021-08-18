@@ -9,11 +9,11 @@
 #include <stdio.h>
 #include "rtcm.h"
 #ifndef WIN32
-// #include <dirent.h>
-// #include <time.h>
-// #include <sys/time.h>
-// #include <sys/stat.h>
-// #include <sys/types.h>
+#include <dirent.h>
+#include <time.h>
+#include <sys/time.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #endif
 
 

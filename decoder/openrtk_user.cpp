@@ -398,6 +398,15 @@ void write_user_ex_file(int index, char* log) {
 		if (f_ins) fprintf(f_ins, log);
 	}
 	break;
+	case USR_OUT_ODO:
+	{
+		if (f_odo == NULL) {
+			sprintf(file_name, "%s-odo.txt", base_user_file_name);
+			f_odo = fopen(file_name, "w");
+		}
+		if (f_odo) fprintf(f_odo, log);
+	}
+	break;
 	}
 }
 
@@ -558,6 +567,7 @@ void output_user_o1() {
 	sprintf(user_output_msg, "%d,%11.4f,%d,%10.4f,%d,%I64d\n",
 		pak_o1.GPS_Week, (double)pak_o1.GPS_TimeOfWeek / 1000.0, pak_o1.mode, pak_o1.speed, pak_o1.fwd, pak_o1.wheel_tick);
 	write_user_log_file(USR_OUT_ODO, user_output_msg);
+	write_user_ex_file(USR_OUT_ODO, user_output_msg);
 }
 
 void parse_user_packet_payload(uint8_t* buff, uint32_t nbyte) {

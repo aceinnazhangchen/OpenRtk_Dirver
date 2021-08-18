@@ -54,7 +54,8 @@ OpenRtk_Dirver::OpenRtk_Dirver(QWidget *parent)
 	connect(StreamManager::Instance(), SIGNAL(sgnFinishReplay()), this, SLOT(onOpenClose()));
 	connect(ui.log_path_btn, SIGNAL(clicked()), this, SLOT(onOpenLogPathClicked()));
 	connect(ui.select_btn, SIGNAL(clicked()), this, SLOT(onSelectFileClicked()));
-
+	connect(ui.step_btn, SIGNAL(clicked()), StreamManager::Instance(), SLOT(onStep()));
+	ui.step_btn->setEnabled(false);
 	ui.decode_btn->hide();
 
 	m_DecodeToolsWidget = new DecodeTools(NULL);
@@ -148,6 +149,7 @@ void OpenRtk_Dirver::onOpenClose()
 		ui.filepath_edt->setDisabled(true);
 		ui.select_btn->setDisabled(true);
 		ui.refresh_btn->setDisabled(true);
+		ui.step_btn->setDisabled(false);
 		ui.open_btn->setText("Close");
 	}
 	else
@@ -163,6 +165,7 @@ void OpenRtk_Dirver::onOpenClose()
 		ui.filepath_edt->setDisabled(false);
 		ui.select_btn->setDisabled(false);
 		ui.refresh_btn->setDisabled(false);
+		ui.step_btn->setDisabled(true);
 		ui.open_btn->setText("Open");
 	}
 }

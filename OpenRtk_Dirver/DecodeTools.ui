@@ -42,6 +42,11 @@
          <string>imu</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>ins401</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item>

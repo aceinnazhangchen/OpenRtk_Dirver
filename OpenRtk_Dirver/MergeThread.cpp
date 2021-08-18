@@ -10,15 +10,19 @@ MergeThread::MergeThread(QObject *parent)
 	, m_rtcmFile(NULL)
 	, m_imuFile(NULL)
 	, m_roverFile(NULL)
+	, m_rover2File(NULL)
 	, m_baseFile(NULL)
 	, m_outFile(NULL)
 	, m_logFile(NULL)
 	, m_RawFilesSize(0)
 	, m_RawFilesReadSize(0)
 	, last_TimeOfWeek(0)
+	, per10Hz(0)
+	, last_per10Hz(0)
 {
 	memset(m_outbuff, 0, MAX_BUFFER_SIZE);
 	memset(&m_gnss, 0, sizeof(m_gnss));
+	memset(&m_gnss2, 0, sizeof(m_gnss2));
 }
 
 MergeThread::~MergeThread()
@@ -67,6 +71,11 @@ void MergeThread::setMergeFileName2(QString file)
 	m_MergeFileName2 = file;
 }
 
+void MergeThread::setMergeFileName3(QString file)
+{
+	m_MergeFileName3 = file;
+}
+
 void MergeThread::makeOutFileName()
 {
 	QFileInfo outDir(m_MergeFileName1);
@@ -102,11 +111,15 @@ void MergeThread::mergeRtcmImuFile() {
 		m_imubuff.clear();
 		memset(&m_gnss, 0, sizeof(m_gnss));
 		int stn = 0;
+		per10Hz = 0;
+		last_per10Hz = 0;
 		while (!feof(m_rtcmFile) && !feof(m_imuFile)) {
 			if (m_isStop) break;
 			int ret = readOneImu();
 			user_s1_t* pak = getImuPak();
-			if (ret = 1 && pak->GPS_TimeOfWeek % 100 == 0) {
+			per10Hz = pak->GPS_TimeOfWeek / 100;
+			if (ret = 1 && per10Hz != last_per10Hz) {
+				last_per10Hz = per10Hz;
 				while (!feof(m_rtcmFile)) {
 					if (m_isStop) break;
 					if(TYPE_ROV == stn && m_roverbuff.size() > 0){
@@ -124,7 +137,7 @@ void MergeThread::mergeRtcmImuFile() {
 								fwrite(m_roverbuff.data(), 1, m_roverbuff.size(), m_outFile);
 								fprintf(m_logFile, "rover,week:%d,sec:%d,size:%d\n", week, nsec, m_roverbuff.size());
 								m_roverbuff.clear();
-								break;
+								//break;
 							}
 							else if (nsec > pak->GPS_TimeOfWeek) {
 								//fprintf(m_logFile, "later rover,week:%d,sec:%d,size:%d\n", week, nsec, m_roverbuff.size());
@@ -167,18 +180,31 @@ void MergeThread::mergeRoverBaseFile()
 	m_baseFile = fopen(m_MergeFileName2.toLocal8Bit().data(), "rb");
 	m_outFile = fopen(m_OutFileName.toLocal8Bit().data(), "wb");
 	m_logFile = fopen(m_OutLogName.toLocal8Bit().data(), "w");
+	if (!m_MergeFileName3.isEmpty()) {
+		m_rover2File = fopen(m_MergeFileName3.toLocal8Bit().data(), "rb");
+	}
 	if (m_roverFile && m_baseFile && m_outFile && m_logFile) {
 		m_RawFilesSize = getFileSize(m_roverFile);
 		m_RawFilesSize += getFileSize(m_baseFile);
+		if (m_rover2File) {
+			m_RawFilesSize += getFileSize(m_rover2File);
+		}
 		m_roverbuff.clear();
 		m_basebuff.clear();
+		m_rover2buff.clear();
 		memset(&m_gnss, 0, sizeof(m_gnss));
+		memset(&m_gnss2, 0, sizeof(m_gnss2));
 		while (!feof(m_roverFile) && !feof(m_baseFile)) {
 			readOneRover();
+			if (m_rover2File) {
+				if (feof(m_rover2File)) break;
+				readOneRover2();
+			}
 			readOneBase();
 		}
 	}
 	if (m_roverFile) fclose(m_roverFile); m_roverFile = NULL;
+	if (m_rover2File) fclose(m_rover2File); m_rover2File = NULL;
 	if (m_baseFile) fclose(m_baseFile); m_baseFile = NULL;
 	if (m_outFile) fclose(m_outFile); m_outFile = NULL;
 	if (m_logFile) fclose(m_logFile); m_logFile = NULL;
@@ -232,6 +258,10 @@ int MergeThread::readOneImu()
 		ret = input_imu_raw(c, out_msg);
 		if (1 == ret) {
 			user_s1_t* pak = getImuPak();
+			if (pak->GPS_Week == 0) {
+				m_imubuff.clear();
+				continue;
+			}
 			if (pak->GPS_TimeOfWeek % 100 == 0 || (pak->GPS_TimeOfWeek / 10 > last_TimeOfWeek/10 && last_TimeOfWeek > 0)) {
 				sprintf(imu_buffer, IMU_FLAG);
 				memcpy(imu_buffer + ACEINNA_HEAD_SIZE, pak, sizeof(user_s1_t));
@@ -265,16 +295,56 @@ void MergeThread::readOneRover()
 		ret = input_rtcm3(c, 0, &m_gnss);
 		if (is_complete_rtcm()) {
 			UpdateProcess(m_roverbuff.size());
-			fprintf(m_outFile, "%s1%03d", ROV_FLAG, m_roverbuff.size());
-			fwrite(m_roverbuff.data(), 1, m_roverbuff.size(), m_outFile);
-			//fprintf(m_logFile, "%s,1,%03d,%03d\n", ROV_FLAG, m_roverbuff.size(), m_roverbuff.size() + 8);
+			if(m_gnss.obs[0].time.time > 0){
+				fprintf(m_logFile, "%s1,%03d,%f\n", ROV_FLAG, m_roverbuff.size(), m_gnss.obs[0].time.time + m_gnss.obs[0].time.sec);
+				fprintf(m_outFile, "%s1%03d", ROV_FLAG, m_roverbuff.size());
+				fwrite(m_roverbuff.data(), 1, m_roverbuff.size(), m_outFile);
+			}
 			//buffer = (uint8_t*)m_roverbuff.data();
 			//len = m_roverbuff.size() - 3;
 			//fprintf(m_logFile, "%s,1,%03d, %d\n", ROV_FLAG, m_roverbuff.size(),rtcm_getbitu(buffer, len * 8, 24));
 			m_roverbuff.clear();
 		}
 		if (ret == 1) {
-			fprintf(m_logFile, "rover,%f\n", m_gnss.obs[0].time.time + m_gnss.obs[0].time.sec);
+			int week = 0;
+			double second = time2gpst(m_gnss.obs[0].time, &week);
+			uint32_t nsec = second * 1000;
+			fprintf(m_logFile, "ROV1,%f,week:%d,sec:%d\n", m_gnss.obs[0].time.time + m_gnss.obs[0].time.sec, week, nsec);
+			break;
+		}
+	}
+}
+
+void MergeThread::readOneRover2()
+{
+	char c = 0;
+	int ret = 0;
+	uint8_t* buffer = NULL;
+	int len = 0;
+	if (m_gnss2.obs[0].time.time + m_gnss2.obs[0].time.sec >= m_gnss.obs[0].time.time + m_gnss.obs[0].time.sec) {
+		return;
+	}
+	while (!feof(m_rover2File)) {
+		fread(&c, sizeof(char), 1, m_rover2File);
+		m_rover2buff.append(c);
+		ret = input_rtcm3(c, 0, &m_gnss2);
+		if (is_complete_rtcm()) {
+			UpdateProcess(m_rover2buff.size());
+			if (m_gnss2.obs[0].time.time > 0) {
+				fprintf(m_logFile, "%s2,%03d,%f\n", ROV_FLAG, m_rover2buff.size(), m_gnss2.obs[0].time.time + m_gnss2.obs[0].time.sec);
+				fprintf(m_outFile, "%s2%03d", ROV_FLAG, m_rover2buff.size());
+				fwrite(m_rover2buff.data(), 1, m_rover2buff.size(), m_outFile);
+			}
+			m_rover2buff.clear();
+			if (m_gnss2.obs[0].time.time + m_gnss2.obs[0].time.sec < m_gnss.obs[0].time.time + m_gnss.obs[0].time.sec) {
+				continue;
+			}
+		}
+		if (ret == 1) {
+			int week = 0;
+			double second = time2gpst(m_gnss2.obs[0].time, &week);
+			uint32_t nsec = second * 1000;
+			fprintf(m_logFile, "ROV2,%f,week:%d,sec:%d\n", m_gnss2.obs[0].time.time + m_gnss2.obs[0].time.sec, week, nsec);
 			break;
 		}
 	}
@@ -306,7 +376,10 @@ void MergeThread::readOneBase()
 		}
 		if (ret == 1) {
 			if (m_gnss.obs[1].time.time >= m_gnss.obs[0].time.time) {
-				fprintf(m_logFile, "base,%f\n", m_gnss.obs[1].time.time + m_gnss.obs[1].time.sec);
+				int week = 0;
+				double second = time2gpst(m_gnss.obs[0].time, &week);
+				uint32_t nsec = second * 1000;
+				fprintf(m_logFile, "BAS,%f,week:%d,sec:%d\n", m_gnss.obs[1].time.time + m_gnss.obs[1].time.sec, week, nsec);
 				fwrite(writeBuffer.data(), 1, writeBuffer.size(), m_outFile);
 				break;
 			}

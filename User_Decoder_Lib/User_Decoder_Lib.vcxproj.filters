@@ -21,22 +21,25 @@
     <ClCompile Include="decoder_dll.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\decoder\imu_raw.c">
-      <Filter>decoder</Filter>
-    </ClCompile>
     <ClCompile Include="..\decoder\mixed_raw.c">
-      <Filter>decoder</Filter>
-    </ClCompile>
-    <ClCompile Include="..\decoder\openrtk_inceptio.c">
-      <Filter>decoder</Filter>
-    </ClCompile>
-    <ClCompile Include="..\decoder\openrtk_user.c">
       <Filter>decoder</Filter>
     </ClCompile>
     <ClCompile Include="..\decoder\rtcm.c">
       <Filter>decoder</Filter>
     </ClCompile>
     <ClCompile Include="..\decoder\rtkcmn.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\ins401.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\imu_raw.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\openrtk_inceptio.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\openrtk_user.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
   </ItemGroup>
@@ -66,6 +69,9 @@
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\rtklib_core.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\ins401.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>

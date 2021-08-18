@@ -104,6 +104,24 @@
 	{
 		uint32_t GPS_Week;
 		double	 GPS_TimeOfWeek;
+		int16_t	 latitude_std;
+		int16_t	 longitude_std;
+		int16_t	 height_std;
+		int16_t	 north_vel_std;
+		int16_t  east_vel_std;
+		int16_t  up_vel_std;
+		float  hor_pos_pl;
+		float  ver_pos_pl;
+		float  hor_vel_pl;
+		float  ver_vel_pl;
+		uint8_t pos_integrity_status;
+		uint8_t vel_integrity_status;
+	} inceptio_d2_t;
+
+	typedef struct
+	{
+		uint32_t GPS_Week;
+		double	 GPS_TimeOfWeek;
 		uint16_t year;
 		uint8_t	 mouth;
 		uint8_t	 day;
@@ -130,6 +148,7 @@
 		INCEPTIO_OUT_SCALED1,
 		INCEPTIO_OUT_INSPVA,
 		INCEPTIO_OUT_STD1,
+		INCEPTIO_OUT_STD2,
 		INCEPTIO_OUT_GNSS,
 		INCEPTIO_OUT_STATUS,
 		INCEPTIO_OUT_ODO

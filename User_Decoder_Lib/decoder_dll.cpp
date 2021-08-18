@@ -1,11 +1,18 @@
 #include <stdio.h>
 #include <vector>
+#ifdef WIN32
 #include <io.h>
 #include <direct.h>
+#else
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#endif
 #include <string.h>
 #include "openrtk_user.h"
 #include "openrtk_inceptio.h"
 #include "decoder_dll.h"
+#include "ins401.h"
 
 #define READ_CACHE_SIZE 4*1024
 
@@ -20,10 +27,16 @@ int getFileSize(FILE* file)
 int makeDir(char* folderPath)
 {
 	int ret = -1;
+#ifdef WIN32
 	if (0 != _access(folderPath, 0))
 	{
-		ret = _mkdir(folderPath);   // 返回 0 表示创建成功，-1 表示失败
+		ret = _mkdir(folderPath);
 	}
+#else
+	if(-1 == access(folderPath, 0)){
+		ret = mkdir(folderPath,S_IRUSR | S_IWUSR | S_IXUSR | S_IRWXG | S_IRWXO);
+	}
+#endif
 	return ret;
 }
 
@@ -210,6 +223,34 @@ USERDECODERLIB_API void decode_openrtk_inceptio(char* filename)
 		gnss_list.clear();
 		ins_list.clear();
 		close_inceptio_all_log_file();
+		fclose(file);
+	}
+}
+
+USERDECODERLIB_API void decode_ins401(char* filename)
+{
+	Ins401::Ins401_decoder* ins401_decoder = new Ins401::Ins401_decoder();
+	FILE* file = fopen(filename, "rb");
+	if (file && ins401_decoder) {
+		int ret = 0;
+		int file_size = getFileSize(file);
+		int read_size = 0;
+		int readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		char dirname[256] = { 0 };
+		createDirByFilePath(filename, dirname);
+		ins401_decoder->init();
+		ins401_decoder->set_base_file_name(dirname);
+		while (!feof(file)) {
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (int i = 0; i < readcount; i++) {
+				ret = ins401_decoder->input_data(read_cache[i]);
+			}
+			double percent = (double)read_size / (double)file_size * 100;
+			printf("Process : %4.1f %%\r", percent);
+		}
+		ins401_decoder->finish();
 		fclose(file);
 	}
 }
