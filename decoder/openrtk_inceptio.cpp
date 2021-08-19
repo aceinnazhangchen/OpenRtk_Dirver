@@ -3,6 +3,7 @@
 #include <memory.h>
 #include <string.h>
 #include <math.h>
+#include <vector>
 #include "openrtk_inceptio.h"
 #include "rtklib_core.h" //R2D
 #include "rtkcmn.h"
@@ -50,6 +51,10 @@ static FILE* fs1_b = NULL;
 int inceptio_kml_description = 1;
 static char base_inceptio_file_name[256] = { 0 };
 
+static std::vector <inceptio_gN_early_t> gN_early_sol_list;
+static std::vector <inceptio_gN_t> gN_sol_list;
+static std::vector <inceptio_iN_t> iN_sol_list;
+
 extern void set_output_inceptio_file(int output) {
 	output_inceptio_file = output;
 }
@@ -69,6 +74,9 @@ extern void init_inceptio_data() {
 	memset(&inceptio_pak_d2, 0, sizeof(inceptio_d2_t));
 	memset(&inceptio_pak_sT, 0, sizeof(inceptio_sT_t));
 	memset(&inceptio_pak_o1, 0, sizeof(inceptio_o1_t));
+	gN_early_sol_list.clear();
+	gN_sol_list.clear();
+	iN_sol_list.clear();
 }
 
 extern void close_inceptio_all_log_file() {
@@ -87,8 +95,8 @@ extern void close_inceptio_all_log_file() {
 	if (f_imu)fclose(f_imu); f_imu = NULL;
 	if (f_ins)fclose(f_ins); f_ins = NULL;
 	if (f_odo)fclose(f_odo); f_odo = NULL;
-	if (f_gnss_kml) { print_kml_end(f_gnss_kml); fclose(f_gnss_kml); } f_gnss_kml = NULL;
-	if (f_ins_kml) { print_kml_end(f_ins_kml); fclose(f_ins_kml); } f_ins_kml = NULL;
+	if (f_gnss_kml) fclose(f_gnss_kml); f_gnss_kml = NULL;
+	if (f_ins_kml) fclose(f_ins_kml); f_ins_kml = NULL;
 
 	if (fs1_b)fclose(fs1_b); fs1_b = NULL;
 }
@@ -278,14 +286,91 @@ void write_inceptio_process_file(int index, int type, char* log) {
 	}
 }
 
-void write_inceptio_gnss_kml_line(inceptio_gN_t* pak_gnss, int begin_end) {
-	if (f_gnss_kml == NULL) {
-		if (strlen(base_inceptio_file_name) == 0) return;
-		char file_name[256] = { 0 };
-		sprintf(file_name, "%s-gnss.kml", base_inceptio_file_name);
-		f_gnss_kml = fopen(file_name, "w");
-		print_kml_header(f_gnss_kml, 0);
+void write_inceptio_early_gnss_kml_line(inceptio_gN_early_t* pak_gnss, int begin_end) {
+	if (f_gnss_kml) {
+		if (begin_end == 1) {
+			fprintf(f_gnss_kml, "<Placemark>\n");
+			fprintf(f_gnss_kml, "<name>Rover Track</name>\n");
+			fprintf(f_gnss_kml, "<Style>\n");
+			fprintf(f_gnss_kml, "<LineStyle>\n");
+			fprintf(f_gnss_kml, "<color>ffffffff</color>\n");
+			fprintf(f_gnss_kml, "</LineStyle>\n");
+			fprintf(f_gnss_kml, "</Style>\n");
+			fprintf(f_gnss_kml, "<LineString>\n");
+			fprintf(f_gnss_kml, "<coordinates>\n");
+		}
+		if (pak_gnss->positionMode != 0) {
+			fprintf(f_gnss_kml, "%.9f,%.9f,%.9f\n", pak_gnss->longitude*180.0 / MAX_INT, pak_gnss->latitude*180.0 / MAX_INT, pak_gnss->height);
+		}
+		if (begin_end == -1) {
+			fprintf(f_gnss_kml, "</coordinates>\n");
+			fprintf(f_gnss_kml, "</LineString>\n");
+			fprintf(f_gnss_kml, "</Placemark>\n");
+		}
 	}
+}
+
+void write_inceptio_early_gnss_kml_point(inceptio_gN_early_t* pak_gnss, int begin_end) {
+	if (f_gnss_kml) {
+		if (begin_end == 1) {
+			fprintf(f_gnss_kml, "<Folder>\n");
+			fprintf(f_gnss_kml, "<name>Rover Position</name>\n");
+		}
+		if (pak_gnss->positionMode != 0) {
+			double ep[6] = { 0 };
+			gtime_t gpstime = gpst2time(pak_gnss->GPS_Week, pak_gnss->GPS_TimeOfWeek);
+			gtime_t utctime = gpst2utc(gpstime);
+			time2epoch(utctime, ep);
+			float north_vel = (float)pak_gnss->velocityNorth / 100.0;
+			float east_vel = (float)pak_gnss->velocityEast / 100.0;
+			float up_vel = (float)pak_gnss->velocityUp / 100.0;
+			double horizontal_speed = sqrt(north_vel * north_vel + east_vel * east_vel);
+			double track_over_ground = atan2(east_vel, north_vel) * R2D;
+			fprintf(f_gnss_kml, "<Placemark>\n");
+			if (begin_end == 1) {
+				fprintf(f_gnss_kml, "<name>Start</name>\n");
+			}
+			else if (begin_end == -1) {
+				fprintf(f_gnss_kml, "<name>End</name>\n");
+			}
+			fprintf(f_gnss_kml, "<TimeStamp><when>%04d-%02d-%02dT%02d:%02d:%05.2fZ</when></TimeStamp>\n", (int32_t)ep[0], (int32_t)ep[1], (int32_t)ep[2], (int32_t)ep[3], (int32_t)ep[4], ep[5]);
+			//=== description start ===
+			if (inceptio_kml_description) {
+				fprintf(f_gnss_kml, "<description><![CDATA[\n");
+				fprintf(f_gnss_kml, "<TABLE border=\"1\" width=\"100 % \" Align=\"center\">\n");
+				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT>\n");
+				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Time:</TD><TD>%d</TD><TD>%.3f</TD><TD>%2d:%2d:%5.3f</TD><TD>%4d/%2d/%2d</TD></TR>\n",
+					pak_gnss->GPS_Week, pak_gnss->GPS_TimeOfWeek, (int32_t)ep[3], (int32_t)ep[4], ep[5], (int32_t)ep[0], (int32_t)ep[1], (int32_t)ep[2]);
+				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Position:</TD><TD>%.9f</TD><TD>%.9f</TD><TD>%.4f</TD><TD>(DMS,m)</TD></TR>\n",
+					pak_gnss->latitude * 180.0 / MAX_INT, pak_gnss->longitude * 180.0 / MAX_INT, pak_gnss->height);
+				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Vel(N,E,D):</TD><TD>%f</TD><TD>%f</TD><TD>%f</TD><TD>(m/s)</TD></TR>\n",
+					north_vel, east_vel, -up_vel);
+				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Att(r,p,h):</TD><TD>%d</TD><TD>%d</TD><TD>%f</TD><TD>(deg,approx)</TD></TR>\n",
+					0, 0, track_over_ground);
+				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Mode:</TD><TD>%d</TD><TD>%s</TD></TR>\n",
+					0, gnss_postype[pak_gnss->positionMode]);
+				fprintf(f_gnss_kml, "</TABLE>\n");
+				fprintf(f_gnss_kml, "]]></description>\n");
+			}
+			//=== description end ===
+			fprintf(f_gnss_kml, "<styleUrl>#P%d</styleUrl>\n", pak_gnss->positionMode);
+			fprintf(f_gnss_kml, "<Style>\n");
+			fprintf(f_gnss_kml, "<IconStyle>\n");
+			fprintf(f_gnss_kml, "<heading>%f</heading>\n", track_over_ground);
+			fprintf(f_gnss_kml, "</IconStyle>\n");
+			fprintf(f_gnss_kml, "</Style>\n");
+			fprintf(f_gnss_kml, "<Point>\n");
+			fprintf(f_gnss_kml, "<coordinates>%13.9f,%12.9f,%5.3f</coordinates>\n", pak_gnss->longitude * 180.0 / MAX_INT, pak_gnss->latitude * 180.0 / MAX_INT, pak_gnss->height);
+			fprintf(f_gnss_kml, "</Point>\n");
+			fprintf(f_gnss_kml, "</Placemark>\n");
+		}
+		if (begin_end == -1) {
+			fprintf(f_gnss_kml, "</Folder>\n");
+		}
+	}
+}
+
+void write_inceptio_gnss_kml_line(inceptio_gN_t* pak_gnss, int begin_end) {
 	if (f_gnss_kml) {
 		if (begin_end == 1) {
 			fprintf(f_gnss_kml, "<Placemark>\n");
@@ -308,14 +393,8 @@ void write_inceptio_gnss_kml_line(inceptio_gN_t* pak_gnss, int begin_end) {
 		}
 	}
 }
-void write_inceptio_gnss_kml_file(inceptio_gN_t* pak_gnss, int begin_end) {
-	if (f_gnss_kml == NULL) {
-		if (strlen(base_inceptio_file_name) == 0) return;
-		char file_name[256] = { 0 };
-		sprintf(file_name, "%s-gnss.kml", base_inceptio_file_name);
-		f_gnss_kml = fopen(file_name, "w");
-		print_kml_header(f_gnss_kml, 0);
-	}
+
+void write_inceptio_gnss_kml_point(inceptio_gN_t* pak_gnss, int begin_end) {
 	if (f_gnss_kml) {
 		if (begin_end == 1) {
 			fprintf(f_gnss_kml, "<Folder>\n");
@@ -376,13 +455,6 @@ void write_inceptio_gnss_kml_file(inceptio_gN_t* pak_gnss, int begin_end) {
 }
 
 void write_inceptio_ins_kml_line(inceptio_iN_t* pak_ins, int begin_end) {
-	if (f_ins_kml == NULL) {
-		if (strlen(base_inceptio_file_name) == 0) return;
-		char file_name[256] = { 0 };
-		sprintf(file_name, "%s-ins.kml", base_inceptio_file_name);
-		f_ins_kml = fopen(file_name, "w");
-		print_kml_header(f_ins_kml, 1);
-	}
 	if (f_ins_kml) {
 		if (begin_end == 1) {
 			fprintf(f_ins_kml, "<Placemark>\n");
@@ -410,13 +482,6 @@ void write_inceptio_ins_kml_line(inceptio_iN_t* pak_ins, int begin_end) {
 }
 
 void write_inceptio_ins_kml_file(inceptio_iN_t* pak_ins, int begin_end) {
-	if (f_ins_kml == NULL) {
-		if (strlen(base_inceptio_file_name) == 0) return;
-		char file_name[256] = { 0 };
-		sprintf(file_name, "%s-ins.kml", base_inceptio_file_name);
-		f_ins_kml = fopen(file_name, "w");
-		print_kml_header(f_ins_kml, 1);
-	}
 	if (f_ins_kml) {
 		if (begin_end == 1) {
 			fprintf(f_ins_kml, "<Folder>\n");
@@ -466,6 +531,122 @@ void write_inceptio_ins_kml_file(inceptio_iN_t* pak_ins, int begin_end) {
 			fprintf(f_ins_kml, "</Folder>\n");
 		}
 	}
+}
+
+void write_gnss_early_kml() {
+	if (gN_early_sol_list.size() > 0) {
+		if (f_gnss_kml == NULL) {
+			if (strlen(base_inceptio_file_name) == 0) return;
+			char file_name[256] = { 0 };
+			sprintf(file_name, "%s-gnss.kml", base_inceptio_file_name);
+			f_gnss_kml = fopen(file_name, "w");
+			print_kml_header(f_gnss_kml, 0);
+		}
+
+		for (int i = 0; i < gN_early_sol_list.size(); ++i) {
+			if (i == 0) {
+				write_inceptio_early_gnss_kml_line(&gN_early_sol_list[i], 1);
+			}
+			else if (i == gN_early_sol_list.size() - 1) {
+				write_inceptio_early_gnss_kml_line(&gN_early_sol_list[i], -1);
+			}
+			else {
+				write_inceptio_early_gnss_kml_line(&gN_early_sol_list[i], 0);
+			}
+		}
+		for (int i = 0; i < gN_early_sol_list.size(); ++i) {
+			if (i == 0) {
+				write_inceptio_early_gnss_kml_point(&gN_early_sol_list[i], 1);
+			}
+			else if (i == gN_early_sol_list.size() - 1) {
+				write_inceptio_early_gnss_kml_point(&gN_early_sol_list[i], -1);
+			}
+			else {
+				write_inceptio_early_gnss_kml_point(&gN_early_sol_list[i], 0);
+			}
+		}
+		gN_early_sol_list.clear();
+		print_kml_end(f_gnss_kml);
+	}
+}
+
+void write_gnss_kml() {
+	if (gN_sol_list.size() > 0) {
+		if (f_gnss_kml == NULL) {
+			if (strlen(base_inceptio_file_name) == 0) return;
+			char file_name[256] = { 0 };
+			sprintf(file_name, "%s-gnss.kml", base_inceptio_file_name);
+			f_gnss_kml = fopen(file_name, "w");
+			print_kml_header(f_gnss_kml, 0);
+		}
+		for (int i = 0; i < gN_sol_list.size(); ++i) {
+			if (i == 0) {
+				write_inceptio_gnss_kml_line(&gN_sol_list[i], 1);
+			}
+			else if (i == gN_sol_list.size() - 1) {
+				write_inceptio_gnss_kml_line(&gN_sol_list[i], -1);
+			}
+			else {
+				write_inceptio_gnss_kml_line(&gN_sol_list[i], 0);
+			}
+		}
+		for (int i = 0; i < gN_sol_list.size(); ++i) {
+			if (i == 0) {
+				write_inceptio_gnss_kml_point(&gN_sol_list[i], 1);
+			}
+			else if (i == gN_sol_list.size() - 1) {
+				write_inceptio_gnss_kml_point(&gN_sol_list[i], -1);
+			}
+			else {
+				write_inceptio_gnss_kml_point(&gN_sol_list[i], 0);
+			}
+		}
+		gN_sol_list.clear();
+		print_kml_end(f_gnss_kml);
+	}
+}
+
+void write_ins_kml() {
+	if (iN_sol_list.size() > 0) {
+		if (f_ins_kml == NULL) {
+			if (strlen(base_inceptio_file_name) == 0) return;
+			char file_name[256] = { 0 };
+			sprintf(file_name, "%s-ins.kml", base_inceptio_file_name);
+			f_ins_kml = fopen(file_name, "w");
+			print_kml_header(f_ins_kml, 1);
+		}
+
+		for (int i = 0; i < iN_sol_list.size(); ++i) {
+			if (i == 0) {
+				write_inceptio_ins_kml_line(&iN_sol_list[i], 1);
+			}
+			else if (i == iN_sol_list.size() - 1) {
+				write_inceptio_ins_kml_line(&iN_sol_list[i], -1);
+			}
+			else {
+				write_inceptio_ins_kml_line(&iN_sol_list[i], 0);
+			}
+		}
+		for (int i = 0; i < iN_sol_list.size(); ++i) {
+			if (i == 0) {
+				write_inceptio_ins_kml_file(&iN_sol_list[i], 1);
+			}
+			else if (i == iN_sol_list.size() - 1) {
+				write_inceptio_ins_kml_file(&iN_sol_list[i], -1);
+			}
+			else {
+				write_inceptio_ins_kml_file(&iN_sol_list[i], 0);
+			}
+		}
+		iN_sol_list.clear();
+		print_kml_end(f_ins_kml);
+	}
+}
+
+void write_inceptio_kml_files() {
+	write_gnss_early_kml();
+	write_gnss_kml();
+	write_ins_kml();
 }
 
 void write_inceptio_bin_file(int index, uint8_t* buff, uint32_t nbyte) {
@@ -668,16 +849,19 @@ void parse_inceptio_packet_payload(uint8_t* buff, uint32_t nbyte) {
 	}
 	else if (strcmp(packet_type, "gN") == 0) {
 		inceptio_raw.ntype = INCEPTIO_OUT_GNSS;
-		if (payload_lenth == sizeof(inceptio_gN_early_t)) {
+		if (payload_lenth == sizeof(inceptio_gN_more_early_t) ||
+			payload_lenth == sizeof(inceptio_gN_early_t)) {
 			data_version = VERSION_EARLY;
 			memcpy(&inceptio_pak_gN_early, payload, payload_lenth);
 			output_inceptio_gN_early();
+			gN_early_sol_list.push_back(inceptio_pak_gN_early);
 		}
 		if (payload_lenth == sizeof(inceptio_gN_24_01_21_t) ||
 			payload_lenth == sizeof(inceptio_gN_t)) {
 			data_version = VERSION_24_01_21;
 			memcpy(&inceptio_pak_gN, payload, payload_lenth);
 			output_inceptio_gN();
+			gN_sol_list.push_back(inceptio_pak_gN);
 		}
 	}
 	else if (strcmp(packet_type, "iN") == 0) {
@@ -685,6 +869,7 @@ void parse_inceptio_packet_payload(uint8_t* buff, uint32_t nbyte) {
 		if (payload_lenth == sizeof(inceptio_iN_t)) {
 			memcpy(&inceptio_pak_iN, payload, sizeof(inceptio_iN_t));
 			output_inceptio_iN();
+			iN_sol_list.push_back(inceptio_pak_iN);
 		}
 	}
 	else if (strcmp(packet_type, "d1") == 0) {
@@ -745,7 +930,7 @@ int parse_inceptio_nmea(uint8_t data) {
 	}
 	else if (inceptio_raw.nmea_flag == 2) {
 		inceptio_raw.nmea[inceptio_raw.nmeabyte++] = data;
-		if (inceptio_raw.nmea[inceptio_raw.nmeabyte - 1] == 0x0A && inceptio_raw.nmea[inceptio_raw.nmeabyte - 2] == 0x0D) {
+		if (inceptio_raw.nmea[inceptio_raw.nmeabyte - 1] == 0x0A || inceptio_raw.nmea[inceptio_raw.nmeabyte - 2] == 0x0D) {
 			inceptio_raw.nmea[inceptio_raw.nmeabyte - 2] = 0x0A;
 			inceptio_raw.nmea[inceptio_raw.nmeabyte - 1] = 0;
 			inceptio_raw.nmea_flag = 0;

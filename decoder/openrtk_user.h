@@ -27,7 +27,7 @@
 		uint32_t nbyte;
 		uint8_t buff[256];
 		uint32_t nmeabyte;
-		uint8_t nmea[128];
+		uint8_t nmea[256];
 		uint8_t ntype;
 	} usrRaw;
 

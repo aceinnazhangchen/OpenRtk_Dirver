@@ -18,7 +18,7 @@
 		float	 z_gyro;
 	} inceptio_s1_t;
 
-	typedef struct
+	struct inceptio_gN_more_early_t
 	{
 		uint32_t GPS_Week;
 		double	 GPS_TimeOfWeek;
@@ -32,10 +32,14 @@
 		int16_t	 velocityNorth;
 		int16_t  velocityEast;
 		int16_t  velocityUp;
+	};
+
+	struct inceptio_gN_early_t : inceptio_gN_more_early_t
+	{
 		int16_t	 latitude_std;
 		int16_t	 longitude_std;
 		int16_t	 height_std;
-	} inceptio_gN_early_t;
+	};
 
 	struct inceptio_gN_24_01_21_t
 	{
@@ -159,12 +163,8 @@
 	extern void init_inceptio_data();
 	extern void set_output_inceptio_file(int output);
 	extern void set_base_inceptio_file_name(char* file_name);
+	extern void write_inceptio_kml_files();
 	extern void close_inceptio_all_log_file();
-	//begin_end : begin = 1 end = -1 other = 0
-	extern void write_inceptio_gnss_kml_line(inceptio_gN_t* pak_gnss, int begin_end);
-	extern void write_inceptio_gnss_kml_file(inceptio_gN_t* pak_gnss, int begin_end);
-	extern void write_inceptio_ins_kml_line(inceptio_iN_t* pak_ins, int begin_end);
-	extern void write_inceptio_ins_kml_file(inceptio_iN_t* pak_ins, int begin_end);
 
 	extern int get_inceptio_packet_type();
 	extern inceptio_gN_t* get_inceptio_packet_gN();

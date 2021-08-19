@@ -13,7 +13,7 @@ OBJ_C = $(patsubst %.c, %.o, $(SOURCES))
 OBJ = $(patsubst %.cpp, %.o, $(OBJ_C))
 TARGET = UserDecoderLib.so
 
-CFLAGS = -shared -fPIC -fpermissive -fvisibility=hidden
+CFLAGS = -shared -fPIC -fvisibility=hidden
 
 #links
 all:$(OBJ)
@@ -23,6 +23,7 @@ all:$(OBJ)
 #compile
 %.o: %.cpp
 	$(CC) $(INC) -c $(CFLAGS) $< -o $@
+	
 
 .PHONY:clean
 clean:

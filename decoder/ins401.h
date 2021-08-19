@@ -15,7 +15,7 @@ namespace Ins401 {
 		uint32_t length;
 		uint8_t buff[256];
 		uint32_t nmeabyte;
-		uint8_t nmea[128];
+		uint8_t nmea[256];
 		uint16_t packet_type;
 	} raw_t;
 

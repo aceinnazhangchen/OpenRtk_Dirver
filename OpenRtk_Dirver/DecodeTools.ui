@@ -24,12 +24,12 @@
       <widget class="QComboBox" name="fileformat_cmb">
        <item>
         <property name="text">
-         <string>openrtk-user</string>
+         <string>OpenRTK330LI (user)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>openrtk-inceptio</string>
+         <string>RTK330LA (inceptio)</string>
         </property>
        </item>
        <item>
@@ -39,12 +39,12 @@
        </item>
        <item>
         <property name="text">
-         <string>imu</string>
+         <string>IMU</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>ins401</string>
+         <string>INS401</string>
         </property>
        </item>
       </widget>

@@ -528,7 +528,7 @@ int8_t Ins401::Ins401_decoder::parse_nmea(uint8_t data)
 	}
 	else if (raw.nmea_flag == 2) {
 		raw.nmea[raw.nmeabyte++] = data;
-		if (raw.nmea[raw.nmeabyte - 1] == 0x0A && raw.nmea[raw.nmeabyte - 2] == 0x0D) {
+		if (raw.nmea[raw.nmeabyte - 1] == 0x0A || raw.nmea[raw.nmeabyte - 2] == 0x0D) {
 			raw.nmea[raw.nmeabyte - 2] = 0x0A;
 			raw.nmea[raw.nmeabyte - 1] = 0;
 			raw.nmea_flag = 0;

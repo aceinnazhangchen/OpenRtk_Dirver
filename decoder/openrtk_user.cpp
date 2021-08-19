@@ -666,7 +666,7 @@ int parse_user_nmea(uint8_t data) {
 	}
 	else if (user_raw.nmea_flag == 2) {
 		user_raw.nmea[user_raw.nmeabyte++] = data;
-		if (user_raw.nmea[user_raw.nmeabyte - 1] == 0x0A && user_raw.nmea[user_raw.nmeabyte - 2] == 0x0D) {
+		if (user_raw.nmea[user_raw.nmeabyte - 1] == 0x0A || user_raw.nmea[user_raw.nmeabyte - 2] == 0x0D) {
 			user_raw.nmea[user_raw.nmeabyte - 2] = 0x0A;
 			user_raw.nmea[user_raw.nmeabyte - 1] = 0;
 			user_raw.nmea_flag = 0;
