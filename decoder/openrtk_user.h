@@ -9,14 +9,6 @@
 #define MAX_NMEA_TYPES 14
 #define MAX_PACKET_TYPES 5
 
-#define HEADKML1 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-#define HEADKML2 "<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n"
-#define MARKICON "http://maps.google.com/mapfiles/kml/shapes/track.png"
-	//#define R2D   (180/3.1415926)
-#define SIZP     0.3            /* mark size of rover positions */
-#define SIZR     0.3            /* mark size of reference position */
-#define TINT     30.0           /* time label interval (sec) */
-
 #pragma pack(push, 1)
 
 	typedef struct {
@@ -128,22 +120,14 @@
 #pragma pack(pop)
 
 	extern uint16_t calc_crc(uint8_t* buff, uint32_t nbyte);
-	extern void print_kml_header(FILE *kml_file, int ntype);
-	extern void print_kml_end(FILE *kml_file);
-	//begin_end : begin = 1 end = -1 other = 0
-	extern void write_gnss_kml_line(user_g1_t* pak_gnss, int begin_end);
-	extern void write_gnss_kml_file(user_g1_t* pak_gnss, int begin_end);
-	extern void write_ins_kml_line(user_i1_t* pak_ins, int begin_end);
-	extern void write_ins_kml_file(user_i1_t* pak_ins, int begin_end);
 
+	extern void init_user_data();
 	extern void set_save_bin(int save);
 	extern void set_output_user_file(int output);
 	extern void set_base_user_file_name(char* file_name);
+	extern void write_kml_files();
 	extern void close_user_all_log_file();
 
-	extern int get_user_packet_type();
-	extern user_s1_t* get_user_packet_s1();
-	extern user_g1_t* get_user_packet_g1();
-	extern user_i1_t* get_user_packet_i1();
-
 	extern int input_user_raw(uint8_t data);
+
+	

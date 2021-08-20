@@ -76,68 +76,11 @@ USERDECODERLIB_API void decode_openrtk_user(char* filename)
 			read_size += readcount;
 			for (int i = 0; i < readcount; i++) {
 				ret = input_user_raw(read_cache[i]);
-				if (ret == 1) {
-					if (get_user_packet_type() == USR_OUT_BESTGNSS) {
-						user_g1_t* g1 = get_user_packet_g1();
-						gnss_list.push_back(*g1);
-					}
-					else if (get_user_packet_type() == USR_OUT_INSPVAX) {
-						user_i1_t* i1 = get_user_packet_i1();
-						ins_list.push_back(*i1);
-					}
-				}
 			}
 			double percent = (double)read_size / (double)file_size * 100;
 			printf("Process : %4.1f %%\r", percent);
 		}
-		//gnss kml
-		for (int i = 0; i < gnss_list.size(); ++i) {
-			if (i == 0) {
-				write_gnss_kml_line(&gnss_list[i], 1);
-			}
-			else if (i == gnss_list.size() - 1) {
-				write_gnss_kml_line(&gnss_list[i], -1);
-			}
-			else {
-				write_gnss_kml_line(&gnss_list[i], 0);
-			}
-		}
-		for (int i = 0; i < gnss_list.size(); ++i) {
-			if (i == 0) {
-				write_gnss_kml_file(&gnss_list[i], 1);
-			}
-			else if (i == gnss_list.size() - 1) {
-				write_gnss_kml_file(&gnss_list[i], -1);
-			}
-			else {
-				write_gnss_kml_file(&gnss_list[i], 0);
-			}
-		}
-		//ins kml
-		for (int i = 0; i < ins_list.size(); ++i) {
-			if (i == 0) {
-				write_ins_kml_line(&ins_list[i], 1);
-			}
-			else if (i == ins_list.size() - 1) {
-				write_ins_kml_line(&ins_list[i], -1);
-			}
-			else {
-				write_ins_kml_line(&ins_list[i], 0);
-			}
-		}
-		for (int i = 0; i < ins_list.size(); ++i) {
-			if (i == 0) {
-				write_ins_kml_file(&ins_list[i], 1);
-			}
-			else if (i == ins_list.size() - 1) {
-				write_ins_kml_file(&ins_list[i], -1);
-			}
-			else {
-				write_ins_kml_file(&ins_list[i], 0);
-			}
-		}
-		gnss_list.clear();
-		ins_list.clear();
+		write_kml_files();
 		close_user_all_log_file();
 		fclose(file);
 	}

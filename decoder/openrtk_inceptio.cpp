@@ -3,10 +3,9 @@
 #include <memory.h>
 #include <string.h>
 #include <math.h>
-#include <vector>
 #include "openrtk_inceptio.h"
 #include "rtklib_core.h" //R2D
-#include "rtkcmn.h"
+#include "kml.h"
 
 #define MAX_INT 2147483648.0
 
@@ -15,9 +14,6 @@
 
 const char* inceptioPacketsTypeList[MAX_INCEPTIO_PACKET_TYPES] = { "s1", "gN","iN","d1","d2","sT","o1","fM","rt"};
 const char* inceptioNMEAList[MAX_NMEA_TYPES] = { "$GPGGA", "$GPRMC", "$GPGSV", "$GLGSV", "$GAGSV", "$BDGSV", "$GPGSA", "$GLGSA", "$GAGSA", "$BDGSA", "$GPZDA", "$GPVTG", "$PASHR", "$GNINS" };
-extern const char* gnss_postype[6];
-extern const char* ins_status[6];
-extern const char* ins_postype[6];
 
 static int data_version = 0;
 static usrRaw inceptio_raw = { 0 };
@@ -30,6 +26,9 @@ static inceptio_d1_t inceptio_pak_d1 = { 0 };
 static inceptio_d2_t inceptio_pak_d2 = { 0 };
 static inceptio_sT_t inceptio_pak_sT = { 0 };
 static inceptio_o1_t inceptio_pak_o1 = { 0 };
+
+static kml_gnss_t gnss_kml = { 0 };
+static kml_ins_t ins_kml = { 0 };
 
 static int output_inceptio_file = 0;
 static FILE* fnmea = NULL;
@@ -45,24 +44,8 @@ static FILE* f_gnssposvel = NULL;
 static FILE* f_imu = NULL;
 static FILE* f_ins = NULL;
 static FILE* f_odo = NULL;
-static FILE* f_gnss_kml = NULL;
-static FILE* f_ins_kml = NULL;
 static FILE* fs1_b = NULL;
-int inceptio_kml_description = 1;
 static char base_inceptio_file_name[256] = { 0 };
-
-static std::vector <inceptio_gN_early_t> gN_early_sol_list;
-static std::vector <inceptio_gN_t> gN_sol_list;
-static std::vector <inceptio_iN_t> iN_sol_list;
-
-extern void set_output_inceptio_file(int output) {
-	output_inceptio_file = output;
-}
-extern void set_base_inceptio_file_name(char* file_name)
-{
-	strcpy(base_inceptio_file_name, file_name);
-	init_inceptio_data();
-}
 
 extern void init_inceptio_data() {
 	memset(&inceptio_raw, 0, sizeof(usrRaw));
@@ -74,13 +57,19 @@ extern void init_inceptio_data() {
 	memset(&inceptio_pak_d2, 0, sizeof(inceptio_d2_t));
 	memset(&inceptio_pak_sT, 0, sizeof(inceptio_sT_t));
 	memset(&inceptio_pak_o1, 0, sizeof(inceptio_o1_t));
-	gN_early_sol_list.clear();
-	gN_sol_list.clear();
-	iN_sol_list.clear();
+	Kml_Generator::Instance()->init();
+}
+
+extern void set_output_inceptio_file(int output) {
+	output_inceptio_file = output;
+}
+extern void set_base_inceptio_file_name(char* file_name)
+{
+	strcpy(base_inceptio_file_name, file_name);
+	init_inceptio_data();
 }
 
 extern void close_inceptio_all_log_file() {
-	memset(&inceptio_raw, 0, sizeof(usrRaw));
 	if (fnmea)fclose(fnmea); fnmea = NULL;
 	if (fs1)fclose(fs1); fs1 = NULL;
 	if (fgN)fclose(fgN); fgN = NULL;
@@ -95,22 +84,51 @@ extern void close_inceptio_all_log_file() {
 	if (f_imu)fclose(f_imu); f_imu = NULL;
 	if (f_ins)fclose(f_ins); f_ins = NULL;
 	if (f_odo)fclose(f_odo); f_odo = NULL;
-	if (f_gnss_kml) fclose(f_gnss_kml); f_gnss_kml = NULL;
-	if (f_ins_kml) fclose(f_ins_kml); f_ins_kml = NULL;
 
 	if (fs1_b)fclose(fs1_b); fs1_b = NULL;
 }
 
-extern int get_inceptio_packet_type() {
-	return inceptio_raw.ntype;
+void inceptio_append_early_gnss_kml() {
+	gnss_kml.gps_week = inceptio_pak_gN_early.GPS_Week;
+	gnss_kml.gps_secs = inceptio_pak_gN_early.GPS_TimeOfWeek;
+	gnss_kml.position_type = inceptio_pak_gN_early.positionMode;
+	gnss_kml.latitude = (double)inceptio_pak_gN_early.latitude*180.0 / MAX_INT;
+	gnss_kml.longitude = (double)inceptio_pak_gN_early.longitude*180.0 / MAX_INT;
+	gnss_kml.height = inceptio_pak_gN_early.height;
+	gnss_kml.north_vel = (float)inceptio_pak_gN_early.velocityNorth / 100.0;
+	gnss_kml.east_vel = (float)inceptio_pak_gN_early.velocityEast / 100.0;
+	gnss_kml.up_vel = (float)inceptio_pak_gN_early.velocityUp / 100.0;
+	Kml_Generator::Instance()->append_gnss(gnss_kml);
 }
 
-extern inceptio_gN_t* get_inceptio_packet_gN() {
-	return &inceptio_pak_gN;
+void inceptio_append_gnss_kml() {
+	gnss_kml.gps_week = inceptio_pak_gN.GPS_Week;
+	gnss_kml.gps_secs = inceptio_pak_gN.GPS_TimeOfWeek;
+	gnss_kml.position_type = inceptio_pak_gN.positionMode;
+	gnss_kml.latitude = (double)inceptio_pak_gN.latitude*180.0 / MAX_INT;
+	gnss_kml.longitude = (double)inceptio_pak_gN.longitude*180.0 / MAX_INT;
+	gnss_kml.height = inceptio_pak_gN.height;
+	gnss_kml.north_vel = (float)inceptio_pak_gN.velocityNorth / 100.0;
+	gnss_kml.east_vel = (float)inceptio_pak_gN.velocityEast / 100.0;
+	gnss_kml.up_vel = (float)inceptio_pak_gN.velocityUp / 100.0;
+	Kml_Generator::Instance()->append_gnss(gnss_kml);
 }
 
-extern inceptio_iN_t* get_inceptio_packet_iN() {
-	return &inceptio_pak_iN;
+void inceptio_append_ins_kml() {
+	ins_kml.gps_week = inceptio_pak_iN.GPS_Week;
+	ins_kml.gps_secs = inceptio_pak_iN.GPS_TimeOfWeek;
+	ins_kml.ins_status = inceptio_pak_iN.insStatus;
+	ins_kml.ins_position_type = inceptio_pak_iN.insPositionType;
+	ins_kml.latitude = (double)inceptio_pak_iN.latitude*180.0 / MAX_INT;
+	ins_kml.longitude = (double)inceptio_pak_iN.longitude*180.0 / MAX_INT;
+	ins_kml.height = inceptio_pak_iN.height;
+	ins_kml.north_velocity = (float)inceptio_pak_iN.velocityNorth / 100.0;
+	ins_kml.east_velocity = (float)inceptio_pak_iN.velocityEast / 100.0;
+	ins_kml.up_velocity = (float)inceptio_pak_iN.velocityUp / 100.0;
+	ins_kml.roll = (float)inceptio_pak_iN.roll / 100.0;
+	ins_kml.pitch = (float)inceptio_pak_iN.pitch / 100.0;
+	ins_kml.heading = (float)inceptio_pak_iN.heading / 100.0;
+	Kml_Generator::Instance()->append_ins(ins_kml);
 }
 
 void write_inceptio_log_file(int index, char* log) {
@@ -286,367 +304,10 @@ void write_inceptio_process_file(int index, int type, char* log) {
 	}
 }
 
-void write_inceptio_early_gnss_kml_line(inceptio_gN_early_t* pak_gnss, int begin_end) {
-	if (f_gnss_kml) {
-		if (begin_end == 1) {
-			fprintf(f_gnss_kml, "<Placemark>\n");
-			fprintf(f_gnss_kml, "<name>Rover Track</name>\n");
-			fprintf(f_gnss_kml, "<Style>\n");
-			fprintf(f_gnss_kml, "<LineStyle>\n");
-			fprintf(f_gnss_kml, "<color>ffffffff</color>\n");
-			fprintf(f_gnss_kml, "</LineStyle>\n");
-			fprintf(f_gnss_kml, "</Style>\n");
-			fprintf(f_gnss_kml, "<LineString>\n");
-			fprintf(f_gnss_kml, "<coordinates>\n");
-		}
-		if (pak_gnss->positionMode != 0) {
-			fprintf(f_gnss_kml, "%.9f,%.9f,%.9f\n", pak_gnss->longitude*180.0 / MAX_INT, pak_gnss->latitude*180.0 / MAX_INT, pak_gnss->height);
-		}
-		if (begin_end == -1) {
-			fprintf(f_gnss_kml, "</coordinates>\n");
-			fprintf(f_gnss_kml, "</LineString>\n");
-			fprintf(f_gnss_kml, "</Placemark>\n");
-		}
-	}
-}
-
-void write_inceptio_early_gnss_kml_point(inceptio_gN_early_t* pak_gnss, int begin_end) {
-	if (f_gnss_kml) {
-		if (begin_end == 1) {
-			fprintf(f_gnss_kml, "<Folder>\n");
-			fprintf(f_gnss_kml, "<name>Rover Position</name>\n");
-		}
-		if (pak_gnss->positionMode != 0) {
-			double ep[6] = { 0 };
-			gtime_t gpstime = gpst2time(pak_gnss->GPS_Week, pak_gnss->GPS_TimeOfWeek);
-			gtime_t utctime = gpst2utc(gpstime);
-			time2epoch(utctime, ep);
-			float north_vel = (float)pak_gnss->velocityNorth / 100.0;
-			float east_vel = (float)pak_gnss->velocityEast / 100.0;
-			float up_vel = (float)pak_gnss->velocityUp / 100.0;
-			double horizontal_speed = sqrt(north_vel * north_vel + east_vel * east_vel);
-			double track_over_ground = atan2(east_vel, north_vel) * R2D;
-			fprintf(f_gnss_kml, "<Placemark>\n");
-			if (begin_end == 1) {
-				fprintf(f_gnss_kml, "<name>Start</name>\n");
-			}
-			else if (begin_end == -1) {
-				fprintf(f_gnss_kml, "<name>End</name>\n");
-			}
-			fprintf(f_gnss_kml, "<TimeStamp><when>%04d-%02d-%02dT%02d:%02d:%05.2fZ</when></TimeStamp>\n", (int32_t)ep[0], (int32_t)ep[1], (int32_t)ep[2], (int32_t)ep[3], (int32_t)ep[4], ep[5]);
-			//=== description start ===
-			if (inceptio_kml_description) {
-				fprintf(f_gnss_kml, "<description><![CDATA[\n");
-				fprintf(f_gnss_kml, "<TABLE border=\"1\" width=\"100 % \" Align=\"center\">\n");
-				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT>\n");
-				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Time:</TD><TD>%d</TD><TD>%.3f</TD><TD>%2d:%2d:%5.3f</TD><TD>%4d/%2d/%2d</TD></TR>\n",
-					pak_gnss->GPS_Week, pak_gnss->GPS_TimeOfWeek, (int32_t)ep[3], (int32_t)ep[4], ep[5], (int32_t)ep[0], (int32_t)ep[1], (int32_t)ep[2]);
-				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Position:</TD><TD>%.9f</TD><TD>%.9f</TD><TD>%.4f</TD><TD>(DMS,m)</TD></TR>\n",
-					pak_gnss->latitude * 180.0 / MAX_INT, pak_gnss->longitude * 180.0 / MAX_INT, pak_gnss->height);
-				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Vel(N,E,D):</TD><TD>%f</TD><TD>%f</TD><TD>%f</TD><TD>(m/s)</TD></TR>\n",
-					north_vel, east_vel, -up_vel);
-				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Att(r,p,h):</TD><TD>%d</TD><TD>%d</TD><TD>%f</TD><TD>(deg,approx)</TD></TR>\n",
-					0, 0, track_over_ground);
-				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Mode:</TD><TD>%d</TD><TD>%s</TD></TR>\n",
-					0, gnss_postype[pak_gnss->positionMode]);
-				fprintf(f_gnss_kml, "</TABLE>\n");
-				fprintf(f_gnss_kml, "]]></description>\n");
-			}
-			//=== description end ===
-			fprintf(f_gnss_kml, "<styleUrl>#P%d</styleUrl>\n", pak_gnss->positionMode);
-			fprintf(f_gnss_kml, "<Style>\n");
-			fprintf(f_gnss_kml, "<IconStyle>\n");
-			fprintf(f_gnss_kml, "<heading>%f</heading>\n", track_over_ground);
-			fprintf(f_gnss_kml, "</IconStyle>\n");
-			fprintf(f_gnss_kml, "</Style>\n");
-			fprintf(f_gnss_kml, "<Point>\n");
-			fprintf(f_gnss_kml, "<coordinates>%13.9f,%12.9f,%5.3f</coordinates>\n", pak_gnss->longitude * 180.0 / MAX_INT, pak_gnss->latitude * 180.0 / MAX_INT, pak_gnss->height);
-			fprintf(f_gnss_kml, "</Point>\n");
-			fprintf(f_gnss_kml, "</Placemark>\n");
-		}
-		if (begin_end == -1) {
-			fprintf(f_gnss_kml, "</Folder>\n");
-		}
-	}
-}
-
-void write_inceptio_gnss_kml_line(inceptio_gN_t* pak_gnss, int begin_end) {
-	if (f_gnss_kml) {
-		if (begin_end == 1) {
-			fprintf(f_gnss_kml, "<Placemark>\n");
-			fprintf(f_gnss_kml, "<name>Rover Track</name>\n");
-			fprintf(f_gnss_kml, "<Style>\n");
-			fprintf(f_gnss_kml, "<LineStyle>\n");
-			fprintf(f_gnss_kml, "<color>ffffffff</color>\n");
-			fprintf(f_gnss_kml, "</LineStyle>\n");
-			fprintf(f_gnss_kml, "</Style>\n");
-			fprintf(f_gnss_kml, "<LineString>\n");
-			fprintf(f_gnss_kml, "<coordinates>\n");
-		}
-		if (pak_gnss->positionMode != 0) {
-			fprintf(f_gnss_kml, "%.9f,%.9f,%.9f\n", pak_gnss->longitude*180.0/MAX_INT, pak_gnss->latitude*180.0/MAX_INT, pak_gnss->height);
-		}
-		if (begin_end == -1) {
-			fprintf(f_gnss_kml, "</coordinates>\n");
-			fprintf(f_gnss_kml, "</LineString>\n");
-			fprintf(f_gnss_kml, "</Placemark>\n");
-		}
-	}
-}
-
-void write_inceptio_gnss_kml_point(inceptio_gN_t* pak_gnss, int begin_end) {
-	if (f_gnss_kml) {
-		if (begin_end == 1) {
-			fprintf(f_gnss_kml, "<Folder>\n");
-			fprintf(f_gnss_kml, "<name>Rover Position</name>\n");
-		}
-		if (pak_gnss->positionMode != 0) {
-			double ep[6] = { 0 };
-			gtime_t gpstime = gpst2time(pak_gnss->GPS_Week, pak_gnss->GPS_TimeOfWeek);
-			gtime_t utctime = gpst2utc(gpstime);
-			time2epoch(utctime, ep);
-			float north_vel = (float)pak_gnss->velocityNorth / 100.0;
-			float east_vel = (float)pak_gnss->velocityEast / 100.0;
-			float up_vel = (float)pak_gnss->velocityUp / 100.0;
-			double horizontal_speed = sqrt(north_vel * north_vel + east_vel * east_vel);
-			double track_over_ground = atan2(east_vel, north_vel) * R2D;
-			fprintf(f_gnss_kml, "<Placemark>\n");
-			if (begin_end == 1) {
-				fprintf(f_gnss_kml, "<name>Start</name>\n");
-			}
-			else if (begin_end == -1) {
-				fprintf(f_gnss_kml, "<name>End</name>\n");
-			}
-			fprintf(f_gnss_kml, "<TimeStamp><when>%04d-%02d-%02dT%02d:%02d:%05.2fZ</when></TimeStamp>\n", (int32_t)ep[0], (int32_t)ep[1], (int32_t)ep[2], (int32_t)ep[3], (int32_t)ep[4], ep[5]);
-			//=== description start ===
-			if (inceptio_kml_description) {
-				fprintf(f_gnss_kml, "<description><![CDATA[\n");
-				fprintf(f_gnss_kml, "<TABLE border=\"1\" width=\"100 % \" Align=\"center\">\n");
-				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT>\n");
-				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Time:</TD><TD>%d</TD><TD>%.3f</TD><TD>%2d:%2d:%5.3f</TD><TD>%4d/%2d/%2d</TD></TR>\n",
-					pak_gnss->GPS_Week, pak_gnss->GPS_TimeOfWeek, (int32_t)ep[3], (int32_t)ep[4], ep[5], (int32_t)ep[0], (int32_t)ep[1], (int32_t)ep[2]);
-				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Position:</TD><TD>%.9f</TD><TD>%.9f</TD><TD>%.4f</TD><TD>(DMS,m)</TD></TR>\n",
-					pak_gnss->latitude * 180.0 / MAX_INT, pak_gnss->longitude * 180.0 / MAX_INT, pak_gnss->height);
-				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Vel(N,E,D):</TD><TD>%f</TD><TD>%f</TD><TD>%f</TD><TD>(m/s)</TD></TR>\n",
-					north_vel, east_vel, -up_vel);
-				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Att(r,p,h):</TD><TD>%d</TD><TD>%d</TD><TD>%f</TD><TD>(deg,approx)</TD></TR>\n",
-					0, 0, track_over_ground);
-				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Mode:</TD><TD>%d</TD><TD>%s</TD></TR>\n",
-					0, gnss_postype[pak_gnss->positionMode]);
-				fprintf(f_gnss_kml, "</TABLE>\n");
-				fprintf(f_gnss_kml, "]]></description>\n");
-			}
-			//=== description end ===
-			fprintf(f_gnss_kml, "<styleUrl>#P%d</styleUrl>\n", pak_gnss->positionMode);
-			fprintf(f_gnss_kml, "<Style>\n");
-			fprintf(f_gnss_kml, "<IconStyle>\n");
-			fprintf(f_gnss_kml, "<heading>%f</heading>\n", track_over_ground);
-			fprintf(f_gnss_kml, "</IconStyle>\n");
-			fprintf(f_gnss_kml, "</Style>\n");
-			fprintf(f_gnss_kml, "<Point>\n");
-			fprintf(f_gnss_kml, "<coordinates>%13.9f,%12.9f,%5.3f</coordinates>\n", pak_gnss->longitude * 180.0 / MAX_INT, pak_gnss->latitude * 180.0 / MAX_INT, pak_gnss->height);
-			fprintf(f_gnss_kml, "</Point>\n");
-			fprintf(f_gnss_kml, "</Placemark>\n");
-		}
-		if (begin_end == -1) {
-			fprintf(f_gnss_kml, "</Folder>\n");
-		}
-	}
-}
-
-void write_inceptio_ins_kml_line(inceptio_iN_t* pak_ins, int begin_end) {
-	if (f_ins_kml) {
-		if (begin_end == 1) {
-			fprintf(f_ins_kml, "<Placemark>\n");
-			fprintf(f_ins_kml, "<name>Rover Track</name>\n");
-			fprintf(f_ins_kml, "<Style>\n");
-			fprintf(f_ins_kml, "<LineStyle>\n");
-			fprintf(f_ins_kml, "<color>ffffffff</color>\n");
-			fprintf(f_ins_kml, "</LineStyle>\n");
-			fprintf(f_ins_kml, "</Style>\n");
-			fprintf(f_ins_kml, "<LineString>\n");
-			fprintf(f_ins_kml, "<coordinates>\n");
-		}
-		do {
-			if (pak_ins->latitude == 0 || pak_ins->longitude == 0) break;
-			uint32_t GPS_TimeOfWeek = (uint32_t)(pak_ins->GPS_TimeOfWeek * 1000);
-			if ((((GPS_TimeOfWeek + 5) / 10) * 10) % 1000 != 0) break;//1000 = 1hz;500 = 2hz;200 = 5hz;100 = 10hz;  x hz = 1000/x
-			fprintf(f_ins_kml, "%.9f,%.9f,%.9f\n", pak_ins->longitude * 180.0 / MAX_INT, pak_ins->latitude * 180.0 / MAX_INT, pak_ins->height);
-		} while (0);
-		if (begin_end == -1) {
-			fprintf(f_ins_kml, "</coordinates>\n");
-			fprintf(f_ins_kml, "</LineString>\n");
-			fprintf(f_ins_kml, "</Placemark>\n");
-		}
-	}
-}
-
-void write_inceptio_ins_kml_file(inceptio_iN_t* pak_ins, int begin_end) {
-	if (f_ins_kml) {
-		if (begin_end == 1) {
-			fprintf(f_ins_kml, "<Folder>\n");
-			fprintf(f_ins_kml, "<name>Rover Position</name>\n");
-		}
-		uint32_t GPS_TimeOfWeek = (uint32_t)(pak_ins->GPS_TimeOfWeek * 1000);
-		if (pak_ins->latitude && pak_ins->longitude &&
-			(((GPS_TimeOfWeek + 5) / 10) * 10) % 1000 == 0)//1000 = 1hz;500 = 2hz;200 = 5hz;100 = 10hz;  x hz = 1000/x
-		{
-			double ep[6] = { 0 };
-			gtime_t gpstime = gpst2time(pak_ins->GPS_Week, pak_ins->GPS_TimeOfWeek);
-			gtime_t utctime = gpst2utc(gpstime);
-			time2epoch(utctime, ep);
-			fprintf(f_ins_kml, "<Placemark>\n");
-			fprintf(f_ins_kml, "<TimeStamp><when>%04d-%02d-%02dT%02d:%02d:%05.2fZ</when></TimeStamp>\n", (int32_t)ep[0], (int32_t)ep[1], (int32_t)ep[2], (int32_t)ep[3], (int32_t)ep[4], ep[5]);
-			//=== description start ===
-			if (inceptio_kml_description) {
-				fprintf(f_ins_kml, "<description><![CDATA[\n");
-				fprintf(f_ins_kml, "<TABLE border=\"1\" width=\"100 % \" Align=\"center\">\n");
-				fprintf(f_ins_kml, "<TR ALIGN=RIGHT>\n");
-				fprintf(f_ins_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Time:</TD><TD>%d</TD><TD>%.3f</TD><TD>%2d:%2d:%5.3f</TD><TD>%4d/%2d/%2d</TD></TR>\n",
-					pak_ins->GPS_Week, pak_ins->GPS_TimeOfWeek, (int32_t)ep[3], (int32_t)ep[4], ep[5], (int32_t)ep[0], (int32_t)ep[1], (int32_t)ep[2]);
-				fprintf(f_ins_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Position:</TD><TD>%.9f</TD><TD>%.9f</TD><TD>%.4f</TD><TD>(DMS,m)</TD></TR>\n",
-					pak_ins->latitude * 180.0 / MAX_INT, pak_ins->longitude * 180.0 / MAX_INT, pak_ins->height);
-				fprintf(f_ins_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Vel(N,E,D):</TD><TD>%f</TD><TD>%f</TD><TD>%f</TD><TD>(m/s)</TD></TR>\n",
-					pak_ins->velocityNorth / 100.0, pak_ins->velocityEast / 100.0, -pak_ins->velocityUp / 100.0);
-				fprintf(f_ins_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Att(r,p,h):</TD><TD>%f</TD><TD>%f</TD><TD>%f</TD><TD>(deg,approx)</TD></TR>\n",
-					pak_ins->roll / 100.0, pak_ins->pitch / 100.0, pak_ins->heading / 100.0);
-				fprintf(f_ins_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Mode:</TD><TD>%s</TD><TD>%s</TD></TR>\n",
-					ins_status[pak_ins->insStatus], ins_postype[pak_ins->insPositionType]);
-				fprintf(f_ins_kml, "</TABLE>\n");
-				fprintf(f_ins_kml, "]]></description>\n");
-			}
-			//=== description end ===
-			fprintf(f_ins_kml, "<styleUrl>#P%d</styleUrl>\n", pak_ins->insPositionType);
-			fprintf(f_ins_kml, "<Style>\n");
-			fprintf(f_ins_kml, "<IconStyle>\n");
-			fprintf(f_ins_kml, "<heading>%f</heading>\n", pak_ins->heading / 100.0);
-			fprintf(f_ins_kml, "</IconStyle>\n");
-			fprintf(f_ins_kml, "</Style>\n");
-			fprintf(f_ins_kml, "<Point>\n");
-			fprintf(f_ins_kml, "<coordinates>%13.9f,%12.9f,%5.3f</coordinates>\n", pak_ins->longitude * 180.0 / MAX_INT, pak_ins->latitude * 180.0 / MAX_INT, pak_ins->height);
-			fprintf(f_ins_kml, "</Point>\n");
-			fprintf(f_ins_kml, "</Placemark>\n");
-		}
-		if (begin_end == -1) {
-			fprintf(f_ins_kml, "</Folder>\n");
-		}
-	}
-}
-
-void write_gnss_early_kml() {
-	if (gN_early_sol_list.size() > 0) {
-		if (f_gnss_kml == NULL) {
-			if (strlen(base_inceptio_file_name) == 0) return;
-			char file_name[256] = { 0 };
-			sprintf(file_name, "%s-gnss.kml", base_inceptio_file_name);
-			f_gnss_kml = fopen(file_name, "w");
-			print_kml_header(f_gnss_kml, 0);
-		}
-
-		for (int i = 0; i < gN_early_sol_list.size(); ++i) {
-			if (i == 0) {
-				write_inceptio_early_gnss_kml_line(&gN_early_sol_list[i], 1);
-			}
-			else if (i == gN_early_sol_list.size() - 1) {
-				write_inceptio_early_gnss_kml_line(&gN_early_sol_list[i], -1);
-			}
-			else {
-				write_inceptio_early_gnss_kml_line(&gN_early_sol_list[i], 0);
-			}
-		}
-		for (int i = 0; i < gN_early_sol_list.size(); ++i) {
-			if (i == 0) {
-				write_inceptio_early_gnss_kml_point(&gN_early_sol_list[i], 1);
-			}
-			else if (i == gN_early_sol_list.size() - 1) {
-				write_inceptio_early_gnss_kml_point(&gN_early_sol_list[i], -1);
-			}
-			else {
-				write_inceptio_early_gnss_kml_point(&gN_early_sol_list[i], 0);
-			}
-		}
-		gN_early_sol_list.clear();
-		print_kml_end(f_gnss_kml);
-	}
-}
-
-void write_gnss_kml() {
-	if (gN_sol_list.size() > 0) {
-		if (f_gnss_kml == NULL) {
-			if (strlen(base_inceptio_file_name) == 0) return;
-			char file_name[256] = { 0 };
-			sprintf(file_name, "%s-gnss.kml", base_inceptio_file_name);
-			f_gnss_kml = fopen(file_name, "w");
-			print_kml_header(f_gnss_kml, 0);
-		}
-		for (int i = 0; i < gN_sol_list.size(); ++i) {
-			if (i == 0) {
-				write_inceptio_gnss_kml_line(&gN_sol_list[i], 1);
-			}
-			else if (i == gN_sol_list.size() - 1) {
-				write_inceptio_gnss_kml_line(&gN_sol_list[i], -1);
-			}
-			else {
-				write_inceptio_gnss_kml_line(&gN_sol_list[i], 0);
-			}
-		}
-		for (int i = 0; i < gN_sol_list.size(); ++i) {
-			if (i == 0) {
-				write_inceptio_gnss_kml_point(&gN_sol_list[i], 1);
-			}
-			else if (i == gN_sol_list.size() - 1) {
-				write_inceptio_gnss_kml_point(&gN_sol_list[i], -1);
-			}
-			else {
-				write_inceptio_gnss_kml_point(&gN_sol_list[i], 0);
-			}
-		}
-		gN_sol_list.clear();
-		print_kml_end(f_gnss_kml);
-	}
-}
-
-void write_ins_kml() {
-	if (iN_sol_list.size() > 0) {
-		if (f_ins_kml == NULL) {
-			if (strlen(base_inceptio_file_name) == 0) return;
-			char file_name[256] = { 0 };
-			sprintf(file_name, "%s-ins.kml", base_inceptio_file_name);
-			f_ins_kml = fopen(file_name, "w");
-			print_kml_header(f_ins_kml, 1);
-		}
-
-		for (int i = 0; i < iN_sol_list.size(); ++i) {
-			if (i == 0) {
-				write_inceptio_ins_kml_line(&iN_sol_list[i], 1);
-			}
-			else if (i == iN_sol_list.size() - 1) {
-				write_inceptio_ins_kml_line(&iN_sol_list[i], -1);
-			}
-			else {
-				write_inceptio_ins_kml_line(&iN_sol_list[i], 0);
-			}
-		}
-		for (int i = 0; i < iN_sol_list.size(); ++i) {
-			if (i == 0) {
-				write_inceptio_ins_kml_file(&iN_sol_list[i], 1);
-			}
-			else if (i == iN_sol_list.size() - 1) {
-				write_inceptio_ins_kml_file(&iN_sol_list[i], -1);
-			}
-			else {
-				write_inceptio_ins_kml_file(&iN_sol_list[i], 0);
-			}
-		}
-		iN_sol_list.clear();
-		print_kml_end(f_ins_kml);
-	}
-}
-
 void write_inceptio_kml_files() {
-	write_gnss_early_kml();
-	write_gnss_kml();
-	write_ins_kml();
+	Kml_Generator::Instance()->open_files(base_inceptio_file_name);
+	Kml_Generator::Instance()->write_files();
+	Kml_Generator::Instance()->close_files();
 }
 
 void write_inceptio_bin_file(int index, uint8_t* buff, uint32_t nbyte) {
@@ -731,6 +392,8 @@ void output_inceptio_gN_early() {
 	write_inceptio_process_file(inceptio_raw.ntype, 1, inceptio_output_msg);
 	//kml
 	//write_inceptio_gnss_kml_file(&inceptio_pak_gN_early);
+	//gN_early_sol_list.push_back(inceptio_pak_gN_early);
+	inceptio_append_early_gnss_kml();
 }
 
 void output_inceptio_gN() {
@@ -767,7 +430,7 @@ void output_inceptio_gN() {
 	sprintf(inceptio_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n", inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek, horizontal_speed, track_over_ground, up_vel);
 	write_inceptio_process_file(inceptio_raw.ntype, 1, inceptio_output_msg);
 	//kml
-	//write_inceptio_gnss_kml_file(&inceptio_pak_gN);
+	inceptio_append_gnss_kml();
 }
 
 void output_inceptio_iN() {
@@ -793,7 +456,7 @@ void output_inceptio_iN() {
 		write_inceptio_process_file(inceptio_raw.ntype, 0, inceptio_output_msg);
 	}
 	//kml
-	//write_inceptio_ins_kml_file(&inceptio_pak_iN);
+	inceptio_append_ins_kml();
 }
 
 void output_inceptio_d1() {
@@ -854,14 +517,12 @@ void parse_inceptio_packet_payload(uint8_t* buff, uint32_t nbyte) {
 			data_version = VERSION_EARLY;
 			memcpy(&inceptio_pak_gN_early, payload, payload_lenth);
 			output_inceptio_gN_early();
-			gN_early_sol_list.push_back(inceptio_pak_gN_early);
 		}
 		if (payload_lenth == sizeof(inceptio_gN_24_01_21_t) ||
 			payload_lenth == sizeof(inceptio_gN_t)) {
 			data_version = VERSION_24_01_21;
 			memcpy(&inceptio_pak_gN, payload, payload_lenth);
 			output_inceptio_gN();
-			gN_sol_list.push_back(inceptio_pak_gN);
 		}
 	}
 	else if (strcmp(packet_type, "iN") == 0) {
@@ -869,7 +530,6 @@ void parse_inceptio_packet_payload(uint8_t* buff, uint32_t nbyte) {
 		if (payload_lenth == sizeof(inceptio_iN_t)) {
 			memcpy(&inceptio_pak_iN, payload, sizeof(inceptio_iN_t));
 			output_inceptio_iN();
-			iN_sol_list.push_back(inceptio_pak_iN);
 		}
 	}
 	else if (strcmp(packet_type, "d1") == 0) {

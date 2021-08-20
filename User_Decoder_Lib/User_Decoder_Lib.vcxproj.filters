@@ -42,6 +42,9 @@
     <ClCompile Include="..\decoder\openrtk_user.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
+    <ClCompile Include="..\decoder\kml.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="decoder_dll.h">
@@ -72,6 +75,9 @@
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\ins401.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\kml.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>

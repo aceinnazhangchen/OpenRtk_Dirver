@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include "kml.h"
 
 namespace Ins401 {
 #pragma pack(push, 1)
@@ -156,6 +157,9 @@ namespace Ins401 {
 		gnss_sol_t gnss;
 		ins_sol_t ins;
 		odo_t odo;
+		diagnostic_msg_t dm;
+		kml_gnss_t gnss_kml;
+		kml_ins_t ins_kml;
 		std::vector<uint16_t>  packets_type_list;
 		std::vector<std::string> nmea_type_list;
 		char base_file_name[256];
@@ -171,25 +175,18 @@ namespace Ins401 {
 		FILE* f_ins_txt;
 		FILE* f_odo_csv;
 		FILE* f_odo_txt;
-		FILE* f_gnss_kml;		
-		FILE* f_ins_kml;
-		int kml_description;
-		std::vector <gnss_sol_t> gnss_sol_list;
-		std::vector <ins_sol_t> ins_sol_list;
+		FILE* f_dm_csv;
 	private:
 		uint16_t calculate_crc(uint8_t *buf, uint16_t  length);
 		void close_all_files();
 		void create_file(FILE * &file, const char * suffix, const char * title);
-		void write_gnss_kml_line(gnss_sol_t * gnss_pak, int begin_end);
-		void write_gnss_kml_point(gnss_sol_t* gnss_pak, int begin_end);
-		void write_gnss_kml();
-		void write_ins_kml_line(ins_sol_t * ins_pak, int begin_end);
-		void write_ins_kml_point(ins_sol_t * ins_pak, int begin_end);
-		void write_ins_kml();
+		void append_gnss_kml();
+		void append_ins_kml();
 		void output_imu_raw();
 		void output_gnss_sol();
 		void output_ins_sol();
 		void output_odo_raw();
+		void output_dm_raw();
 		void parse_packet_payload();
 		void save_imu_bin();
 		int8_t parse_nmea(uint8_t data);		

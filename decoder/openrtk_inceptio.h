@@ -166,9 +166,5 @@
 	extern void write_inceptio_kml_files();
 	extern void close_inceptio_all_log_file();
 
-	extern int get_inceptio_packet_type();
-	extern inceptio_gN_t* get_inceptio_packet_gN();
-	extern inceptio_iN_t* get_inceptio_packet_iN();
-
 	extern int input_inceptio_raw(uint8_t data);
 
