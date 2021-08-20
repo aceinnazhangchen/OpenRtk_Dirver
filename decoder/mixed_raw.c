@@ -114,13 +114,13 @@ extern int input_aceinna_format_raw(uint8_t c, uint8_t* outbuff, uint32_t* outle
 		if (raw.buffer_len < ACEINNA_HEAD_SIZE) {
 			raw.buffer[raw.buffer_len++] = c;
 			if (raw.buffer_len == ACEINNA_HEAD_SIZE) {
-				if (strncmp(ROV_FLAG, raw.buffer, ACEINNA_HEAD_SIZE) == 0) {
+				if (strncmp(ROV_FLAG, (char*)raw.buffer, ACEINNA_HEAD_SIZE) == 0) {
 					raw.type = TYPE_ROV;
 				}
-				else if (strncmp(BAS_FLAG, raw.buffer, ACEINNA_HEAD_SIZE) == 0) {
+				else if (strncmp(BAS_FLAG, (char*)raw.buffer, ACEINNA_HEAD_SIZE) == 0) {
 					raw.type = TYPE_BAS;
 				}
-				else if (strncmp(IMU_FLAG, raw.buffer, ACEINNA_HEAD_SIZE) == 0) {
+				else if (strncmp(IMU_FLAG, (char*)raw.buffer, ACEINNA_HEAD_SIZE) == 0) {
 					raw.type = TYPE_IMU;
 				}
 				else {

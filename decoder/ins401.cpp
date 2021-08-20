@@ -1,5 +1,6 @@
 #include "ins401.h"
 #include <string.h>
+#include <math.h>
 #include "openrtk_user.h"
 #include "rtklib_core.h" //R2D
 

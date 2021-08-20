@@ -1,4 +1,5 @@
 #include "kml.h"
+#include <math.h>
 #include "rtklib_core.h" //R2D
 #include "rtkcmn.h"
 
@@ -10,7 +11,7 @@ extern void print_kml_header(FILE *kml_file, int ntype) {//ntype 0:gnss 1:ins
 	if (kml_file) {
 		const char* color_gnss[6] = {
 			"ffffffff","ff0000ff","ffff00ff","50FF78F0","ff00ff00","ff00aaff"
-		};//B-G-R °×É« SPP RTD UDR FIX FLOAT
+		};//B-G-R ï¿½ï¿½É« SPP RTD UDR FIX FLOAT
 		const char* color_ins[6] = {
 			"ffffffff","50FF78F0","ffff00ff","ff0000ff","ff00ff00","ff00aaff"
 		};
@@ -121,7 +122,7 @@ void Kml_Generator::write_header(FILE * kml_file, int ntype)
 	if (kml_file) {
 		const char* color_gnss[6] = {
 			"ffffffff","ff0000ff","ffff00ff","50FF78F0","ff00ff00","ff00aaff"
-		};//B-G-R °×É« SPP RTD UDR FIX FLOAT
+		};//B-G-R ï¿½ï¿½É« SPP RTD UDR FIX FLOAT
 		const char* color_ins[6] = {
 			"ffffffff","50FF78F0","ffff00ff","ff0000ff","ff00ff00","ff00aaff"
 		};
