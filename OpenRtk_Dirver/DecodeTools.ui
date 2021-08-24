@@ -34,7 +34,7 @@
        </item>
        <item>
         <property name="text">
-         <string>mixed-raw</string>
+         <string>Mixed_Raw</string>
         </property>
        </item>
        <item>
@@ -45,6 +45,11 @@
        <item>
         <property name="text">
          <string>INS401</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>RTCM_Split</string>
         </property>
        </item>
       </widget>

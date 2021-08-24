@@ -1,12 +1,10 @@
 #pragma once
 #include <stdint.h>
-#include <string>
 #include <vector>
 #include "kml.h"
 
 namespace Ins401 {
 #pragma pack(push, 1)
-
 	typedef struct {
 		uint8_t nmea_flag;
 		uint8_t flag;
@@ -144,7 +142,6 @@ namespace Ins401 {
 		uint8_t	 fwd;
 		uint64_t wheel_tick;
 	} odo_t;
-
 #pragma pack(pop)
 
 	class Ins401_decoder {
@@ -161,7 +158,6 @@ namespace Ins401 {
 		kml_gnss_t gnss_kml;
 		kml_ins_t ins_kml;
 		std::vector<uint16_t>  packets_type_list;
-		std::vector<std::string> nmea_type_list;
 		char base_file_name[256];
 		char output_msg[1024];
 		FILE* f_nmea;
@@ -177,7 +173,6 @@ namespace Ins401 {
 		FILE* f_odo_txt;
 		FILE* f_dm_csv;
 	private:
-		uint16_t calculate_crc(uint8_t *buf, uint16_t  length);
 		void close_all_files();
 		void create_file(FILE * &file, const char * suffix, const char * title);
 		void append_gnss_kml();

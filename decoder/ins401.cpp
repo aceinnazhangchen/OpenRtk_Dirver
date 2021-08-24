@@ -1,15 +1,10 @@
 #include "ins401.h"
 #include <string.h>
 #include <math.h>
-#include "openrtk_user.h"
+#include "common.h"
 #include "rtklib_core.h" //R2D
 
 using namespace Ins401;
-
-#define INS401_PREAMB 0x55
-#ifndef NEAM_HEAD
-#define NEAM_HEAD 0x24
-#endif // !NEAM_HEAD
 
 enum emPackageType{
 	em_RAW_IMU = 0x0a01,
@@ -39,9 +34,6 @@ Ins401::Ins401_decoder::Ins401_decoder()
 	packets_type_list.push_back(em_INS_SOL);
 	packets_type_list.push_back(em_RAW_ODO);
 	packets_type_list.push_back(em_DIAGNOSTIC_MSG);
-	nmea_type_list.clear();
-	nmea_type_list.push_back("$GPGGA");
-	nmea_type_list.push_back("$GPZDA");
 	init();
 }
 
@@ -62,25 +54,6 @@ void Ins401::Ins401_decoder::init()
 	memset(base_file_name, 0, 256);
 	memset(output_msg, 0, 1024);
 	Kml_Generator::Instance()->init();
-}
-
-uint16_t Ins401::Ins401_decoder::calculate_crc(uint8_t * buf, uint16_t length)
-{
-	uint16_t crc = 0x1D0F;
-	int i, j;
-	for (i = 0; i < length; i++) {
-		crc = crc ^ (buf[i] << 8);
-		for (j = 0; j < 8; j++) {
-			if (crc & 0x8000) {
-				crc = (crc << 1) ^ 0x1021;
-			}
-			else {
-				crc = crc << 1;
-			}
-		}
-	}
-	crc = crc & 0xffff;
-	return crc;
 }
 
 void Ins401::Ins401_decoder::close_all_files()
@@ -240,7 +213,7 @@ void Ins401::Ins401_decoder::output_odo_raw()
 
 void Ins401::Ins401_decoder::output_dm_raw() {
 	create_file(f_dm_csv, "dm.csv", "GPS_Week(),GPS_TimeOfWeek(s),Device Status(),IMU Temperature(),MCU Temperature()\n");
-	fprintf(f_dm_csv,"%d,%11.4f,%3d,%10.4f,%10.4f\n", dm.gps_week, (double)dm.gps_millisecs / 1000.0, dm.Device_status_bit_field, dm.IMU_Unit_temperature, dm.MCU_temperature);
+	fprintf(f_dm_csv,"%d,%11.3f,%3d,%7.1f,%7.1f\n", dm.gps_week, (double)dm.gps_millisecs / 1000.0, dm.Device_status_bit_field, dm.IMU_Unit_temperature, dm.MCU_temperature);
 }
 
 void Ins401::Ins401_decoder::parse_packet_payload()
@@ -325,8 +298,8 @@ int8_t Ins401::Ins401_decoder::parse_nmea(uint8_t data)
 			int i = 0;
 			char NMEA[8] = { 0 };
 			memcpy(NMEA, raw.nmea, 6);
-			for (i = 0; i < nmea_type_list.size(); i++) {
-				if (strcmp(NMEA, nmea_type_list[i].c_str()) == 0) {
+			for (i = 0; i < MAX_NMEA_TYPES; i++) {
+				if (strcmp(NMEA, nmea_type(i)) == 0) {
 					raw.nmea_flag = 2;
 					break;
 				}
@@ -361,12 +334,12 @@ int Ins401::Ins401_decoder::input_data(uint8_t data)
 	if (raw.flag == 0) {
 		raw.header[raw.header_len++] = data;
 		if (raw.header_len == 1) {
-			if (raw.header[0] != INS401_PREAMB) {
+			if (raw.header[0] != USER_PREAMB) {
 				raw.header_len = 0;
 			}
 		}
 		if (raw.header_len == 2) {
-			if (raw.header[1] != INS401_PREAMB) {
+			if (raw.header[1] != USER_PREAMB) {
 				raw.header_len = 0;
 			}
 		}
@@ -392,8 +365,8 @@ int Ins401::Ins401_decoder::input_data(uint8_t data)
 		}
 		else if (raw.length > 0 && raw.nbyte == raw.length + 8) { //8 = [type1,type2,len(4)] + [crc1,crc2]
 			uint16_t packet_crc = 256 * raw.buff[raw.nbyte - 2] + raw.buff[raw.nbyte - 1];
-			uint16_t calc_crc = calculate_crc(raw.buff, raw.nbyte - 2);
-			if (packet_crc == calc_crc) {
+			uint16_t crc = calc_crc(raw.buff, raw.nbyte - 2);
+			if (packet_crc == crc) {
 				parse_packet_payload();
 				ret = 1;
 			}

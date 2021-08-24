@@ -3,6 +3,7 @@
 #include <memory.h>
 #include <string.h>
 #include <math.h>
+#include "common.h"
 #include "openrtk_inceptio.h"
 #include "rtklib_core.h" //R2D
 #include "kml.h"
@@ -13,7 +14,6 @@
 #define VERSION_24_01_21	1
 
 const char* inceptioPacketsTypeList[MAX_INCEPTIO_PACKET_TYPES] = { "s1", "gN","iN","d1","d2","sT","o1","fM","rt"};
-const char* inceptioNMEAList[MAX_NMEA_TYPES] = { "$GPGGA", "$GPRMC", "$GPGSV", "$GLGSV", "$GAGSV", "$BDGSV", "$GPGSA", "$GLGSA", "$GAGSA", "$BDGSA", "$GPZDA", "$GPVTG", "$PASHR", "$GNINS" };
 
 static int data_version = 0;
 static usrRaw inceptio_raw = { 0 };
@@ -578,7 +578,7 @@ int parse_inceptio_nmea(uint8_t data) {
 			char NMEA[8] = { 0 };
 			memcpy(NMEA, inceptio_raw.nmea, 6);
 			for (i = 0; i < MAX_NMEA_TYPES; i++) {
-				if (strcmp(NMEA, inceptioNMEAList[i]) == 0) {
+				if (strcmp(NMEA, nmea_type(i)) == 0) {
 					inceptio_raw.nmea_flag = 2;
 					break;
 				}

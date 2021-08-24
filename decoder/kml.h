@@ -41,18 +41,6 @@ struct kml_ins_t {
 };
 #pragma pack(pop)
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-extern void print_kml_header(FILE *kml_file, int ntype);
-extern void print_kml_end(FILE *kml_file);
-
-#ifdef __cplusplus
-}
-#endif
-
 class Kml_Generator
 {
 private:

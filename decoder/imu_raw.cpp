@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include "common.h"
 #include "imu_raw.h"
 #include "rtcm.h"
 

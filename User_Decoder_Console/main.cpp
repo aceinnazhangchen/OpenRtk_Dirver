@@ -1,41 +1,7 @@
-#include <stdio.h>
-#include <vector>
-#include <io.h>
-#include <direct.h>
-#include <string.h>
+#include "common.h"
 #include "openrtk_user.h"
 #include "openrtk_inceptio.h"
 #include "ins401.h"
-
-#define READ_CACHE_SIZE 4*1024
-
-int getFileSize(FILE* file)
-{
-	fseek(file, 0L, SEEK_END);
-	int file_size = ftell(file);
-	fseek(file, 0L, SEEK_SET);
-	return file_size;
-}
-
-int makeDir(char* folderPath) 
-{
-	int ret = -1;
-	if (0 != _access(folderPath, 0))
-	{
-		ret = _mkdir(folderPath);   // 返回 0 表示创建成功，-1 表示失败
-	}
-	return ret;
-}
-
-void createDirByFilePath(char* filename,char* dirname) {
-	char basename[64] = { 0 };
-	strncpy(dirname, filename, strlen(filename) - 4);
-	char* p = strrchr(dirname, '\\');
-	strcpy(basename, p);
-	strcat(dirname, "_d");
-	makeDir(dirname);
-	strcat(dirname, basename);
-}
 
 void decode_openrtk_user(char* filename)
 {
@@ -47,10 +13,7 @@ void decode_openrtk_user(char* filename)
 		int read_size = 0;
 		int readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
-		std::vector<user_g1_t> gnss_list;
-		std::vector<user_i1_t> ins_list;
 		set_output_user_file(1);
-		set_save_bin(1);
 		createDirByFilePath(filename, dirname);
 		set_base_user_file_name(dirname);
 		while (!feof(file)) {
@@ -122,6 +85,7 @@ void decode_ins401(char* filename)
 		ins401_decoder->finish();
 		fclose(file);
 	}
+	delete ins401_decoder;
 }
 
 int main(int argc, char* argv[]) {

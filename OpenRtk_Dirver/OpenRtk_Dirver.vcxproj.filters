@@ -106,6 +106,12 @@
     <ClCompile Include="..\decoder\kml.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
+    <ClCompile Include="..\decoder\rtcm_split.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\common.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="StreamManager.h">
@@ -182,6 +188,12 @@
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\kml.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\rtcm_split.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\common.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>

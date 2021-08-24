@@ -7,43 +7,6 @@ const char* gnss_postype[6] = { "NONE", "PSRSP", "PSRDIFF", "UNDEFINED", "RTKFIX
 const char* ins_status[6] = { "INS_INACTIVE", "INS_ALIGNING", "INS_HIGH_VARIANCE", "INS_SOLUTION_GOOD", "INS_SOLUTION_FREE", "INS_ALIGNMENT_COMPLETE" };
 const char* ins_postype[6] = { "INS_NONE", "INS_PSRSP", "INS_PSRDIFF", "INS_PROPOGATED", "INS_RTKFIXED", "INS_RTKFLOAT" };
 
-extern void print_kml_header(FILE *kml_file, int ntype) {//ntype 0:gnss 1:ins
-	if (kml_file) {
-		const char* color_gnss[6] = {
-			"ffffffff","ff0000ff","ffff00ff","50FF78F0","ff00ff00","ff00aaff"
-		};//B-G-R ��ɫ SPP RTD UDR FIX FLOAT
-		const char* color_ins[6] = {
-			"ffffffff","50FF78F0","ffff00ff","ff0000ff","ff00ff00","ff00aaff"
-		};
-		int i;
-		fprintf(kml_file, HEADKML1);
-		fprintf(kml_file, HEADKML2);
-		fprintf(kml_file, "<Document>\n");
-		for (i = 0; i < 6; i++)
-		{
-			fprintf(kml_file, "<Style id=\"P%d\">\n", i);
-			fprintf(kml_file, "<IconStyle>\n");
-			if (ntype == 0) {
-				fprintf(kml_file, "<color> %s </color>\n", color_gnss[i]);
-			}
-			else {
-				fprintf(kml_file, "<color> %s </color>\n", color_ins[i]);
-			}
-			fprintf(kml_file, "<scale> %f </scale>\n", SIZP);
-			fprintf(kml_file, "<Icon><href> %s </href></Icon>\n", MARKICON);
-			fprintf(kml_file, "</IconStyle>\n");
-			fprintf(kml_file, "</Style>\n");
-		}
-	}
-}
-
-extern void print_kml_end(FILE *kml_file) {
-	if (kml_file) {
-		fprintf(kml_file, "</Document>\n");
-		fprintf(kml_file, "</kml>\n");
-	}
-}
-
 Kml_Generator * Kml_Generator::m_instance = NULL;
 
 Kml_Generator::Kml_Generator()
@@ -342,7 +305,7 @@ void Kml_Generator::write_gnss_kml()
 			}
 		}
 		gnss_sol_list.clear();
-		print_kml_end(f_gnss_kml);
+		write_end(f_gnss_kml);
 	}
 }
 
@@ -373,6 +336,6 @@ void Kml_Generator::write_ins_kml()
 			}
 		}
 		ins_sol_list.clear();
-		print_kml_end(f_ins_kml);
+		write_end(f_ins_kml);
 	}
 }

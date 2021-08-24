@@ -1,12 +1,6 @@
 #pragma once
 #include <stdint.h>
 
-#define USER_PREAMB 0x55
-#ifndef NEAM_HEAD
-#define NEAM_HEAD 0x24
-#endif // !NEAM_HEAD
-
-#define MAX_NMEA_TYPES 14
 #define MAX_PACKET_TYPES 5
 
 #pragma pack(push, 1)
@@ -118,8 +112,6 @@
 	} UserOutPacketType;
 
 #pragma pack(pop)
-
-	extern uint16_t calc_crc(uint8_t* buff, uint32_t nbyte);
 
 	extern void init_user_data();
 	extern void set_save_bin(int save);

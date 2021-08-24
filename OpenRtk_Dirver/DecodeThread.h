@@ -3,6 +3,7 @@
 #include <QThread>
 #include <QTime>
 #include "ins401.h"
+#include "rtcm_split.h"
 
 enum emDecodeFormat {
 	emDecodeFormat_openrtk_user,
@@ -10,6 +11,7 @@ enum emDecodeFormat {
 	emDecodeFormat_mixed_raw,
 	emDecodeFormat_imu,
 	emDecodeFormat_ins401,
+	emDecodeFormat_RTCM_Split,
 };
 
 class DecodeThread : public QThread
@@ -30,6 +32,7 @@ protected:
 	void decode_mixed_raw();
 	void decode_imu();
 	void decode_ins401();
+	void split_rtcm();
 private:
 	int getFileSize(FILE* file);
 private:
@@ -39,6 +42,7 @@ private:
 	QString m_OutBaseName;
 	QTime m_TimeCounter;
 	Ins401::Ins401_decoder* ins401_decoder;
+	Rtcm_Split* rtcm_split;
 signals:
 	void sgnProgress(int present, int msecs);
 	void sgnFinished();

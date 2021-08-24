@@ -14,10 +14,13 @@ DecodeThread::DecodeThread(QObject *parent)
 	, m_FileFormat(emDecodeFormat_openrtk_user)
 {
 	ins401_decoder = new Ins401::Ins401_decoder();
+	rtcm_split = new Rtcm_Split();
 }
 
 DecodeThread::~DecodeThread()
 {
+	if (ins401_decoder) {delete ins401_decoder; ins401_decoder = NULL;}
+	if (rtcm_split) { delete rtcm_split; rtcm_split = NULL; }
 }
 
 void DecodeThread::run()
@@ -42,6 +45,9 @@ void DecodeThread::run()
 			break;
 		case emDecodeFormat_ins401:
 			decode_ins401();
+			break;
+		case emDecodeFormat_RTCM_Split:
+			split_rtcm();
 			break;
 		default:
 			break;
@@ -210,6 +216,31 @@ void DecodeThread::decode_ins401()
 			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
 		}
 		ins401_decoder->finish();
+		fclose(file);
+	}
+}
+
+void DecodeThread::split_rtcm()
+{
+	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
+	if (file && rtcm_split) {
+		int file_size = getFileSize(file);
+		int read_size = 0;
+		int readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		rtcm_split->init();
+		rtcm_split->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
+		while (!feof(file)) {
+			if (m_isStop) break;
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (int i = 0; i < readcount; i++) {
+				rtcm_split->input_data(read_cache[i]);
+			}
+			double percent = (double)read_size / (double)file_size * 10000;
+			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		rtcm_split->close_files();
 		fclose(file);
 	}
 }

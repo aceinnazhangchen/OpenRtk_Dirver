@@ -3,12 +3,12 @@
 #include <memory.h>
 #include <string.h>
 #include <math.h>
+#include "common.h"
 #include "openrtk_user.h"
 #include "rtklib_core.h" //R2D
 #include "kml.h"
 
 const char* userPacketsTypeList[MAX_PACKET_TYPES] = { "s1", "g1", "i1", "o1", "y1" };
-const char* userNMEAList[MAX_NMEA_TYPES] = { "$GPGGA", "$GPRMC", "$GPGSV", "$GLGSV", "$GAGSV", "$BDGSV", "$GPGSA", "$GLGSA", "$GAGSA", "$BDGSA", "$GPZDA", "$GPVTG", "$PASHR", "$GNINS" };
 
 static usrRaw user_raw = { 0 };
 static char user_output_msg[1024] = { 0 };
@@ -57,24 +57,6 @@ extern void set_base_user_file_name(char* file_name)
 {
 	strcpy(base_user_file_name, file_name);
 	init_user_data();
-}
-
-extern uint16_t calc_crc(uint8_t* buff, uint32_t nbyte) {
-	uint16_t crc = 0x1D0F;
-	int i, j;
-	for (i = 0; i < nbyte; i++) {
-		crc = crc ^ (buff[i] << 8);
-		for (j = 0; j < 8; j++) {
-			if (crc & 0x8000) {
-				crc = (crc << 1) ^ 0x1021;
-			}
-			else {
-				crc = crc << 1;
-			}
-		}
-	}
-	crc = crc & 0xffff;
-	return crc;
 }
 
 extern void close_user_all_log_file() {
@@ -450,7 +432,7 @@ int parse_user_nmea(uint8_t data) {
 			char NMEA[8] = { 0 };
 			memcpy(NMEA, user_raw.nmea, 6);
 			for (i = 0; i < MAX_NMEA_TYPES; i++) {
-				if (strcmp(NMEA, userNMEAList[i]) == 0) {
+				if (strcmp(NMEA, nmea_type(i)) == 0) {
 					user_raw.nmea_flag = 2;
 					break;
 				}
