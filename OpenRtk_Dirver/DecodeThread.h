@@ -25,6 +25,7 @@ public:
 	void stop();
 	void setFileFormat(int format);
 	void setFileName(QString file);
+	void setShowTime(bool show);
 	void makeOutPath(QString filename);
 protected:
 	void decode_openrtk_user();
@@ -43,6 +44,7 @@ private:
 	QTime m_TimeCounter;
 	Ins401::Ins401_decoder* ins401_decoder;
 	Rtcm_Split* rtcm_split;
+	bool m_show_time;
 signals:
 	void sgnProgress(int present, int msecs);
 	void sgnFinished();

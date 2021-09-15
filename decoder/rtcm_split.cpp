@@ -19,6 +19,7 @@ void Rtcm_Split::init()
 	memset(rtcm_buffer, 0, RTCM_BUFF_SIZE);
 	rtcm_buffer_cur = 0;
 	files_map.clear();
+	nav_file = NULL;
 }
 
 void Rtcm_Split::set_base_file_name(char * file_name)
@@ -32,6 +33,7 @@ void Rtcm_Split::close_files()
 	for (it = files_map.begin(); it != files_map.end(); it++) {
 		fclose((FILE*)it->second);
 	}
+	if (nav_file)fclose(nav_file); nav_file = NULL;
 }
 
 void Rtcm_Split::input_data(uint8_t data)
@@ -45,17 +47,27 @@ void Rtcm_Split::input_data(uint8_t data)
 			rtcm_buffer_cur += size;
 		}
 	}
-	if (ret && obs.staid) {
-		std::map<uint32_t, FILE*>::iterator it;
-		it = files_map.find(obs.staid);
-		if (it == files_map.end()) {
-			char file_path[256] = { 0 };
-			sprintf(file_path, "%s_%d.rtcm", base_file_name, obs.staid);
-			FILE* file = fopen(file_path,"wb");
-			files_map[obs.staid] = file;
+	if (ret) {
+		if (ret == 2) {
+			if (nav_file == NULL) {
+				char file_path[256] = { 0 };
+				sprintf(file_path, "%s_nav.rtcm", base_file_name);
+				nav_file = fopen(file_path, "wb");
+			}
+			fwrite(rtcm_buffer, 1, rtcm_buffer_cur, nav_file);
 		}
-		FILE* sta_file = files_map[obs.staid];
-		fwrite(rtcm_buffer, 1, rtcm_buffer_cur, sta_file);
+		else if (obs.staid) {
+			std::map<uint32_t, FILE*>::iterator it;
+			it = files_map.find(obs.staid);
+			if (it == files_map.end()) {
+				char file_path[256] = { 0 };
+				sprintf(file_path, "%s_%d.rtcm", base_file_name, obs.staid);
+				FILE* file = fopen(file_path, "wb");
+				files_map[obs.staid] = file;
+			}
+			FILE* sta_file = files_map[obs.staid];
+			fwrite(rtcm_buffer, 1, rtcm_buffer_cur, sta_file);
+		}
 		rtcm_buffer_cur = 0;
 	}
 }

@@ -110,6 +110,22 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="time_checkBox">
+       <property name="toolTip">
+        <string comment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间" extracomment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;解码ins401的时候，第一列以年月日时分秒的格式显示时间。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="statusTip">
+        <string comment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间" extracomment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间"/>
+       </property>
+       <property name="whatsThis">
+        <string comment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间" extracomment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>UTC time(YYYY/MM/DD-hh:mm:ss.dd)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>

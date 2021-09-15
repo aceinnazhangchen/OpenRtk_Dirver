@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>OpenRtk_DirverClass</class>
  <widget class="QMainWindow" name="OpenRtk_DirverClass">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -30,8 +33,11 @@
       </item>
       <item>
        <widget class="QComboBox" name="ModelBox">
-        <property name="editable">
+        <property name="enabled">
          <bool>true</bool>
+        </property>
+        <property name="editable">
+         <bool>false</bool>
         </property>
         <item>
          <property name="text">

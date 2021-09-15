@@ -39,6 +39,9 @@ extern "C" {
 #define RTCM2PREAMB 0x66 /* rtcm ver.2 frame preamble */
 #define RTCM3PREAMB 0xD3 /* rtcm ver.3 frame preamble */
 
+#define ENAQZS
+//#define _USE_PPP_
+
 typedef struct {
     /* move the observation data struct out of rtcm definiton, to save more memory for PPP only mode */
     obs_t obs[MAXSTN];

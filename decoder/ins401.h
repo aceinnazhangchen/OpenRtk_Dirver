@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <vector>
+#include <map>
 #include "kml.h"
 
 namespace Ins401 {
@@ -12,7 +13,7 @@ namespace Ins401 {
 		uint8_t header[4];
 		uint32_t nbyte;
 		uint32_t length;
-		uint8_t buff[256];
+		uint8_t buff[1280];
 		uint32_t nmeabyte;
 		uint8_t nmea[256];
 		uint16_t packet_type;
@@ -160,6 +161,7 @@ namespace Ins401 {
 		std::vector<uint16_t>  packets_type_list;
 		char base_file_name[256];
 		char output_msg[1024];
+		FILE* f_log;
 		FILE* f_nmea;
 		FILE* f_process;
 		FILE* f_imu_csv;
@@ -172,6 +174,12 @@ namespace Ins401 {
 		FILE* f_odo_csv;
 		FILE* f_odo_txt;
 		FILE* f_dm_csv;
+		FILE* f_rover_rtcm;
+		bool show_format_time;
+		int pack_num;
+		int crc_right_num;
+		int crc_error_num;
+		std::map<uint16_t, int> all_type_pack_num;
 	private:
 		void close_all_files();
 		void create_file(FILE * &file, const char * suffix, const char * title);
@@ -182,12 +190,14 @@ namespace Ins401 {
 		void output_ins_sol();
 		void output_odo_raw();
 		void output_dm_raw();
+		void output_rover_rtcm();
 		void parse_packet_payload();
 		void save_imu_bin();
 		int8_t parse_nmea(uint8_t data);		
 	public:
 		void init();
 		void set_base_file_name(char* file_name);
+		void set_show_format_time(bool show);
 		int input_data(uint8_t data);
 		void finish();
 	};

@@ -441,7 +441,8 @@ void output_inceptio_iN() {
 		(float)inceptio_pak_iN.velocityNorth / 100.0, (float)inceptio_pak_iN.velocityEast / 100.0, (float)inceptio_pak_iN.velocityUp / 100.0,
 		(float)inceptio_pak_iN.roll / 100.0, (float)inceptio_pak_iN.pitch / 100.0, (float)inceptio_pak_iN.heading / 100.0);
 	write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
-	if ((uint32_t)(inceptio_pak_iN.GPS_TimeOfWeek*1000) % 100 == 0) {
+	uint32_t GPS_TimeOfWeek = (uint32_t)(inceptio_pak_iN.GPS_TimeOfWeek * 100)*10;
+	if (GPS_TimeOfWeek % 100 == 0) {
 		//txt
 		sprintf(inceptio_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n", inceptio_pak_iN.GPS_Week, inceptio_pak_iN.GPS_TimeOfWeek,
 			(double)inceptio_pak_iN.latitude*180.0 / MAX_INT, (double)inceptio_pak_iN.longitude*180.0 / MAX_INT, inceptio_pak_iN.height,

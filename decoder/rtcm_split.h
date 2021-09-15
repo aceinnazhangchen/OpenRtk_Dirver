@@ -23,5 +23,6 @@ private:
 	uint8_t rtcm_buffer[RTCM_BUFF_SIZE];
 	uint32_t rtcm_buffer_cur;
 	std::map<uint32_t, FILE*> files_map;
+	FILE* nav_file;
 };
 

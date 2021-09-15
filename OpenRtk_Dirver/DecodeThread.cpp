@@ -11,6 +11,7 @@
 DecodeThread::DecodeThread(QObject *parent)
 	: QThread(parent)
 	, m_isStop(false)
+	, m_show_time(false)
 	, m_FileFormat(emDecodeFormat_openrtk_user)
 {
 	ins401_decoder = new Ins401::Ins401_decoder();
@@ -69,6 +70,11 @@ void DecodeThread::setFileFormat(int format)
 void DecodeThread::setFileName(QString file)
 {
 	m_FileName = file;
+}
+
+void DecodeThread::setShowTime(bool show)
+{
+	m_show_time = show;
 }
 
 void DecodeThread::makeOutPath(QString filename)
@@ -204,6 +210,7 @@ void DecodeThread::decode_ins401()
 		int readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
 		ins401_decoder->init();
+		ins401_decoder->set_show_format_time(m_show_time);
 		ins401_decoder->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
 		while (!feof(file)) {
 			if (m_isStop) break;

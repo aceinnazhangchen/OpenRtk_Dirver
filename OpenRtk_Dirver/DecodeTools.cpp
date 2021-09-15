@@ -16,6 +16,8 @@ DecodeTools::DecodeTools(QWidget *parent)
 
 	connect(m_DecodeThread, SIGNAL(sgnProgress(int, int)), this, SLOT(onProcess(int, int)));
 	connect(m_DecodeThread, SIGNAL(sgnFinished()), this, SLOT(onFinished()));
+
+	//ui.time_checkBox->setToolTip("");
 }
 
 DecodeTools::~DecodeTools()
@@ -72,6 +74,7 @@ void DecodeTools::onDecodeClicked()
 	ui.progressBar->setValue(0);
 	m_DecodeThread->setFileFormat(ui.fileformat_cmb->currentIndex());
 	m_DecodeThread->setFileName(filename);
+	m_DecodeThread->setShowTime(ui.time_checkBox->isChecked());
 	m_DecodeThread->start();
 	setOperable(false);
 }
