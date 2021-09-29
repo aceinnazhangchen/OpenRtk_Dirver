@@ -32,12 +32,12 @@ namespace Ins401 {
 		uint32_t crc_err : 1; // 0 = normal; 1 = Application CRC error detected
 		uint32_t tx_overflow_err : 1; // 0 = normal; 1 = Tx Overflow occurred 10 consecutive cycles
 		/* GNSS unit status */
-		uint32_t pps_status : 1;  // 0 ¨C normal; 1 ¨C 1PPS pulse exception
-		uint32_t gnss_data_status : 1; // 0 ¨C normal; 1 ¨C GNSS chipset has NO data output
-		uint32_t gnss_signal_status : 1; // 0 ¨C normal; 1 ¨C GNSS chipset has data output but no valid signal detected
+		uint32_t pps_status : 1;  // 0 ï¿½C normal; 1 ï¿½C 1PPS pulse exception
+		uint32_t gnss_data_status : 1; // 0 ï¿½C normal; 1 ï¿½C GNSS chipset has NO data output
+		uint32_t gnss_signal_status : 1; // 0 ï¿½C normal; 1 ï¿½C GNSS chipset has data output but no valid signal detected
 		/* operation */
-		uint32_t power : 1; //  0 ¨C normal; 1 - any component has no power
-		uint32_t MCU_status : 1; // 0 ¨C normal; 1 ¨C MCU failure
+		uint32_t power : 1; //  0 ï¿½C normal; 1 - any component has no power
+		uint32_t MCU_status : 1; // 0 ï¿½C normal; 1 ï¿½C MCU failure
 		uint32_t reserved : 17;
 	} status_bit_t;
 
@@ -143,6 +143,15 @@ namespace Ins401 {
 		uint8_t	 fwd;
 		uint64_t wheel_tick;
 	} odo_t;
+
+	typedef struct {
+		uint16_t gps_week;
+		uint32_t gps_millisecs;
+		int8_t flag;
+		double RVB[3];
+		double CVB[9];
+	} binary_misalign_t;
+
 #pragma pack(pop)
 
 	class Ins401_decoder {
@@ -155,6 +164,7 @@ namespace Ins401 {
 		gnss_sol_t gnss;
 		ins_sol_t ins;
 		odo_t odo;
+		binary_misalign_t misa;
 		diagnostic_msg_t dm;
 		kml_gnss_t gnss_kml;
 		kml_ins_t ins_kml;
@@ -173,6 +183,8 @@ namespace Ins401 {
 		FILE* f_ins_txt;
 		FILE* f_odo_csv;
 		FILE* f_odo_txt;
+		FILE* f_misa_csv;
+		FILE* f_misa_txt;
 		FILE* f_dm_csv;
 		FILE* f_rover_rtcm;
 		bool show_format_time;
@@ -191,6 +203,7 @@ namespace Ins401 {
 		void output_odo_raw();
 		void output_dm_raw();
 		void output_rover_rtcm();
+		void output_misa_sol();
 		void parse_packet_payload();
 		void save_imu_bin();
 		int8_t parse_nmea(uint8_t data);		
