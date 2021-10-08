@@ -67,7 +67,7 @@ USERDECODERLIB_API void decode_openrtk_inceptio(char* filename)
 USERDECODERLIB_API void decode_ins401(char* filename)
 {
 	char* parse_str;
-	char ins_parse_save_file[100];
+	char ins_parse_save_file[500];
 	Ins401::Ins401_decoder* ins401_decoder = new Ins401::Ins401_decoder();
 	FILE* file = fopen(filename, "rb");
 	if (file && ins401_decoder) {
