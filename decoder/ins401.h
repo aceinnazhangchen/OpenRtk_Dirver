@@ -152,6 +152,58 @@ namespace Ins401 {
 		double CVB[9];
 	} binary_misalign_t;
 
+	typedef struct  SaveConfig
+	{
+		int16_t gnss_week;
+		int32_t gnss_second;
+		int8_t solution_type;
+		int8_t position_type;
+		double latitude;
+		double longitude;
+		float height;
+		int16_t north_velocity;
+		int16_t east_velocity;
+		int16_t down_velocity;
+		int16_t roll;
+		int16_t pitch;
+		int16_t azimuth;
+		int16_t latitude_std;
+		int16_t longitude_std;
+		int16_t altitude_std;
+		int16_t north_velocity_std;
+		int16_t east_velocity_std;
+		int16_t down_velocity_std;
+		int16_t roll_std;
+		int16_t pitch_std;
+		int16_t azimuth_std;
+		int16_t gyro_bias_x;
+		int16_t gyro_bias_y;
+		int16_t gyro_bias_z;
+		int16_t acc_bias_x;
+		int16_t acc_bias_y;
+		int16_t acc_bias_z;
+		int16_t std_gyro_bias_x;
+		int16_t std_gyro_bias_y;
+		int16_t std_gyro_bias_z;
+		int16_t std_acc_bias_x;
+		int16_t std_acc_bias_y;
+		int16_t std_acc_bias_z;
+		int8_t static_type;
+		double reserve1;
+		double reserve2;
+	}SaveConfig;
+
+	typedef struct SaveMsg
+	{
+		uint8_t sync1;            //!< start of packet first byte (0xAA)
+		uint8_t sync2;            //!< start of packet second byte (0x44)
+		uint8_t sync3;            //!< start of packet third  byte (0x12)
+		uint16_t message_length;  //!< Message length (Not including header or CRC)
+		uint16_t message_id;      //!< Message ID number
+		SaveConfig saveConfig;
+		uint8_t crc[4];                           //!< 32-bit cyclic redundancy check (CRC)
+	}SaveMsg;
+
 #pragma pack(pop)
 
 	class Ins401_decoder {
@@ -187,6 +239,8 @@ namespace Ins401 {
 		FILE* f_misa_txt;
 		FILE* f_dm_csv;
 		FILE* f_rover_rtcm;
+		FILE* f_ins_log;
+		FILE* f_ins_save;
 		bool show_format_time;
 		int pack_num;
 		int crc_right_num;
@@ -212,7 +266,9 @@ namespace Ins401 {
 		void set_base_file_name(char* file_name);
 		void set_show_format_time(bool show);
 		int input_data(uint8_t data);
+		int input_ins_save_data(unsigned char data);		
 		void finish();
+		void ins_save_finish();
 	};
 };
 

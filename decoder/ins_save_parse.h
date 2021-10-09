@@ -7,8 +7,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-char* parse_ins_save_data(char *buff, int length);
-
+char* get_ins_save_data_str(char *buff, int length);
 #ifdef __cplusplus
 }
 #endif
