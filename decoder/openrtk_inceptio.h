@@ -2,9 +2,56 @@
 #include <stdint.h>
 #include "openrtk_user.h"
 
-#define MAX_INCEPTIO_PACKET_TYPES 9
+#define MAX_INCEPTIO_PACKET_TYPES 11
 
 #pragma pack(push, 1)
+
+	typedef struct {
+		/* IMU */
+		uint32_t imu_temp_status : 1; // imu temperature status
+		uint32_t imu_acce_status : 1;  // imu accelerometer status
+		uint32_t imu_gyro_status : 1; // imu gyro status
+		uint32_t imu_sensor_status1 : 1; // imu sensor (#1, #2ㄛ #3) status
+		uint32_t imu_sensor_status2 : 1; // imu sensor (#1, #2ㄛ #3) status
+		uint32_t imu_sensor_status3 : 1; // imu sensor (#1, #2ㄛ #3) status
+		uint32_t imu_overall_status : 1;
+
+		/* GNSS status */
+		uint32_t gnss_data_status : 1;
+		uint32_t gnss_signal_status : 1;
+
+		/* operation */
+		uint32_t power : 1; // for the whole device, any component has no power then 0
+		uint32_t MCU_status : 1;
+		uint32_t pps_status : 1;
+
+		uint32_t zupt_det : 1; // 1 每 zupt detected
+		uint32_t odo_used : 1; // 1 每 odometer update used
+		uint32_t odo_recv : 1; // 1 每 odometer data received
+
+		/* IMU sensor fault flags:
+		0 每 fault; 1 - normal*/
+		uint32_t imu_s1_state : 1;
+		uint32_t imu_s2_state : 1;
+		uint32_t imu_s3_state : 1;
+		/* Time valid flag: 0 每 fault; 1 - normal */
+		uint32_t time_valid : 1;
+		/* Antenna sensing status:
+		 0 每 UNINIT
+		 1 每 NORMAL
+		 2 - OPEN
+		 3 - SHORT
+		 4 每 THERMAL SHUTDOWN
+		 5 - REVERSE CURRENT
+		 6 - OVERCURRENT
+		 7 - RESERVED */
+		uint32_t antenna_sensing : 3;
+		/* GNSS chipset fault flag: 0 每 fault; 1 - normal */
+		uint32_t gnss_chipset : 1;
+
+		uint32_t rexerved : 9;
+	} status_bit_t;
+
 
 	typedef struct
 	{
@@ -150,6 +197,7 @@
 	typedef enum {
 		INCEPTIO_OUT_NONE = 0,
 		INCEPTIO_OUT_SCALED1,
+		INCEPTIO_OUT_SCALED2,
 		INCEPTIO_OUT_INSPVA,
 		INCEPTIO_OUT_STD1,
 		INCEPTIO_OUT_STD2,
