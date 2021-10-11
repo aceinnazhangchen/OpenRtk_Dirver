@@ -14,7 +14,8 @@ enum emPackageType{
 	em_RAW_ODO = 0x0a04,
 	em_DIAGNOSTIC_MSG = 0x0a05,
 	em_ROVER_RTCM = 0x0a06,
-	em_MISALIGN = 0x0a07	
+	em_MISALIGN = 0x0a07,
+	PowerUpDR_MES = 0x0a09
 };
 
 Ins401::Ins401_decoder::Ins401_decoder()
@@ -41,6 +42,7 @@ Ins401::Ins401_decoder::Ins401_decoder()
 	packets_type_list.push_back(em_DIAGNOSTIC_MSG);
 	packets_type_list.push_back(em_ROVER_RTCM);
 	packets_type_list.push_back(em_MISALIGN);
+	packets_type_list.push_back(PowerUpDR_MES);
 	all_type_pack_num.clear();
 	init();
 }
@@ -72,6 +74,7 @@ void Ins401::Ins401_decoder::init()
 	all_type_pack_num[em_DIAGNOSTIC_MSG] = 0;
 	all_type_pack_num[em_ROVER_RTCM] = 0;
 	all_type_pack_num[em_MISALIGN] = 0;
+	all_type_pack_num[PowerUpDR_MES] = 0;
 	Kml_Generator::Instance()->init();
 }
 
@@ -380,11 +383,22 @@ void Ins401::Ins401_decoder::parse_packet_payload()
 	{
 		size_t packet_size = sizeof(binary_misalign_t);
 		if (raw.length == packet_size) {
-			memcpy(&misa, payload, packet_size);
+			memcpy(&powerup_dr, payload, packet_size);
 			output_misa_sol();
 		}
 	}
 	break;
+	case PowerUpDR_MES:
+	{
+		size_t packet_size = sizeof(SaveMsg);
+		int ret = 0;
+		for (int i = 0; i < raw.length; i++)
+		{
+			ret = input_ins_save_data(raw.buff[i]);
+		}
+		// ins_save_finish();
+	}
+		break;
 	default:
 		break;
 	};

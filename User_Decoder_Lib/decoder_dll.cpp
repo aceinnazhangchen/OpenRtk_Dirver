@@ -78,31 +78,21 @@ USERDECODERLIB_API void decode_ins401(char* filename)
 		createDirByFilePath(filename, dirname);
 		ins401_decoder->init();
 		ins401_decoder->set_base_file_name(dirname);
+		while (!feof(file)) {
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (int i = 0; i < readcount; i++) {
+				ret = ins401_decoder->input_data(read_cache[i]);
+			}
+			double percent = (double)read_size / (double)file_size * 100;
+			printf("Process : %4.1f %%\r", percent);
+		}
 		if(strstr(filename, "ins_save") != NULL)
 		{
-			while (!feof(file)) {
-				readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
-				read_size += readcount;
-				for(int i = 0; i < readcount; i++)
-				{
-					ret = ins401_decoder->input_ins_save_data(read_cache[i]);
-				}
-				double percent = (double)read_size / (double)file_size * 100;
-				printf("Process : %4.1f %%\r", percent);
-			}
 			ins401_decoder->ins_save_finish();
 		}
 		else
 		{
-			while (!feof(file)) {
-				readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
-				read_size += readcount;
-				for (int i = 0; i < readcount; i++) {
-					ret = ins401_decoder->input_data(read_cache[i]);
-				}
-				double percent = (double)read_size / (double)file_size * 100;
-				printf("Process : %4.1f %%\r", percent);
-			}
 			ins401_decoder->finish();
 		}
 		fclose(file);

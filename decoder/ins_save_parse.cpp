@@ -16,6 +16,7 @@ uint8_t frame_data[512];
 uint8_t crc_rev[4];
 SaveMsg* ins_save_data;
 static char ins_save_str[512];
+uint32_t ins_save_flag;
 
 static unsigned long CRC32Value(int i)
 {

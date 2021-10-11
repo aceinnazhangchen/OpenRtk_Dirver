@@ -218,6 +218,7 @@ namespace Ins401 {
 		odo_t odo;
 		binary_misalign_t misa;
 		diagnostic_msg_t dm;
+		SaveMsg powerup_dr;
 		kml_gnss_t gnss_kml;
 		kml_ins_t ins_kml;
 		std::vector<uint16_t>  packets_type_list;
