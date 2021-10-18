@@ -64,10 +64,14 @@ USERDECODERLIB_API void decode_openrtk_inceptio(char* filename)
 	}
 }
 
-USERDECODERLIB_API void decode_ins401(char* filename)
+USERDECODERLIB_API void decode_ins401(char* filename, char* is_parse_dr)
 {
 	Ins401::Ins401_decoder* ins401_decoder = new Ins401::Ins401_decoder();
 	FILE* file = fopen(filename, "rb");
+	if( (strcmp(_strlwr(is_parse_dr), "false") == 0) && (strstr(_strlwr(filename), "ins_save") != NULL ) )
+	{
+		return;
+	}
 	if (file && ins401_decoder) {
 		int ret = 0;
 		int file_size = getFileSize(file);
