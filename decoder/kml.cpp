@@ -14,6 +14,7 @@ Kml_Generator::Kml_Generator()
 	kml_description = 1;
 	f_gnss_kml = NULL;
 	f_ins_kml = NULL;
+	inskml_rate = 10;
 	init();
 }
 
@@ -75,7 +76,7 @@ void Kml_Generator::append_ins(kml_ins_t & ins)
 {
 	uint32_t gps_millisecs = (uint32_t)(ins.gps_secs * 1000);
 	if (fabs(ins.latitude*ins.longitude) > 0.00000001 &&
-		(((gps_millisecs + 5) / 10) * 10) % 1000 == 0) {//1000 = 1hz;500 = 2hz;200 = 5hz;100 = 10hz;  x hz = 1000/x
+		(((gps_millisecs + 5) / 10) * 10) % (1000 / inskml_rate) == 0) {//1000 = 1hz;500 = 2hz;200 = 5hz;100 = 10hz;  x hz = 1000/x
 		ins_sol_list.push_back(ins);
 	}
 }

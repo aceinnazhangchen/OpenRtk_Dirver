@@ -272,7 +272,7 @@ void Ins401::Ins401_decoder::output_misa_sol() {
 		fprintf(f_misa_csv, "%s,%d,%d,%d,%f,%f,%f,%f,%f,%f\n", time,misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0],misa.RVB[1],misa.RVB[2],misa.CVB[0],misa.CVB[1],misa.CVB[2]);
 	}
 	else {
-		printf("%s,%d,%d,%d,%f,%f,%f,%f,%f,%f\n", time,misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0],misa.RVB[1],misa.RVB[2],misa.CVB[0],misa.CVB[1],misa.CVB[2]);
+		// printf("%s,%d,%d,%d,%f,%f,%f,%f,%f,%f\n", time,misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0],misa.RVB[1],misa.RVB[2],misa.CVB[0],misa.CVB[1],misa.CVB[2]);
 		create_file(f_misa_csv, "misa.csv", "DateTime(),GPS_Week(),GPS_TimeOfWeek(s),flag(),RVB1(),RVB2(),RVB3(),CVB1(),CVB2(),CVB3()\n");
 		fprintf(f_misa_csv, "%d,%d,%d,%f,%f,%f,%f,%f,%f\n", misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0],misa.RVB[1],misa.RVB[2],misa.CVB[0],misa.CVB[1],misa.CVB[2]);
 	}

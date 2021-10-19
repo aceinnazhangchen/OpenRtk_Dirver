@@ -67,6 +67,7 @@ USERDECODERLIB_API void decode_openrtk_inceptio(char* filename)
 USERDECODERLIB_API void decode_ins401(char* filename, char* is_parse_dr)
 {
 	Ins401::Ins401_decoder* ins401_decoder = new Ins401::Ins401_decoder();
+	Kml_Generator::Instance()->inskml_rate = inskml_rate;
 	FILE* file = fopen(filename, "rb");
 	if( (strcmp(_strlwr(is_parse_dr), "false") == 0) && (strstr(_strlwr(filename), "ins_save") != NULL ) )
 	{
