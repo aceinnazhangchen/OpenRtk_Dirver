@@ -14,6 +14,8 @@ enum emPackageType{
 	em_RAW_ODO = 0x0a04,
 	em_DIAGNOSTIC_MSG = 0x0a05,
 	em_ROVER_RTCM = 0x0a06,
+	em_MISALIGN = 0x0a07,
+	PowerUpDR_MES = 0x0a09
 };
 
 Ins401::Ins401_decoder::Ins401_decoder()
@@ -39,6 +41,8 @@ Ins401::Ins401_decoder::Ins401_decoder()
 	packets_type_list.push_back(em_RAW_ODO);
 	packets_type_list.push_back(em_DIAGNOSTIC_MSG);
 	packets_type_list.push_back(em_ROVER_RTCM);
+	packets_type_list.push_back(em_MISALIGN);
+	packets_type_list.push_back(PowerUpDR_MES);
 	all_type_pack_num.clear();
 	init();
 }
@@ -69,6 +73,8 @@ void Ins401::Ins401_decoder::init()
 	all_type_pack_num[em_RAW_ODO] = 0;
 	all_type_pack_num[em_DIAGNOSTIC_MSG] = 0;
 	all_type_pack_num[em_ROVER_RTCM] = 0;
+	all_type_pack_num[em_MISALIGN] = 0;
+	all_type_pack_num[PowerUpDR_MES] = 0;
 	Kml_Generator::Instance()->init();
 }
 
@@ -256,6 +262,30 @@ void Ins401::Ins401_decoder::output_ins_sol() {
 	append_ins_kml();
 }
 
+
+void Ins401::Ins401_decoder::output_misa_sol() {
+	if (show_format_time) {
+		create_file(f_misa_csv, "misa.csv", "DateTime(),GPS_Week(),GPS_TimeOfWeek(s),flag(),RVB1(),RVB2(),RVB3(),CVB1(),CVB2(),CVB3()\n");
+		gtime_t gpstime = gpst2time(odo.GPS_Week, (double)odo.GPS_TimeOfWeek / 1000.0);
+		gtime_t utctime = gpst2utc(gpstime);
+		char* time = time_str(utctime, 2);
+		fprintf(f_misa_csv, "%s,%d,%d,%d,%f,%f,%f,%f,%f,%f\n", time,misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0],misa.RVB[1],misa.RVB[2],misa.CVB[0],misa.CVB[1],misa.CVB[2]);
+	}
+	else {
+		printf("%s,%d,%d,%d,%f,%f,%f,%f,%f,%f\n", time,misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0],misa.RVB[1],misa.RVB[2],misa.CVB[0],misa.CVB[1],misa.CVB[2]);
+		create_file(f_misa_csv, "misa.csv", "DateTime(),GPS_Week(),GPS_TimeOfWeek(s),flag(),RVB1(),RVB2(),RVB3(),CVB1(),CVB2(),CVB3()\n");
+		fprintf(f_misa_csv, "%d,%d,%d,%f,%f,%f,%f,%f,%f\n", misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0],misa.RVB[1],misa.RVB[2],misa.CVB[0],misa.CVB[1],misa.CVB[2]);
+	}
+
+#ifndef NOT_OUTPUT_INNER_FILE
+	create_file(f_misa_txt, "misa.txt", NULL);
+	fprintf(f_misa_txt, "%d,%d,%d,%f,%f,%f,%f,%f,%f\n", misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0],misa.RVB[1],misa.RVB[2],misa.CVB[0],misa.CVB[1],misa.CVB[2]);
+	create_file(f_process, "process", NULL);
+	fprintf(f_process, "$GPMISA,%d,%d,%d,%f,%f,%f,%f,%f,%f\n", misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0],misa.RVB[1],misa.RVB[2],misa.CVB[0],misa.CVB[1],misa.CVB[2]);
+#endif
+}
+
+
 void Ins401::Ins401_decoder::output_odo_raw()
 {
 	if (show_format_time) {
@@ -350,6 +380,26 @@ void Ins401::Ins401_decoder::parse_packet_payload()
 	{
 		output_rover_rtcm();
 	}break;
+	case em_MISALIGN:
+	{
+		size_t packet_size = sizeof(binary_misalign_t);
+		if (raw.length == packet_size) {
+			memcpy(&misa, payload, packet_size);
+			output_misa_sol();
+		}
+	}
+	break;
+	case PowerUpDR_MES:
+	{
+		size_t packet_size = sizeof(SaveMsg);
+		int ret = 0;
+		for (int i = 0; i < raw.length; i++)
+		{
+			ret = input_ins_save_data(raw.buff[i]);
+		}
+		// ins_save_finish();
+	}
+		break;
 	default:
 		break;
 	};

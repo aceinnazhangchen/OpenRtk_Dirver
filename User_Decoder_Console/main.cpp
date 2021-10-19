@@ -82,7 +82,14 @@ void decode_ins401(char* filename)
 			double percent = (double)read_size / (double)file_size * 100;
 			printf("Process : %4.1f %%\r", percent);
 		}
-		ins401_decoder->finish();
+		if(strstr(filename, "ins_save") != NULL)
+		{
+			ins401_decoder->ins_save_finish();
+		}
+		else
+		{
+			ins401_decoder->finish();
+		}
 		fclose(file);
 	}
 	delete ins401_decoder;
