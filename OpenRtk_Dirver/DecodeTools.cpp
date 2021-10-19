@@ -75,6 +75,19 @@ void DecodeTools::onDecodeClicked()
 	m_DecodeThread->setFileFormat(ui.fileformat_cmb->currentIndex());
 	m_DecodeThread->setFileName(filename);
 	m_DecodeThread->setShowTime(ui.time_checkBox->isChecked());
+	switch (ui.frequency_cmb->currentIndex()) {
+	case 0:
+		m_DecodeThread->setKmlFrequency(1000);
+		break;
+	case 1:
+		m_DecodeThread->setKmlFrequency(100);
+		break;
+	case 2:
+		m_DecodeThread->setKmlFrequency(10);
+		break;
+	default:
+		break;
+	}
 	m_DecodeThread->start();
 	setOperable(false);
 }

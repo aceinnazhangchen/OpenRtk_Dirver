@@ -684,6 +684,16 @@ extern void time2str(gtime_t t, char *s, int n)
     sprintf(s,"%04.0f/%02.0f/%02.0f-%02.0f:%02.0f:%0*.*f",ep[0],ep[1],ep[2],
             ep[3],ep[4],n<=0?2:n+3,n<=0?0:n,ep[5]);
 }
+extern void time2name(gtime_t t, char *s, int n)
+{
+	double ep[6];
+
+	if (n < 0) n = 0; else if (n > 12) n = 12;
+	if (1.0 - t.sec < 0.5 / pow(10.0, n)) { t.time++; t.sec = 0.0; };
+	time2epoch(t, ep);
+	sprintf(s, "%04.0f-%02.0f-%02.0f_%02.0f-%02.0f-%0*.*f", ep[0], ep[1], ep[2],
+		ep[3], ep[4], n <= 0 ? 2 : n + 3, n <= 0 ? 0 : n, ep[5]);
+}
 /* get time string -------------------------------------------------------------
 * get time string
 * args   : gtime_t t        I   gtime_t struct
@@ -696,6 +706,12 @@ extern char *time_str(gtime_t t, int n)
     static char buff[64];
     time2str(t,buff,n);
     return buff;
+}
+extern char *time_name(gtime_t t, int n)
+{
+	static char buff[64];
+	time2name(t, buff, n);
+	return buff;
 }
 /* time to day of year ---------------------------------------------------------
 * convert time to day of year

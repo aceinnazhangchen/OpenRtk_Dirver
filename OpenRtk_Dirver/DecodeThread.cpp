@@ -13,9 +13,11 @@ DecodeThread::DecodeThread(QObject *parent)
 	, m_isStop(false)
 	, m_show_time(false)
 	, m_FileFormat(emDecodeFormat_openrtk_user)
+	, ins_kml_frequency(1000)
 {
 	ins401_decoder = new Ins401::Ins401_decoder();
 	rtcm_split = new Rtcm_Split();
+	e2e_deocder = new E2E::E2E_protocol();
 }
 
 DecodeThread::~DecodeThread()
@@ -50,6 +52,9 @@ void DecodeThread::run()
 		case emDecodeFormat_RTCM_Split:
 			split_rtcm();
 			break;
+		case emDecodeFormat_E2E_protocol:
+			decode_e2e_protocol();
+			break;
 		default:
 			break;
 		}
@@ -75,6 +80,12 @@ void DecodeThread::setFileName(QString file)
 void DecodeThread::setShowTime(bool show)
 {
 	m_show_time = show;
+}
+
+void DecodeThread::setKmlFrequency(int frequency)
+{
+	ins_kml_frequency = frequency;
+	Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
 }
 
 void DecodeThread::makeOutPath(QString filename)
@@ -103,6 +114,7 @@ void DecodeThread::decode_openrtk_user()
 		set_output_user_file(1);
 		set_save_bin(1);
 		set_base_user_file_name(m_OutBaseName.toLocal8Bit().data());
+		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
 		while (!feof(file)) {
 			if (m_isStop) break;
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
@@ -159,6 +171,7 @@ void DecodeThread::decode_mixed_raw()
 		set_output_aceinna_file(1);
 		set_aceinna_file_basename(m_OutBaseName.toLocal8Bit().data());
 		open_aceinna_log_file();
+		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
 		while (!feof(file)) {
 			if (m_isStop) break;
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
@@ -212,6 +225,7 @@ void DecodeThread::decode_ins401()
 		ins401_decoder->init();
 		ins401_decoder->set_show_format_time(m_show_time);
 		ins401_decoder->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
+		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
 		while (!feof(file)) {
 			if (m_isStop) break;
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
@@ -231,8 +245,8 @@ void DecodeThread::split_rtcm()
 {
 	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
 	if (file && rtcm_split) {
-		int file_size = getFileSize(file);
-		int read_size = 0;
+		int64_t file_size = getFileSize(file);
+		int64_t read_size = 0;
 		int readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
 		rtcm_split->init();
@@ -252,10 +266,45 @@ void DecodeThread::split_rtcm()
 	}
 }
 
-int DecodeThread::getFileSize(FILE * file)
+void DecodeThread::decode_e2e_protocol() {
+	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
+	if (file && rtcm_split) {
+		int64_t file_size = getFileSize(file);
+		int64_t read_size = 0;
+		int readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		e2e_deocder->init();
+		e2e_deocder->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
+		while (!feof(file)) {
+			if (m_isStop) break;
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (int i = 0; i < readcount; i++) {
+				e2e_deocder->input_data(read_cache[i]);
+			}
+			double percent = (double)read_size / (double)file_size * 10000;
+			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		e2e_deocder->finish();
+		fclose(file);
+	}
+}
+
+int64_t DecodeThread::getFileSize(FILE * file)
 {
-	fseek(file, 0L, SEEK_END);
-	int file_size = ftell(file);
-	fseek(file, 0L, SEEK_SET);
+	int64_t file_size = 0;
+#if defined(_WIN32) || defined(_WIN64)
+#if _MSC_VER >= 1400
+	_fseeki64(file, (int64_t)(0), SEEK_END);
+	file_size = _ftelli64(file);
+	_fseeki64(file, (int64_t)(0), SEEK_SET);
 	return file_size;
+#else
+#error Visual Studio version is less than 8.0(VS 2005) !
+#endif
+#else
+	fseeko(file, (int64_t)(0), SEEK_END);
+	file_size = ftello(fp);
+	fseeko(file, (int64_t)(0), SEEK_SET);
+#endif
 }

@@ -97,6 +97,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\decoder\common.c" />
+    <ClCompile Include="..\decoder\E2E_protocol.cpp" />
     <ClCompile Include="..\decoder\imu_raw.cpp" />
     <ClCompile Include="..\decoder\ins401.cpp" />
     <ClCompile Include="..\decoder\kml.cpp" />
@@ -136,6 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\decoder\common.h" />
+    <ClInclude Include="..\decoder\E2E_protocol.h" />
     <ClInclude Include="..\decoder\gnss_datatype.h" />
     <ClInclude Include="..\decoder\imu_raw.h" />
     <ClInclude Include="..\decoder\ins401.h" />

@@ -218,7 +218,9 @@ void write_inceptio_log_file(int index, char* log) {
 		if (fsT == NULL) {
 			sprintf(file_name, "%s_sT.csv", base_inceptio_file_name);
 			fsT = fopen(file_name, "w");
-			if (fsT) fprintf(fsT, "GPS_Week(),GPS_TimeofWeek(s),year(),mouth(),day(),hour(),min(),sec(),imu_status(),imu_temperature(),mcu_temperature()\n");
+			if (fsT) fprintf(fsT, "GPS_Week(),GPS_TimeofWeek(s),year(),mouth(),day(),hour(),min(),sec(),imu_temp_status,imu_acce_status,imu_gyro_status,imu_sensor_status1,imu_sensor_status2,imu_sensor_status3,imu_overall_status\
+,gnss_data_status,gnss_signal_status,power,MCU_status,pps_status,zupt_det,odo_used,odo_recv,imu_s1_state,imu_s2_state,imu_s3_state,time_valid,antenna_sensing,gnss_chipset\
+,imu_temperature(),mcu_temperature()\n");
 		}
 		if (fsT) fprintf(fsT, log);
 	}
@@ -501,9 +503,15 @@ void output_inceptio_d2() {
 
 void output_inceptio_sT() {
 	//csv
-	sprintf(inceptio_output_msg, "%d,%11.4f,%5d,%5d,%5d,%5d,%5d,%5d,%5d,%8.3f,%8.3f\n", inceptio_pak_sT.GPS_Week, inceptio_pak_sT.GPS_TimeOfWeek,
+	sprintf(inceptio_output_msg, "%d,%11.4f,%5d,%5d,%5d,%5d,%5d,%5d, %3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,  %8.3f,%8.3f\n", inceptio_pak_sT.GPS_Week, inceptio_pak_sT.GPS_TimeOfWeek,
 		inceptio_pak_sT.year, inceptio_pak_sT.mouth, inceptio_pak_sT.day, inceptio_pak_sT.hour, inceptio_pak_sT.min, inceptio_pak_sT.sec,
-		inceptio_pak_sT.imu_status, inceptio_pak_sT.imu_temperature, inceptio_pak_sT.mcu_temperature);
+		inceptio_pak_sT.status_bit.imu_temp_status, inceptio_pak_sT.status_bit.imu_acce_status, inceptio_pak_sT.status_bit.imu_gyro_status,
+		inceptio_pak_sT.status_bit.imu_sensor_status1, inceptio_pak_sT.status_bit.imu_sensor_status2, inceptio_pak_sT.status_bit.imu_sensor_status3, inceptio_pak_sT.status_bit.imu_overall_status,
+		inceptio_pak_sT.status_bit.gnss_data_status, inceptio_pak_sT.status_bit.gnss_signal_status, inceptio_pak_sT.status_bit.power, inceptio_pak_sT.status_bit.MCU_status, inceptio_pak_sT.status_bit.pps_status,
+		inceptio_pak_sT.status_bit.zupt_det,inceptio_pak_sT.status_bit.odo_used,inceptio_pak_sT.status_bit.odo_recv,
+		inceptio_pak_sT.status_bit.imu_s1_state, inceptio_pak_sT.status_bit.imu_s2_state, inceptio_pak_sT.status_bit.imu_s3_state,
+		inceptio_pak_sT.status_bit.time_valid, inceptio_pak_sT.status_bit.antenna_sensing, inceptio_pak_sT.status_bit.gnss_chipset,
+		inceptio_pak_sT.imu_temperature, inceptio_pak_sT.mcu_temperature);
 	write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
 }
 

@@ -112,6 +112,9 @@
     <ClCompile Include="..\decoder\common.c">
       <Filter>decoder</Filter>
     </ClCompile>
+    <ClCompile Include="..\decoder\E2E_protocol.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="StreamManager.h">
@@ -194,6 +197,9 @@
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\common.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\E2E_protocol.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>

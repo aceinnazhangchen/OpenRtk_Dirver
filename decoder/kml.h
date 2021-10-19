@@ -53,6 +53,7 @@ private:
 	static Kml_Generator* m_instance;
 public:
 	void init();
+	void set_kml_frequency(int frequency);
 	void open_files(char* file_base_name);
 	void write_files();
 	void close_files();
@@ -71,6 +72,7 @@ private:
 	int kml_description;
 	FILE* f_gnss_kml;
 	FILE* f_ins_kml;
+	int ins_kml_frequency;
 	std::vector<kml_gnss_t> gnss_sol_list;
 	std::vector<kml_ins_t> ins_sol_list;
 };

@@ -52,6 +52,11 @@
          <string>RTCM_Split</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>E2E_protocol</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item>
@@ -101,6 +106,32 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>kml frequency</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="frequency_cmb">
+       <item>
+        <property name="text">
+         <string>1hz</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>10hz</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>100hz</string>
+        </property>
+       </item>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="decode_btn">

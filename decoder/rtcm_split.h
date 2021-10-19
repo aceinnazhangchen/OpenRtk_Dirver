@@ -15,6 +15,7 @@ public:
 	void set_base_file_name(char* file_name);
 	void close_files();
 	void input_data(uint8_t data);
+	void create_new_split_file();
 private:
 	char base_file_name[256];
 	rtcm_t rtcm;
@@ -24,5 +25,9 @@ private:
 	uint32_t rtcm_buffer_cur;
 	std::map<uint32_t, FILE*> files_map;
 	FILE* nav_file;
+	FILE* log_file;
+	FILE* time_split_file;
+	time_t split_start_time;
+	time_t last_time;
 };
 

@@ -179,7 +179,7 @@
 		uint8_t	 hour;
 		uint8_t  min;
 		uint8_t  sec;
-		uint32_t imu_status;
+		status_bit_t status_bit;
 		float  imu_temperature;
 		float  mcu_temperature;
 	} inceptio_sT_t;

@@ -56,7 +56,7 @@ namespace Ins401 {
 		uint16_t	gps_week;
 		uint32_t	gps_millisecs;
 		/*
-		0:INVALID
+		0: INVALID
 		1: Single-point positioning (SPP)
 		2: Real time differential GNSS (RTD)
 		4: Real time kinematic (RTK), ambiguity fixed (RTK_FIXED)
