@@ -319,7 +319,7 @@ void Ins401::Ins401_decoder::output_dm_raw() {
 	}
 	else {
 		create_file(f_dm_csv, "dm.csv", "GPS_Week(),GPS_TimeOfWeek(s),Device Status(),IMU Temperature(),MCU Temperature()\n");
-		fprintf(f_dm_csv, "%d,%11.3f,%3d,%7.1f,%7.1f\n", dm.gps_week, (double)dm.gps_millisecs / 1000.0, dm.Device_status_bit_field, dm.IMU_Unit_temperature, dm.MCU_temperature);
+		fprintf(f_dm_csv, "%d,%11.3f,0x%04x,%7.1f,%7.1f\n", dm.gps_week, (double)dm.gps_millisecs / 1000.0, dm.Device_status_bit_field, dm.IMU_Unit_temperature, dm.MCU_temperature);
 	}
 }
 
