@@ -1,64 +1,14 @@
 #include "ins_save_parse.h"
 #include <stdint.h>
 #include <string.h>
+#include "ins401.h"
+
+using namespace Ins401;
 
 #ifndef CRC32_POLYNOMIAL
 #define CRC32_POLYNOMIAL 0xEDB88320L
 #endif // !CRC32_POLYNOMIAL
 
-#pragma pack(1)
-typedef struct  SaveConfig
-{
-	int16_t gnss_week;
-	int32_t gnss_second;
-	int8_t solution_type;
-	int8_t position_type;
-	double latitude;
-	double longitude;
-	float height;
-	int16_t north_velocity;
-	int16_t east_velocity;
-	int16_t down_velocity;
-	int16_t roll;
-	int16_t pitch;
-	int16_t azimuth;
-	int16_t latitude_std;
-	int16_t longitude_std;
-	int16_t altitude_std;
-	int16_t north_velocity_std;
-	int16_t east_velocity_std;
-	int16_t down_velocity_std;
-	int16_t roll_std;
-	int16_t pitch_std;
-	int16_t azimuth_std;
-	int16_t gyro_bias_x;
-	int16_t gyro_bias_y;
-	int16_t gyro_bias_z;
-	int16_t acc_bias_x;
-	int16_t acc_bias_y;
-	int16_t acc_bias_z;
-	int16_t std_gyro_bias_x;
-	int16_t std_gyro_bias_y;
-	int16_t std_gyro_bias_z;
-	int16_t std_acc_bias_x;
-	int16_t std_acc_bias_y;
-	int16_t std_acc_bias_z;
-	int8_t static_type;
-	double reserve1;
-	double reserve2;
-}SaveConfig;
-
-typedef struct SaveMsg
-{
-	uint8_t sync1;            //!< start of packet first byte (0xAA)
-	uint8_t sync2;            //!< start of packet second byte (0x44)
-	uint8_t sync3;            //!< start of packet third  byte (0x12)
-	uint16_t message_length;  //!< Message length (Not including header or CRC)
-	uint16_t message_id;      //!< Message ID number
-	SaveConfig saveConfig;
-	uint8_t crc[4];                           //!< 32-bit cyclic redundancy check (CRC)
-}SaveMsg;
-#pragma pack()
 
 
 uint8_t ins_save_data_head[3] = {0xaa,0x44,0x12};
@@ -66,6 +16,7 @@ uint8_t frame_data[512];
 uint8_t crc_rev[4];
 SaveMsg* ins_save_data;
 static char ins_save_str[512];
+uint32_t ins_save_flag;
 
 static unsigned long CRC32Value(int i)
 {
@@ -101,7 +52,7 @@ static unsigned long CalculateBlockCRC32(unsigned long ulCount,   /* Number of b
 int printasciisavebuf(SaveConfig* msaveconfig, char* buff)
 {
 	double dms1[3], dms2[3], amag = 0.0;
-	char *p = buff, *q, sum, *emag = "E";
+	char *p = buff, *q, sum;
 
 	//%02.0f%02.0f%05.2f,A,%02.0f%010.7f,%s,%03.0f%010.7f,%s,%4.2f,%4.2f,%02.0f%02.0f%02d,%.1f,%s,%s
 	p+= sprintf(p, "$developer,%4d,%7d,%d,%d,%14.10f,%14.10f,%9.4f,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%10.5f,%10.5f",
@@ -124,13 +75,14 @@ int printasciisavebuf(SaveConfig* msaveconfig, char* buff)
 	return p - (char *)buff;
 }
 
-static int input_ins_save_data(unsigned char data)
+int Ins401::Ins401_decoder::input_ins_save_data(unsigned char data)
 {
     static uint8_t frame_rev_flag = 0;
     static uint16_t frame_data_len = 0;
     static uint16_t data_rev_index = 0;
     static uint16_t crc_rev_index = 0;
     static uint8_t time_cnt = 0;
+
     if (frame_rev_flag == 0)
     {
         if (data == ins_save_data_head[0])
@@ -201,77 +153,54 @@ static int input_ins_save_data(unsigned char data)
             if (crc_rev_index == 4)
             {
                 uint32_t crc_check = CalculateBlockCRC32(frame_data_len,frame_data);
-                if (crc_check == (crc_rev[3] << 24 | crc_rev[2] << 16 | crc_rev[1] << 8 | crc_rev[0] << 0 ) )
-                {
-                    ins_save_data = (SaveMsg *)(frame_data);
-                    printf("get ins save data\r\n");
-                    printasciisavebuf(&ins_save_data->saveConfig,ins_save_str);
-                }
                 frame_rev_flag = 0;
                 frame_data_len = 0;
                 data_rev_index = 0;
-                crc_rev[0] = 0;
-                crc_rev[1] = 0;
                 crc_rev_index = 0;
+                if (crc_check == (crc_rev[3] << 24 | crc_rev[2] << 16 | crc_rev[1] << 8 | crc_rev[0] << 0 ) )
+                {
+                    ins_save_data = (SaveMsg *)(frame_data);
+                    printasciisavebuf(&ins_save_data->saveConfig,ins_save_str);
+                    ins_save_flag = 1;
+                }
+                else
+                {
+                    ins_save_flag = -1;
+                }
             }
             break;
     }
+    return 0;
 }
 
 
-char* parse_ins_save_data(char *buff, int length)
+// char* parse_ins_save_data(char *buff, int length)
+// {
+//     int pos = 0;
+//     while (length)
+//     {
+//         length--;
+//         int ret = input_ins_save_data(buff[pos++]);
+//     }
+//     return ins_save_str;
+// }
+
+char* get_ins_save_data_str()
 {
-    int pos = 0;
-    while (length)
-    {
-        length--;
-        int ret = input_ins_save_data(buff[pos++]);
-    }
     return ins_save_str;
 }
 
-static int getFileSize(FILE * file)
-{
-	fseek(file, 0L, SEEK_END);
-	int file_size = ftell(file);
-	fseek(file, 0L, SEEK_SET);
-	return file_size;
-}
 
-#if 0
-int main(int argc, char*argv[])
-{
-    uint8_t* parse_str;
-	char filename[100];
-    if(argc < 2)
+void Ins401::Ins401_decoder::ins_save_finish()
+{	
+	create_file(f_ins_log, ".log", NULL);
+	fprintf(f_ins_log, "pack_type = %s, parse_status = %d\n", "ins save", ins_save_flag);
+	create_file(f_ins_save, ".txt", NULL);
+    if(ins_save_flag == 1)
     {
-        printf("please select file to parse\r\n");
-        exit(-1);
+        char* parse_str = get_ins_save_data_str();
+        printf("%s\r\n",parse_str);
+        fwrite(parse_str,1,strlen(parse_str),f_ins_save);
     }
-	memcpy(filename,argv[1],strlen(argv[1]) + 1);
-	FILE* file = fopen(filename, "rb");
-	if (file) {
-		int ret = 0;
-		int file_size = getFileSize(file);
-		int read_size = 0;
-		int readcount = 0;
-		char read_cache[1024] = { 0 };
-		char dirname[256] = { 0 };
-		if(strstr(filename, "ins_save") != NULL)
-		{
-			while (!feof(file)) {
-				readcount = fread(read_cache, sizeof(char), 1024, file);
-				read_size += readcount;          
-				parse_str = parse_ins_save_data(read_cache, readcount);
-				double percent = (double)read_size / (double)file_size * 100;
-                printf("%s\r\n",parse_str);
-				printf("Process : %4.1f %%\r", percent);
-			}
-		}
-		fclose(file);
-		printf("\nfinished\r\n");
-	}
+	close_all_files();
 }
-#endif
-
-

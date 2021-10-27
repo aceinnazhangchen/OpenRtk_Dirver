@@ -32,12 +32,12 @@ namespace Ins401 {
 		uint32_t crc_err : 1; // 0 = normal; 1 = Application CRC error detected
 		uint32_t tx_overflow_err : 1; // 0 = normal; 1 = Tx Overflow occurred 10 consecutive cycles
 		/* GNSS unit status */
-		uint32_t pps_status : 1;  // 0 ¨C normal; 1 ¨C 1PPS pulse exception
-		uint32_t gnss_data_status : 1; // 0 ¨C normal; 1 ¨C GNSS chipset has NO data output
-		uint32_t gnss_signal_status : 1; // 0 ¨C normal; 1 ¨C GNSS chipset has data output but no valid signal detected
+		uint32_t pps_status : 1;  // 0 ï¿½C normal; 1 ï¿½C 1PPS pulse exception
+		uint32_t gnss_data_status : 1; // 0 ï¿½C normal; 1 ï¿½C GNSS chipset has NO data output
+		uint32_t gnss_signal_status : 1; // 0 ï¿½C normal; 1 ï¿½C GNSS chipset has data output but no valid signal detected
 		/* operation */
-		uint32_t power : 1; //  0 ¨C normal; 1 - any component has no power
-		uint32_t MCU_status : 1; // 0 ¨C normal; 1 ¨C MCU failure
+		uint32_t power : 1; //  0 ï¿½C normal; 1 - any component has no power
+		uint32_t MCU_status : 1; // 0 ï¿½C normal; 1 ï¿½C MCU failure
 		uint32_t reserved : 17;
 	} status_bit_t;
 
@@ -143,6 +143,67 @@ namespace Ins401 {
 		uint8_t	 fwd;
 		uint64_t wheel_tick;
 	} odo_t;
+
+	typedef struct {
+		uint16_t gps_week;
+		uint32_t gps_millisecs;
+		int8_t flag;
+		double RVB[3];
+		double CVB[9];
+	} binary_misalign_t;
+
+	typedef struct  SaveConfig
+	{
+		int16_t gnss_week;
+		int32_t gnss_second;
+		int8_t solution_type;
+		int8_t position_type;
+		double latitude;
+		double longitude;
+		float height;
+		int16_t north_velocity;
+		int16_t east_velocity;
+		int16_t down_velocity;
+		int16_t roll;
+		int16_t pitch;
+		int16_t azimuth;
+		int16_t latitude_std;
+		int16_t longitude_std;
+		int16_t altitude_std;
+		int16_t north_velocity_std;
+		int16_t east_velocity_std;
+		int16_t down_velocity_std;
+		int16_t roll_std;
+		int16_t pitch_std;
+		int16_t azimuth_std;
+		int16_t gyro_bias_x;
+		int16_t gyro_bias_y;
+		int16_t gyro_bias_z;
+		int16_t acc_bias_x;
+		int16_t acc_bias_y;
+		int16_t acc_bias_z;
+		int16_t std_gyro_bias_x;
+		int16_t std_gyro_bias_y;
+		int16_t std_gyro_bias_z;
+		int16_t std_acc_bias_x;
+		int16_t std_acc_bias_y;
+		int16_t std_acc_bias_z;
+		int8_t static_type;
+		double reserve1;
+		double reserve2;
+	}SaveConfig;
+
+	typedef struct SaveMsg
+	{
+		uint8_t sync1;            //!< start of packet first byte (0xAA)
+		uint8_t sync2;            //!< start of packet second byte (0x44)
+		uint8_t sync3;            //!< start of packet third  byte (0x12)
+		uint16_t message_length;  //!< Message length (Not including header or CRC)
+		uint16_t message_id;      //!< Message ID number
+		SaveConfig saveConfig;
+		uint8_t crc[4];                           //!< 32-bit cyclic redundancy check (CRC)
+	}SaveMsg;
+
 #pragma pack(pop)
 
 	class Ins401_decoder {
@@ -155,7 +216,9 @@ namespace Ins401 {
 		gnss_sol_t gnss;
 		ins_sol_t ins;
 		odo_t odo;
+		binary_misalign_t misa;
 		diagnostic_msg_t dm;
+		SaveMsg powerup_dr;
 		kml_gnss_t gnss_kml;
 		kml_ins_t ins_kml;
 		std::vector<uint16_t>  packets_type_list;
@@ -173,8 +236,12 @@ namespace Ins401 {
 		FILE* f_ins_txt;
 		FILE* f_odo_csv;
 		FILE* f_odo_txt;
+		FILE* f_misa_csv;
+		FILE* f_misa_txt;
 		FILE* f_dm_csv;
 		FILE* f_rover_rtcm;
+		FILE* f_ins_log;
+		FILE* f_ins_save;
 		bool show_format_time;
 		int pack_num;
 		int crc_right_num;
@@ -191,6 +258,7 @@ namespace Ins401 {
 		void output_odo_raw();
 		void output_dm_raw();
 		void output_rover_rtcm();
+		void output_misa_sol();
 		void parse_packet_payload();
 		void save_imu_bin();
 		int8_t parse_nmea(uint8_t data);		
@@ -199,7 +267,9 @@ namespace Ins401 {
 		void set_base_file_name(char* file_name);
 		void set_show_format_time(bool show);
 		int input_data(uint8_t data);
+		int input_ins_save_data(unsigned char data);		
 		void finish();
+		void ins_save_finish();
 	};
 };
 
