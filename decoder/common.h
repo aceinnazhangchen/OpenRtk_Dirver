@@ -7,7 +7,7 @@
 #define NEAM_HEAD 0x24
 
 #define READ_CACHE_SIZE 4*1024
-#define MAX_NMEA_TYPES 14
+#define MAX_NMEA_TYPES 15
 
 #ifdef __cplusplus
 extern "C" {
