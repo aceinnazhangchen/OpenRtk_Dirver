@@ -10,7 +10,7 @@
 #include <sys/types.h>
 #endif
 
-const char* NMEATypeList[MAX_NMEA_TYPES] = { "$GPGGA","$GNGGA", "$GPRMC", "$GPGSV", "$GLGSV", "$GAGSV", "$BDGSV", "$GPGSA", "$GLGSA", "$GAGSA", "$BDGSA", "$GPZDA", "$GPVTG", "$PASHR", "$GNINS" };
+const char* NMEATypeList[MAX_NMEA_TYPES] = { "$GPGGA","$GNGGA", "$GPRMC", "$GNRMC", "$GPGSV", "$GLGSV", "$GAGSV", "$BDGSV", "$GPGSA", "$GLGSA", "$GAGSA", "$BDGSA", "$GPZDA", "$GNZDA", "$GPVTG", "$PASHR", "$GNINS" };
 
 int getFileSize(FILE* file)
 {
@@ -72,4 +72,18 @@ uint16_t calc_crc(uint8_t* buff, uint32_t nbyte) {
 const char * nmea_type(int index)
 {
 	return NMEATypeList[index];
+}
+
+int is_nmea_char(char c)
+{
+	if (c >= 'A' && c <= 'Z') {
+		return 1;
+	}
+	else if (c >= '0' && c <= '9') {
+		return 1;
+	}
+	else if (c == '$' ,c == '-' || c == ',' || c == '.' || c == '*') {
+		return 1;
+	}
+	return 0;
 }

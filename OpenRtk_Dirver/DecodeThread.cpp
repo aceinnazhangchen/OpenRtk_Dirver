@@ -15,7 +15,7 @@ DecodeThread::DecodeThread(QObject *parent)
 	, m_FileFormat(emDecodeFormat_openrtk_user)
 	, ins_kml_frequency(1000)
 {
-	ins401_decoder = new Ins401::Ins401_decoder();
+	ins401_decoder = new Ins401_Tool::Ins401_decoder();
 	rtcm_split = new Rtcm_Split();
 	e2e_deocder = new E2E::E2E_protocol();
 }
@@ -142,6 +142,7 @@ void DecodeThread::decode_openrtk_inceptio()
 		char read_cache[READ_CACHE_SIZE] = { 0 };
 		set_output_inceptio_file(1);
 		set_base_inceptio_file_name(m_OutBaseName.toLocal8Bit().data());
+		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
 		while (!feof(file)) {
 			if (m_isStop) break;
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);

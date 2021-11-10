@@ -6,6 +6,18 @@
 #include <string.h>
 #include "ins_save_parse.h"
 
+#ifndef  WIN32
+#include<ctype.h>
+inline char* _strlwr(char* str)
+{
+	char* orig = str;
+	// process the string
+	for (; *str != '\0 '; str++)
+		*str = tolower(*str);
+	return orig;
+}
+#endif // ! WIN32
+
 USERDECODERLIB_API void decode_openrtk_user(char* filename)
 {
 	FILE* file = fopen(filename, "rb");
@@ -66,7 +78,7 @@ USERDECODERLIB_API void decode_openrtk_inceptio(char* filename)
 
 USERDECODERLIB_API void decode_ins401(char* filename, char* is_parse_dr)
 {
-	Ins401::Ins401_decoder* ins401_decoder = new Ins401::Ins401_decoder();
+	Ins401_Tool::Ins401_decoder* ins401_decoder = new Ins401_Tool::Ins401_decoder();
 	FILE* file = fopen(filename, "rb");
 	if( (strcmp(_strlwr(is_parse_dr), "false") == 0) && (strstr(_strlwr(filename), "ins_save") != NULL ) )
 	{

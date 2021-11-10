@@ -61,7 +61,7 @@ void decode_openrtk_inceptio(char* filename)
 
 void decode_ins401(char* filename)
 {
-	Ins401::Ins401_decoder* ins401_decoder = new Ins401::Ins401_decoder();
+	Ins401_Tool::Ins401_decoder* ins401_decoder = new Ins401_Tool::Ins401_decoder();
 	FILE* file = fopen(filename, "rb");
 	if (file && ins401_decoder) {
 		int ret = 0;

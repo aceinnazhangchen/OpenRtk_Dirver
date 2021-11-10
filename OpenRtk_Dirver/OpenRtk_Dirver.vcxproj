@@ -13,18 +13,18 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3EBD8D3E-15E2-4740-88EE-550240BDA287}</ProjectGuid>
     <Keyword>QtVS_v304</Keyword>
-    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0.17763.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0.17763.0</WindowsTargetPlatformVersion>
     <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
@@ -100,6 +100,7 @@
     <ClCompile Include="..\decoder\E2E_protocol.cpp" />
     <ClCompile Include="..\decoder\imu_raw.cpp" />
     <ClCompile Include="..\decoder\ins401.cpp" />
+    <ClCompile Include="..\decoder\ins_save_parse.cpp" />
     <ClCompile Include="..\decoder\kml.cpp" />
     <ClCompile Include="..\decoder\mixed_raw.c" />
     <ClCompile Include="..\decoder\openrtk_inceptio.cpp" />
@@ -141,6 +142,7 @@
     <ClInclude Include="..\decoder\gnss_datatype.h" />
     <ClInclude Include="..\decoder\imu_raw.h" />
     <ClInclude Include="..\decoder\ins401.h" />
+    <ClInclude Include="..\decoder\ins_save_parse.h" />
     <ClInclude Include="..\decoder\kml.h" />
     <ClInclude Include="..\decoder\mixed_raw.h" />
     <ClInclude Include="..\decoder\openrtk_inceptio.h" />

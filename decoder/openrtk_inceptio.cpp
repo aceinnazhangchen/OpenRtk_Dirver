@@ -32,6 +32,7 @@ static kml_gnss_t gnss_kml = { 0 };
 static kml_ins_t ins_kml = { 0 };
 
 static int output_inceptio_file = 0;
+static FILE* f_log = NULL;
 static FILE* fnmea = NULL;
 static FILE* fs1 = NULL;
 static FILE* fs2 = NULL;
@@ -49,9 +50,15 @@ static FILE* f_odo = NULL;
 static FILE* fs1_b = NULL;
 static char base_inceptio_file_name[256] = { 0 };
 
+int crc_error_num = 0;
+double	last_GPS_TimeOfWeek = 0.0;
+
 extern void init_inceptio_data() {
+	crc_error_num = 0;
+	last_GPS_TimeOfWeek = 0;
 	memset(&inceptio_raw, 0, sizeof(usrRaw));
 	memset(&inceptio_pak_s1, 0, sizeof(inceptio_s1_t));
+	memset(&inceptio_pak_s2, 0, sizeof(inceptio_s1_t));
 	memset(&inceptio_pak_gN_early, 0, sizeof(inceptio_gN_early_t));
 	memset(&inceptio_pak_gN, 0, sizeof(inceptio_gN_t));
 	memset(&inceptio_pak_iN, 0, sizeof(inceptio_iN_t));
@@ -69,9 +76,17 @@ extern void set_base_inceptio_file_name(char* file_name)
 {
 	strcpy(base_inceptio_file_name, file_name);
 	init_inceptio_data();
+
+	if (strlen(base_inceptio_file_name) == 0) return;
+	char log_file_name[256] = { 0 };
+	if (f_log == NULL) {
+		sprintf(log_file_name, "%s.log", base_inceptio_file_name);
+		f_log = fopen(log_file_name, "w");
+	}
 }
 
 extern void close_inceptio_all_log_file() {
+	if (f_log)fclose(f_log); f_log = NULL;
 	if (fnmea)fclose(fnmea); fnmea = NULL;
 	if (fs1)fclose(fs1); fs1 = NULL;
 	if (fs2)fclose(fs2); fs2 = NULL;
@@ -292,6 +307,7 @@ void write_inceptio_process_file(int index, int type, char* log) {
 	switch (index)
 	{
 	case INCEPTIO_OUT_SCALED1:
+	case INCEPTIO_OUT_SCALED2:
 	{
 		if (f_process) fprintf(f_process, "$GPIMU,%s", log);
 	}
@@ -369,12 +385,12 @@ void output_inceptio_s1() {
 	sprintf(inceptio_output_msg, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", inceptio_pak_s1.GPS_Week, inceptio_pak_s1.GPS_TimeOfWeek,
 		inceptio_pak_s1.x_accel, inceptio_pak_s1.y_accel, inceptio_pak_s1.z_accel, inceptio_pak_s1.x_gyro, inceptio_pak_s1.y_gyro, inceptio_pak_s1.z_gyro);
 	write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
-	//txt
-	sprintf(inceptio_output_msg, "%d,%11.4f,    ,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", inceptio_pak_s1.GPS_Week, inceptio_pak_s1.GPS_TimeOfWeek,
-		inceptio_pak_s1.x_accel, inceptio_pak_s1.y_accel, inceptio_pak_s1.z_accel, inceptio_pak_s1.x_gyro, inceptio_pak_s1.y_gyro, inceptio_pak_s1.z_gyro);
-	write_inceptio_ex_file(inceptio_raw.ntype, inceptio_output_msg);
-	//process
-	write_inceptio_process_file(inceptio_raw.ntype, 0, inceptio_output_msg);
+	////txt
+	//sprintf(inceptio_output_msg, "%d,%11.4f,    ,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", inceptio_pak_s1.GPS_Week, inceptio_pak_s1.GPS_TimeOfWeek,
+	//	inceptio_pak_s1.x_accel, inceptio_pak_s1.y_accel, inceptio_pak_s1.z_accel, inceptio_pak_s1.x_gyro, inceptio_pak_s1.y_gyro, inceptio_pak_s1.z_gyro);
+	//write_inceptio_ex_file(inceptio_raw.ntype, inceptio_output_msg);
+	////process
+	//write_inceptio_process_file(inceptio_raw.ntype, 0, inceptio_output_msg);
 }
 
 void output_inceptio_s2() {
@@ -382,6 +398,12 @@ void output_inceptio_s2() {
 	sprintf(inceptio_output_msg, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", inceptio_pak_s2.GPS_Week, inceptio_pak_s2.GPS_TimeOfWeek,
 		inceptio_pak_s2.x_accel, inceptio_pak_s2.y_accel, inceptio_pak_s2.z_accel, inceptio_pak_s2.x_gyro, inceptio_pak_s2.y_gyro, inceptio_pak_s2.z_gyro);
 	write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
+	//txt
+	sprintf(inceptio_output_msg, "%d,%11.4f,    ,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", inceptio_pak_s2.GPS_Week, inceptio_pak_s2.GPS_TimeOfWeek,
+		inceptio_pak_s2.x_accel, inceptio_pak_s2.y_accel, inceptio_pak_s2.z_accel, inceptio_pak_s2.x_gyro, inceptio_pak_s2.y_gyro, inceptio_pak_s2.z_gyro);
+	write_inceptio_ex_file(inceptio_raw.ntype, inceptio_output_msg);
+	//process
+	write_inceptio_process_file(inceptio_raw.ntype, 0, inceptio_output_msg);
 
 }
 
@@ -420,6 +442,13 @@ void output_inceptio_gN_early() {
 }
 
 void output_inceptio_gN() {
+	double span_time = 0;
+	if (last_GPS_TimeOfWeek != 0.0) {
+		span_time = inceptio_pak_gN.GPS_TimeOfWeek - last_GPS_TimeOfWeek;
+		if (span_time > 1) {
+			fprintf(f_log, "%11.4f,%11.4f,%f \n", last_GPS_TimeOfWeek, inceptio_pak_gN.GPS_TimeOfWeek, span_time);
+		}
+	}
 	float north_vel = (float)inceptio_pak_gN.velocityNorth / 100.0;
 	float east_vel = (float)inceptio_pak_gN.velocityEast / 100.0;
 	float up_vel = (float)inceptio_pak_gN.velocityUp / 100.0;
@@ -454,6 +483,8 @@ void output_inceptio_gN() {
 	write_inceptio_process_file(inceptio_raw.ntype, 1, inceptio_output_msg);
 	//kml
 	inceptio_append_gnss_kml();
+
+	last_GPS_TimeOfWeek = inceptio_pak_gN.GPS_TimeOfWeek;
 }
 
 void output_inceptio_iN() {
@@ -626,10 +657,12 @@ int parse_inceptio_nmea(uint8_t data) {
 		}
 	}
 	else if (inceptio_raw.nmea_flag == 2) {
-		inceptio_raw.nmea[inceptio_raw.nmeabyte++] = data;
-		if (inceptio_raw.nmea[inceptio_raw.nmeabyte - 1] == 0x0A || inceptio_raw.nmea[inceptio_raw.nmeabyte - 2] == 0x0D) {
-			inceptio_raw.nmea[inceptio_raw.nmeabyte - 2] = 0x0A;
-			inceptio_raw.nmea[inceptio_raw.nmeabyte - 1] = 0;
+		if (is_nmea_char(data)) {
+			inceptio_raw.nmea[inceptio_raw.nmeabyte++] = data;
+		}
+		else{
+			inceptio_raw.nmea[inceptio_raw.nmeabyte++] = 0x0A;
+			inceptio_raw.nmea[inceptio_raw.nmeabyte++] = 0;
 			inceptio_raw.nmea_flag = 0;
 			if (output_inceptio_file) {
 				write_inceptio_log_file(0, (char*)inceptio_raw.nmea);
@@ -674,9 +707,14 @@ int input_inceptio_raw(uint8_t data)
 		inceptio_raw.buff[inceptio_raw.nbyte++] = data;
 		if (inceptio_raw.nbyte == inceptio_raw.buff[2] + 5) { //5 = [type1,type2,len] + [crc1,crc2]
 			uint16_t packet_crc = 256 * inceptio_raw.buff[inceptio_raw.nbyte - 2] + inceptio_raw.buff[inceptio_raw.nbyte - 1];
-			if (packet_crc == calc_crc(inceptio_raw.buff, inceptio_raw.nbyte - 2)) {
+			uint16_t cal_crc = calc_crc(inceptio_raw.buff, inceptio_raw.nbyte - 2);
+			if (packet_crc == cal_crc) {
 				parse_inceptio_packet_payload(inceptio_raw.buff, inceptio_raw.nbyte);
 				ret = 1;
+			}
+			else {
+				crc_error_num++;
+				fprintf(f_log, "type=%c%c,crc=0x%04x:0x%04x,size=%d\n", inceptio_raw.buff[0], inceptio_raw.buff[1],packet_crc, cal_crc, inceptio_raw.nbyte);
 			}
 			inceptio_raw.flag = 0;
 			inceptio_raw.nbyte = 0;

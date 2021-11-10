@@ -4,7 +4,8 @@
 #include <map>
 #include "kml.h"
 
-namespace Ins401 {
+namespace Ins401_Tool {
+
 #pragma pack(push, 1)
 	typedef struct {
 		uint8_t nmea_flag;
@@ -132,6 +133,7 @@ namespace Ins401 {
 		uint32_t	Device_status_bit_field;
 		float		IMU_Unit_temperature;
 		float		MCU_temperature;
+		float		STA9100_temperature;
 	}diagnostic_msg_t;
 
 	typedef struct

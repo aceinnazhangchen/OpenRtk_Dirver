@@ -3,18 +3,14 @@
 #include <string.h>
 #include "ins401.h"
 
-using namespace Ins401;
-
 #ifndef CRC32_POLYNOMIAL
 #define CRC32_POLYNOMIAL 0xEDB88320L
 #endif // !CRC32_POLYNOMIAL
 
-
-
 uint8_t ins_save_data_head[3] = {0xaa,0x44,0x12};
 uint8_t frame_data[512];
 uint8_t crc_rev[4];
-SaveMsg* ins_save_data;
+Ins401_Tool::SaveMsg* ins_save_data;
 static char ins_save_str[512];
 uint32_t ins_save_flag;
 
@@ -49,7 +45,7 @@ static unsigned long CalculateBlockCRC32(unsigned long ulCount,   /* Number of b
 }
 
 
-int printasciisavebuf(SaveConfig* msaveconfig, char* buff)
+int printasciisavebuf(Ins401_Tool::SaveConfig* msaveconfig, char* buff)
 {
 	double dms1[3], dms2[3], amag = 0.0;
 	char *p = buff, *q, sum;
@@ -75,7 +71,7 @@ int printasciisavebuf(SaveConfig* msaveconfig, char* buff)
 	return p - (char *)buff;
 }
 
-int Ins401::Ins401_decoder::input_ins_save_data(unsigned char data)
+int Ins401_Tool::Ins401_decoder::input_ins_save_data(unsigned char data)
 {
     static uint8_t frame_rev_flag = 0;
     static uint16_t frame_data_len = 0;
@@ -191,7 +187,7 @@ char* get_ins_save_data_str()
 }
 
 
-void Ins401::Ins401_decoder::ins_save_finish()
+void Ins401_Tool::Ins401_decoder::ins_save_finish()
 {	
 	create_file(f_ins_log, ".log", NULL);
 	fprintf(f_ins_log, "pack_type = %s, parse_status = %d\n", "ins save", ins_save_flag);

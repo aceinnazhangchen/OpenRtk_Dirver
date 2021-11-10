@@ -46,7 +46,7 @@ private:
 	QString m_FileName;
 	QString m_OutBaseName;
 	QTime m_TimeCounter;
-	Ins401::Ins401_decoder* ins401_decoder;
+	Ins401_Tool::Ins401_decoder* ins401_decoder;
 	Rtcm_Split* rtcm_split;
 	E2E::E2E_protocol* e2e_deocder;
 	bool m_show_time;

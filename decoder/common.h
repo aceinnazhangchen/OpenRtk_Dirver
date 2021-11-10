@@ -7,7 +7,7 @@
 #define NEAM_HEAD 0x24
 
 #define READ_CACHE_SIZE 4*1024
-#define MAX_NMEA_TYPES 15
+#define MAX_NMEA_TYPES 17
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,7 +18,7 @@ extern "C" {
 	void createDirByFilePath(const char* filename, char* dirname);
 	uint16_t calc_crc(uint8_t* buff, uint32_t nbyte);
 	const char* nmea_type(int index);
-
+	int is_nmea_char(char c);
 #ifdef __cplusplus
 }
 #endif
