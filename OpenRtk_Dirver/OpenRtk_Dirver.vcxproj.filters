@@ -121,6 +121,9 @@
     <ClCompile Include="SplitTools.cpp">
       <Filter>Source Files\Tools</Filter>
     </ClCompile>
+    <ClCompile Include="SplitThread.cpp">
+      <Filter>Source Files\Thread</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="StreamManager.h">
@@ -152,6 +155,9 @@
     </QtMoc>
     <QtMoc Include="SplitTools.h">
       <Filter>Header Files\Tools</Filter>
+    </QtMoc>
+    <QtMoc Include="SplitThread.h">
+      <Filter>Header Files\Thread</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>

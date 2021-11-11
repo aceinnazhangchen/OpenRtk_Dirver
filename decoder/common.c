@@ -12,12 +12,32 @@
 
 const char* NMEATypeList[MAX_NMEA_TYPES] = { "$GPGGA","$GNGGA", "$GPRMC", "$GNRMC", "$GPGSV", "$GLGSV", "$GAGSV", "$BDGSV", "$GPGSA", "$GLGSA", "$GAGSA", "$BDGSA", "$GPZDA", "$GNZDA", "$GPVTG", "$PASHR", "$GNINS" };
 
-int getFileSize(FILE* file)
+//int getFileSize(FILE* file)
+//{
+//	fseek(file, 0L, SEEK_END);
+//	int file_size = ftell(file);
+//	fseek(file, 0L, SEEK_SET);
+//	return file_size;
+//}
+
+int64_t getFileSize(FILE * file)
 {
-	fseek(file, 0L, SEEK_END);
-	int file_size = ftell(file);
-	fseek(file, 0L, SEEK_SET);
+	int64_t file_size = 0;
+#if defined(_WIN32) || defined(_WIN64)
+#if _MSC_VER >= 1400
+	_fseeki64(file, (int64_t)(0), SEEK_END);
+	file_size = _ftelli64(file);
+	_fseeki64(file, (int64_t)(0), SEEK_SET);
 	return file_size;
+#else
+#error Visual Studio version is less than 8.0(VS 2005) !
+#endif
+#else
+	fseeko(file, (int64_t)(0), SEEK_END);
+	file_size = ftello(fp);
+	fseeko(file, (int64_t)(0), SEEK_SET);
+	return file_size;
+#endif
 }
 
 int makeDir(char* folderPath)

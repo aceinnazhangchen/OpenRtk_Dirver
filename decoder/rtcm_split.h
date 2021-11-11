@@ -13,6 +13,8 @@ public:
 
 	void init();
 	void set_base_file_name(char* file_name);
+	void set_time_range(uint32_t start_time,uint32_t end_time);
+	void set_time_silce(uint32_t time_silce);
 	void close_files();
 	void input_data(uint8_t data);
 	void create_new_split_file();
@@ -27,7 +29,11 @@ private:
 	FILE* nav_file;
 	FILE* log_file;
 	FILE* time_split_file;
+	uint32_t split_index;
 	time_t split_start_time;
+	time_t time_range_start;
+	time_t time_range_end;
 	time_t last_time;
+	time_t m_time_slice;
 };
 

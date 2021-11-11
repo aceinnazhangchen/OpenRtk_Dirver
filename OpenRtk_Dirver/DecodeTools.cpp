@@ -10,10 +10,8 @@ DecodeTools::DecodeTools(QWidget *parent)
 	ui.setupUi(this);
 	setAcceptDrops(true);
 	m_DecodeThread = new DecodeThread(this);
-
 	connect(ui.select_btn, SIGNAL(clicked()), this, SLOT(onSelectFileClicked()));
 	connect(ui.decode_btn, SIGNAL(clicked()), this, SLOT(onDecodeClicked()));
-
 	connect(m_DecodeThread, SIGNAL(sgnProgress(int, int)), this, SLOT(onProcess(int, int)));
 	connect(m_DecodeThread, SIGNAL(sgnFinished()), this, SLOT(onFinished()));
 

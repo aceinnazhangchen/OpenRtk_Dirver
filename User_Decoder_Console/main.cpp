@@ -9,7 +9,7 @@ void decode_openrtk_user(char* filename)
 	if (file) {
 		char dirname[256] = { 0 };
 		int ret = 0;
-		int file_size = getFileSize(file);
+		int64_t file_size = getFileSize(file);
 		size_t read_size = 0;
 		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
@@ -37,7 +37,7 @@ void decode_openrtk_inceptio(char* filename)
 	if (file) {
 		char dirname[256] = { 0 };
 		int ret = 0;
-		int file_size = getFileSize(file);
+		int64_t file_size = getFileSize(file);
 		size_t read_size = 0;
 		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
@@ -65,7 +65,7 @@ void decode_ins401(char* filename)
 	FILE* file = fopen(filename, "rb");
 	if (file && ins401_decoder) {
 		int ret = 0;
-		int file_size = getFileSize(file);
+		int64_t file_size = getFileSize(file);
 		size_t read_size = 0;
 		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };

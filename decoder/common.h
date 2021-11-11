@@ -9,11 +9,14 @@
 #define READ_CACHE_SIZE 4*1024
 #define MAX_NMEA_TYPES 17
 
+#define HOUR	(3600)
+#define MINUTE  (60)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-	int getFileSize(FILE* file);
+	int64_t getFileSize(FILE* file);
 	int makeDir(char* folderPath);
 	void createDirByFilePath(const char* filename, char* dirname);
 	uint16_t calc_crc(uint8_t* buff, uint32_t nbyte);

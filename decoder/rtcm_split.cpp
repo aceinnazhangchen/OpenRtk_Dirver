@@ -1,9 +1,11 @@
 #include "rtcm_split.h"
 #include <string.h>
-
-#define HOUR 3600
+#include "common.h"
 
 Rtcm_Split::Rtcm_Split()
+	:time_range_start(0)
+	,time_range_end(0)
+	,m_time_slice(HOUR)
 {
 	init();
 }
@@ -14,6 +16,7 @@ Rtcm_Split::~Rtcm_Split()
 
 void Rtcm_Split::init()
 {
+	split_index = 0;
 	split_start_time = 0;
 	last_time = 0;
 	memset(base_file_name, 0, 256);
@@ -31,6 +34,17 @@ void Rtcm_Split::init()
 void Rtcm_Split::set_base_file_name(char * file_name)
 {
 	strcpy(base_file_name, file_name);
+}
+
+void Rtcm_Split::set_time_range(uint32_t start_time, uint32_t end_time)
+{
+	time_range_start = start_time + 8 * HOUR;
+	time_range_end = end_time + 8 * HOUR;
+}
+
+void Rtcm_Split::set_time_silce(uint32_t time_silce)
+{
+	m_time_slice = time_silce;
 }
 
 void Rtcm_Split::close_files()
@@ -82,8 +96,9 @@ void Rtcm_Split::input_data(uint8_t data)
 			sprintf(file_path, "%s_out.log", base_file_name);
 			log_file = fopen(file_path, "wb");
 		}
-		if (obs.time.time > 0 && obs.time.time >= 1636369200 && obs.time.time <= 1636370100) {
-			if (obs.time.time - split_start_time >= HOUR) {
+		if (obs.time.time > 0 && obs.time.time >= time_range_start && obs.time.time < time_range_end) {
+			if (obs.time.time - time_range_start >= m_time_slice * split_index) {
+				split_index++;
 				split_start_time = obs.time.time;
 				create_new_split_file();				
 			}

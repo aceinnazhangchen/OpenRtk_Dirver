@@ -394,7 +394,7 @@
   </action>
   <action name="actionSplit">
    <property name="text">
-    <string>Split</string>
+    <string>Spliter</string>
    </property>
   </action>
  </widget>

@@ -1,12 +1,11 @@
 #include "DecodeThread.h"
-#include "StreamManager.h"
+#include <QDir>
+#include <QList>
+#include "common.h"
 #include "openrtk_user.h"
 #include "openrtk_inceptio.h"
 #include "mixed_raw.h"
 #include "imu_raw.h"
-#include <QList>
-
-#define READ_CACHE_SIZE 4*1024
 
 DecodeThread::DecodeThread(QObject *parent)
 	: QThread(parent)
@@ -16,14 +15,12 @@ DecodeThread::DecodeThread(QObject *parent)
 	, ins_kml_frequency(1000)
 {
 	ins401_decoder = new Ins401_Tool::Ins401_decoder();
-	rtcm_split = new Rtcm_Split();
 	e2e_deocder = new E2E::E2E_protocol();
 }
 
 DecodeThread::~DecodeThread()
 {
 	if (ins401_decoder) {delete ins401_decoder; ins401_decoder = NULL;}
-	if (rtcm_split) { delete rtcm_split; rtcm_split = NULL; }
 }
 
 void DecodeThread::run()
@@ -48,9 +45,6 @@ void DecodeThread::run()
 			break;
 		case emDecodeFormat_ins401:
 			decode_ins401();
-			break;
-		case emDecodeFormat_RTCM_Split:
-			split_rtcm();
 			break;
 		case emDecodeFormat_E2E_protocol:
 			decode_e2e_protocol();
@@ -242,34 +236,9 @@ void DecodeThread::decode_ins401()
 	}
 }
 
-void DecodeThread::split_rtcm()
-{
-	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
-	if (file && rtcm_split) {
-		int64_t file_size = getFileSize(file);
-		int64_t read_size = 0;
-		int readcount = 0;
-		char read_cache[READ_CACHE_SIZE] = { 0 };
-		rtcm_split->init();
-		rtcm_split->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
-		while (!feof(file)) {
-			if (m_isStop) break;
-			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
-			read_size += readcount;
-			for (int i = 0; i < readcount; i++) {
-				rtcm_split->input_data(read_cache[i]);
-			}
-			double percent = (double)read_size / (double)file_size * 10000;
-			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
-		}
-		rtcm_split->close_files();
-		fclose(file);
-	}
-}
-
 void DecodeThread::decode_e2e_protocol() {
 	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
-	if (file && rtcm_split) {
+	if (file) {
 		int64_t file_size = getFileSize(file);
 		int64_t read_size = 0;
 		int readcount = 0;
@@ -289,23 +258,4 @@ void DecodeThread::decode_e2e_protocol() {
 		e2e_deocder->finish();
 		fclose(file);
 	}
-}
-
-int64_t DecodeThread::getFileSize(FILE * file)
-{
-	int64_t file_size = 0;
-#if defined(_WIN32) || defined(_WIN64)
-#if _MSC_VER >= 1400
-	_fseeki64(file, (int64_t)(0), SEEK_END);
-	file_size = _ftelli64(file);
-	_fseeki64(file, (int64_t)(0), SEEK_SET);
-	return file_size;
-#else
-#error Visual Studio version is less than 8.0(VS 2005) !
-#endif
-#else
-	fseeko(file, (int64_t)(0), SEEK_END);
-	file_size = ftello(fp);
-	fseeko(file, (int64_t)(0), SEEK_SET);
-#endif
 }

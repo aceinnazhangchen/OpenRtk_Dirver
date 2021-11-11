@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>572</width>
+    <width>608</width>
     <height>127</height>
    </rect>
   </property>
@@ -29,7 +29,7 @@
       <widget class="QLineEdit" name="filepath_edt"/>
      </item>
      <item>
-      <widget class="QToolButton" name="select_btn_2">
+      <widget class="QToolButton" name="select_btn">
        <property name="text">
         <string>...</string>
        </property>
@@ -61,12 +61,67 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QDateEdit" name="dateEdit"/>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>start time</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDateTimeEdit" name="dateTimeEdit_start">
+       <property name="displayFormat">
+        <string>yyyy/MM/dd HH:mm:ss</string>
+       </property>
+       <property name="calendarPopup">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>end time</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDateTimeEdit" name="dateTimeEdit_end">
+       <property name="displayFormat">
+        <string>yyyy/MM/dd HH:mm:ss</string>
+       </property>
+       <property name="calendarPopup">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>time slice</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QTimeEdit" name="timeEdit">
+       <property name="date">
+        <date>
+         <year>1970</year>
+         <month>1</month>
+         <day>1</day>
+        </date>
+       </property>
+       <property name="time">
+        <time>
+         <hour>0</hour>
+         <minute>0</minute>
+         <second>0</second>
+        </time>
+       </property>
        <property name="displayFormat">
         <string>HH:mm:ss</string>
+       </property>
+       <property name="calendarPopup">
+        <bool>false</bool>
        </property>
       </widget>
      </item>

@@ -115,6 +115,7 @@
     <ClCompile Include="MergeThread.cpp" />
     <ClCompile Include="MergeTools.cpp" />
     <ClCompile Include="SingleStream.cpp" />
+    <ClCompile Include="SplitThread.cpp" />
     <ClCompile Include="SplitTools.cpp" />
     <ClCompile Include="StreamConfigUI.cpp" />
     <ClCompile Include="StreamManager.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
     <ClInclude Include="resource.h" />
+    <QtMoc Include="SplitThread.h" />
     <QtMoc Include="SplitTools.h" />
     <QtMoc Include="AnalysisTools.h" />
     <QtMoc Include="AnalysisThread.h" />
