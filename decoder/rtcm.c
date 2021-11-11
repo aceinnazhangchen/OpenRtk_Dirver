@@ -1256,13 +1256,13 @@ static void decode_type999_id21(rtcm_t *rtcm, obs_t *obs)
 	{
 		rtcm->teseo.fix_status = 0;
 	}
-	rtcm->teseo.geo_sep = (float)rtcm_getbits(rtcm->buff, i, 15) * 0.01;
+	rtcm->teseo.geo_sep = (float)rtcm_getbits(rtcm->buff, i, 15) * 0.01f;
 	i += 15;
 	if (fabs(rtcm->teseo.geo_sep) > 100.0)
 	{
 		rtcm->teseo.geo_sep = 0.0;
 	}
-	rtcm->teseo.age = (float)rtcm_getbits(rtcm->buff, i, 24) * 0.001;
+	rtcm->teseo.age = (float)rtcm_getbits(rtcm->buff, i, 24) * 0.001f;
 	i += 24;
 	/* Differential Reference Station ID */
 	i += 12;
@@ -5100,7 +5100,7 @@ extern int input_rtcm3(unsigned char data, unsigned int stnID, gnss_rtcm_t *gnss
 
 				if (fabs(tt) > SECONDS_IN_WEEK *0.5)
 				{
-					week = floor(rtcm->teseo.time / SECONDS_IN_WEEK);
+					week = (int)floor(rtcm->teseo.time / SECONDS_IN_WEEK);
 					tow = rtcm->teseo.time - week * SECONDS_IN_WEEK;
 					rtcm->time = obs->time = gpst2time(week, tow);
 				}

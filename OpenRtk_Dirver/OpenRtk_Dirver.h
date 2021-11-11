@@ -11,6 +11,7 @@
 #include "DecodeTools.h"
 #include "MergeTools.h"
 #include "AnalysisTools.h"
+#include "SplitTools.h"
 
 enum emStates
 {
@@ -37,6 +38,7 @@ private:
 	DecodeTools* m_DecodeToolsWidget;
 	MergeTools* m_MergeTools;
 	AnalysisTools* m_AnalysisTools;
+	SplitTools* m_SplitTools;
 public slots:
 	void onSearchComPort();
 	void onOpenClose();
@@ -48,4 +50,5 @@ public slots:
 	void onDecodeWidgetOpen();
 	void onMergeWidgetOpen();
 	void onAnalysisWidgetOpen();
+	void onSplitWidgetOpen();
 };

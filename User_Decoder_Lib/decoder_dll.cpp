@@ -25,8 +25,8 @@ USERDECODERLIB_API void decode_openrtk_user(char* filename)
 		char dirname[256] = { 0 };
 		int ret = 0;
 		int file_size = getFileSize(file);
-		int read_size = 0;
-		int readcount = 0;
+		size_t read_size = 0;
+		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
 		set_output_user_file(1);
 		createDirByFilePath(filename, dirname);
@@ -34,7 +34,7 @@ USERDECODERLIB_API void decode_openrtk_user(char* filename)
 		while (!feof(file)) {
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
 			read_size += readcount;
-			for (int i = 0; i < readcount; i++) {
+			for (size_t i = 0; i < readcount; i++) {
 				ret = input_user_raw(read_cache[i]);
 			}
 			double percent = (double)read_size / (double)file_size * 100;
@@ -54,8 +54,8 @@ USERDECODERLIB_API void decode_openrtk_inceptio(char* filename)
 		char dirname[256] = { 0 };
 		int ret = 0;
 		int file_size = getFileSize(file);
-		int read_size = 0;
-		int readcount = 0;
+		size_t read_size = 0;
+		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
 		set_output_inceptio_file(1);
 		createDirByFilePath(filename, dirname);
@@ -63,7 +63,7 @@ USERDECODERLIB_API void decode_openrtk_inceptio(char* filename)
 		while (!feof(file)) {
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
 			read_size += readcount;
-			for (int i = 0; i < readcount; i++) {
+			for (size_t i = 0; i < readcount; i++) {
 				ret = input_inceptio_raw(read_cache[i]);
 			}
 			double percent = (double)read_size / (double)file_size * 100;
@@ -87,8 +87,8 @@ USERDECODERLIB_API void decode_ins401(char* filename, char* is_parse_dr)
 	if (file && ins401_decoder) {
 		int ret = 0;
 		int file_size = getFileSize(file);
-		int read_size = 0;
-		int readcount = 0;
+		size_t read_size = 0;
+		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
 		char dirname[256] = { 0 };
 		createDirByFilePath(filename, dirname);
@@ -97,7 +97,7 @@ USERDECODERLIB_API void decode_ins401(char* filename, char* is_parse_dr)
 		while (!feof(file)) {
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
 			read_size += readcount;
-			for (int i = 0; i < readcount; i++) {
+			for (size_t i = 0; i < readcount; i++) {
 				ret = ins401_decoder->input_data(read_cache[i]);
 			}
 			double percent = (double)read_size / (double)file_size * 100;

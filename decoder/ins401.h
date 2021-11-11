@@ -33,13 +33,20 @@ namespace Ins401_Tool {
 		uint32_t crc_err : 1; // 0 = normal; 1 = Application CRC error detected
 		uint32_t tx_overflow_err : 1; // 0 = normal; 1 = Tx Overflow occurred 10 consecutive cycles
 		/* GNSS unit status */
-		uint32_t pps_status : 1;  // 0 �C normal; 1 �C 1PPS pulse exception
-		uint32_t gnss_data_status : 1; // 0 �C normal; 1 �C GNSS chipset has NO data output
-		uint32_t gnss_signal_status : 1; // 0 �C normal; 1 �C GNSS chipset has data output but no valid signal detected
+		uint32_t pps_status : 1;  // 0 = normal; 1 = 1PPS pulse exception
+		uint32_t gnss_data_status : 1; // 0 = normal; 1 = GNSS chipset has NO data output
+		uint32_t gnss_signal_status : 1; // 0 = normal; 1 = GNSS chipset has data output but no valid signal detected
 		/* operation */
-		uint32_t power : 1; //  0 �C normal; 1 - any component has no power
-		uint32_t MCU_status : 1; // 0 �C normal; 1 �C MCU failure
-		uint32_t reserved : 17;
+		uint32_t power : 1; //  0 = normal; 1 = any component has no power
+		uint32_t MCU_status : 1; // 0 = normal; 1 = MCU failure
+		uint32_t temperature_under_mcu_flag : 1;  // 0 = normal; 1 = under temperature
+		uint32_t temperature_under_sta_flag : 1;  // 0 = normal; 1 = under temperature
+		uint32_t temperature_under_imu_flag : 1;  // 0 = normal; 1 = under temperature
+
+		uint32_t temperature_over_mcu_flag : 1;   // 0 = normal; 1 = over temperature
+		uint32_t temperature_over_sta_flag : 1;   // 0 = normal; 1 = over temperature
+		uint32_t temperature_over_imu_flag : 1;   // 0 = normal; 1 = over temperature
+		uint32_t reserved : 11;
 	} status_bit_t;
 
 	typedef struct {
@@ -128,12 +135,12 @@ namespace Ins401_Tool {
 	}ins_sol_t;
 
 	typedef struct {
-		uint16_t	gps_week;
-		uint32_t	gps_millisecs;
-		uint32_t	Device_status_bit_field;
-		float		IMU_Unit_temperature;
-		float		MCU_temperature;
-		float		STA9100_temperature;
+		uint16_t		gps_week;
+		uint32_t		gps_millisecs;
+		status_bit_t	status_bit;
+		float			IMU_Unit_temperature;
+		float			MCU_temperature;
+		float			STA9100_temperature;
 	}diagnostic_msg_t;
 
 	typedef struct

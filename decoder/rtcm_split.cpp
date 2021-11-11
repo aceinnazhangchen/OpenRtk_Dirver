@@ -46,6 +46,7 @@ void Rtcm_Split::close_files()
 
 void Rtcm_Split::input_data(uint8_t data)
 {
+	//set_approximate_time(2021, 312, &rtcm);
 	int ret = 0;
 	ret = input_rtcm3_data(&rtcm,data, &obs, &nav);
 	if (is_complete_rtcm()) {
@@ -81,8 +82,8 @@ void Rtcm_Split::input_data(uint8_t data)
 			sprintf(file_path, "%s_out.log", base_file_name);
 			log_file = fopen(file_path, "wb");
 		}
-		if (obs.time.time > 0) {
-			if (obs.time.time - split_start_time >= HOUR * 2) {
+		if (obs.time.time > 0 && obs.time.time >= 1636369200 && obs.time.time <= 1636370100) {
+			if (obs.time.time - split_start_time >= HOUR) {
 				split_start_time = obs.time.time;
 				create_new_split_file();				
 			}

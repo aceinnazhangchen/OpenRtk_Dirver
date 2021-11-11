@@ -267,11 +267,11 @@ namespace Ins401_Tool {
 			create_file(f_misa_csv, "misa.csv", "DateTime(),GPS_Week(),GPS_TimeOfWeek(s),flag(),RVB1(),RVB2(),RVB3(),CVB1(),CVB2(),CVB3()\n");
 			gtime_t gpstime = gpst2time(odo.GPS_Week, (double)odo.GPS_TimeOfWeek / 1000.0);
 			gtime_t utctime = gpst2utc(gpstime);
-			char* time = time_str(utctime, 2);
-			fprintf(f_misa_csv, "%s,%d,%d,%d,%f,%f,%f,%f,%f,%f\n", time, misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0], misa.RVB[1], misa.RVB[2], misa.CVB[0], misa.CVB[1], misa.CVB[2]);
+			char* timestr = time_str(utctime, 2);
+			fprintf(f_misa_csv, "%s,%d,%d,%d,%f,%f,%f,%f,%f,%f\n", timestr, misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0], misa.RVB[1], misa.RVB[2], misa.CVB[0], misa.CVB[1], misa.CVB[2]);
 		}
 		else {
-			printf("%s,%d,%d,%d,%f,%f,%f,%f,%f,%f\n", time, misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0], misa.RVB[1], misa.RVB[2], misa.CVB[0], misa.CVB[1], misa.CVB[2]);
+			printf("%d,%d,%d,%f,%f,%f,%f,%f,%f\n", misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0], misa.RVB[1], misa.RVB[2], misa.CVB[0], misa.CVB[1], misa.CVB[2]);
 			create_file(f_misa_csv, "misa.csv", "DateTime(),GPS_Week(),GPS_TimeOfWeek(s),flag(),RVB1(),RVB2(),RVB3(),CVB1(),CVB2(),CVB3()\n");
 			fprintf(f_misa_csv, "%d,%d,%d,%f,%f,%f,%f,%f,%f\n", misa.gps_week, misa.gps_millisecs, misa.flag, misa.RVB[0], misa.RVB[1], misa.RVB[2], misa.CVB[0], misa.CVB[1], misa.CVB[2]);
 		}
@@ -310,15 +310,35 @@ namespace Ins401_Tool {
 
 	void Ins401_decoder::output_dm_raw() {
 		if (show_format_time) {
-			create_file(f_dm_csv, "dm.csv", "DateTime(),GPS_Week(),GPS_TimeOfWeek(s),Device Status(),IMU Temperature(),MCU Temperature(),STA9100 Temperature()\n");
+			create_file(f_dm_csv, "dm.csv", "DateTime(),GPS_Week(),GPS_TimeOfWeek(s),\
+master_fail, hw_err, sw_err, config_err, calib_err, accel_degradation, gyro_degradation,\
+forced_restart, crc_err, tx_overflow_err, pps_status, gnss_data_status, gnss_signal_status,\
+power, MCU_status, temperature_under_mcu_flag, temperature_under_sta_flag, temperature_under_imu_flag,\
+temperature_over_mcu_flag, temperature_over_sta_flag, temperature_over_imu_flag,\
+IMU Temperature(),MCU Temperature(),STA9100 Temperature()\n");
 			gtime_t gpstime = gpst2time(dm.gps_week, (double)dm.gps_millisecs / 1000.0);
 			gtime_t utctime = gpst2utc(gpstime);
 			char* time = time_str(utctime, 2);
-			fprintf(f_dm_csv, "%s,%d,%11.3f,%3d,%7.1f,%7.1f,%7.1f\n", time, dm.gps_week, (double)dm.gps_millisecs / 1000.0, dm.Device_status_bit_field, dm.IMU_Unit_temperature, dm.MCU_temperature, dm.STA9100_temperature);
+			fprintf(f_dm_csv, "%s,%d,%11.3f, %2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d, %5.1f,%5.1f,%5.1f\n", time, dm.gps_week, (double)dm.gps_millisecs / 1000.0,
+				dm.status_bit.master_fail, dm.status_bit.hw_err, dm.status_bit.sw_err, dm.status_bit.config_err, dm.status_bit.calib_err, dm.status_bit.accel_degradation, dm.status_bit.gyro_degradation,
+				dm.status_bit.forced_restart, dm.status_bit.crc_err, dm.status_bit.tx_overflow_err, dm.status_bit.pps_status, dm.status_bit.gnss_data_status, dm.status_bit.gnss_signal_status,
+				dm.status_bit.power, dm.status_bit.MCU_status, dm.status_bit.temperature_under_mcu_flag, dm.status_bit.temperature_under_sta_flag, dm.status_bit.temperature_under_imu_flag,
+				dm.status_bit.temperature_over_mcu_flag, dm.status_bit.temperature_over_sta_flag, dm.status_bit.temperature_over_imu_flag,
+				dm.IMU_Unit_temperature, dm.MCU_temperature, dm.STA9100_temperature);
 		}
 		else {
-			create_file(f_dm_csv, "dm.csv", "GPS_Week(),GPS_TimeOfWeek(s),Device Status(),IMU Temperature(),MCU Temperature(),STA9100 Temperature()\n");
-			fprintf(f_dm_csv, "%d,%11.3f,%3d,%7.1f,%7.1f,%7.1f\n", dm.gps_week, (double)dm.gps_millisecs / 1000.0, dm.Device_status_bit_field, dm.IMU_Unit_temperature, dm.MCU_temperature, dm.STA9100_temperature);
+			create_file(f_dm_csv, "dm.csv", "GPS_Week(),GPS_TimeOfWeek(s),\
+master_fail, hw_err, sw_err, config_err, calib_err, accel_degradation, gyro_degradation,\
+forced_restart, crc_err, tx_overflow_err, pps_status, gnss_data_status, gnss_signal_status,\
+power, MCU_status, temperature_under_mcu_flag, temperature_under_sta_flag, temperature_under_imu_flag,\
+temperature_over_mcu_flag, temperature_over_sta_flag, temperature_over_imu_flag,\
+IMU Temperature(),MCU Temperature(),STA9100 Temperature()\n");
+			fprintf(f_dm_csv, "%d,%11.3f, %2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,  %5.1f,%5.1f,%5.1f\n", dm.gps_week, (double)dm.gps_millisecs / 1000.0, 
+				dm.status_bit.master_fail, dm.status_bit.hw_err, dm.status_bit.sw_err, dm.status_bit.config_err, dm.status_bit.calib_err, dm.status_bit.accel_degradation, dm.status_bit.gyro_degradation,
+				dm.status_bit.forced_restart, dm.status_bit.crc_err, dm.status_bit.tx_overflow_err, dm.status_bit.pps_status, dm.status_bit.gnss_data_status, dm.status_bit.gnss_signal_status,
+				dm.status_bit.power, dm.status_bit.MCU_status, dm.status_bit.temperature_under_mcu_flag, dm.status_bit.temperature_under_sta_flag, dm.status_bit.temperature_under_imu_flag,
+				dm.status_bit.temperature_over_mcu_flag, dm.status_bit.temperature_over_sta_flag, dm.status_bit.temperature_over_imu_flag,
+				dm.IMU_Unit_temperature, dm.MCU_temperature, dm.STA9100_temperature);
 		}
 	}
 
@@ -392,7 +412,7 @@ namespace Ins401_Tool {
 		{
 			size_t packet_size = sizeof(SaveMsg);
 			int ret = 0;
-			for (int i = 0; i < raw.length; i++)
+			for (uint32_t i = 0; i < raw.length; i++)
 			{
 				ret = input_ins_save_data(raw.buff[i]);
 			}

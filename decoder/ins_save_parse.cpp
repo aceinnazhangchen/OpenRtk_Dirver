@@ -45,9 +45,9 @@ static unsigned long CalculateBlockCRC32(unsigned long ulCount,   /* Number of b
 }
 
 
-int printasciisavebuf(Ins401_Tool::SaveConfig* msaveconfig, char* buff)
+int64_t printasciisavebuf(Ins401_Tool::SaveConfig* msaveconfig, char* buff)
 {
-	double dms1[3], dms2[3], amag = 0.0;
+	double amag = 0.0;
 	char *p = buff, *q, sum;
 
 	//%02.0f%02.0f%05.2f,A,%02.0f%010.7f,%s,%03.0f%010.7f,%s,%4.2f,%4.2f,%02.0f%02.0f%02d,%.1f,%s,%s

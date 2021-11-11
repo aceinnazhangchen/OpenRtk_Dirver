@@ -118,6 +118,9 @@
     <ClCompile Include="..\decoder\ins_save_parse.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
+    <ClCompile Include="SplitTools.cpp">
+      <Filter>Source Files\Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="StreamManager.h">
@@ -147,6 +150,9 @@
     <QtMoc Include="AnalysisThread.h">
       <Filter>Header Files\Thread</Filter>
     </QtMoc>
+    <QtMoc Include="SplitTools.h">
+      <Filter>Header Files\Tools</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="StreamConfigUI.ui">
@@ -159,6 +165,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="AnalysisTools.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="SplitTools.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

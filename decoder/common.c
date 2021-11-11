@@ -53,10 +53,10 @@ void createDirByFilePath(const char* filename, char* dirname) {
 
 uint16_t calc_crc(uint8_t* buff, uint32_t nbyte) {
 	uint16_t crc = 0x1D0F;
-	int i, j;
+	uint32_t i, j;
 	for (i = 0; i < nbyte; i++) {
 		crc = crc ^ (buff[i] << 8);
-		for (j = 0; j < 8; j++) {
+		for (j = 0; j < 8u; j++) {
 			if (crc & 0x8000) {
 				crc = (crc << 1) ^ 0x1021;
 			}

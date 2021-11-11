@@ -60,12 +60,12 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\decoder;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\decoder;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\decoder;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\decoder;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -115,6 +115,7 @@
     <ClCompile Include="MergeThread.cpp" />
     <ClCompile Include="MergeTools.cpp" />
     <ClCompile Include="SingleStream.cpp" />
+    <ClCompile Include="SplitTools.cpp" />
     <ClCompile Include="StreamConfigUI.cpp" />
     <ClCompile Include="StreamManager.cpp" />
     <QtRcc Include="OpenRtk_Dirver.qrc" />
@@ -125,6 +126,7 @@
     <QtMoc Include="OpenRtk_Dirver.h" />
     <ClCompile Include="OpenRtk_Dirver.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="SplitTools.ui" />
     <QtUic Include="StreamConfigUI.ui" />
   </ItemGroup>
   <ItemGroup>
@@ -152,6 +154,7 @@
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
     <ClInclude Include="resource.h" />
+    <QtMoc Include="SplitTools.h" />
     <QtMoc Include="AnalysisTools.h" />
     <QtMoc Include="AnalysisThread.h" />
     <QtMoc Include="MergeThread.h" />

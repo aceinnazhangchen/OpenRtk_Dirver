@@ -97,12 +97,12 @@ void append_ins_kml(){
 	ins_kml.latitude = pak_i1.latitude;
 	ins_kml.longitude = pak_i1.longitude;
 	ins_kml.height = pak_i1.height;
-	ins_kml.north_velocity = pak_i1.north_velocity;
-	ins_kml.east_velocity = pak_i1.east_velocity;
-	ins_kml.up_velocity = pak_i1.up_velocity;
-	ins_kml.roll = pak_i1.roll;
-	ins_kml.pitch = pak_i1.pitch;
-	ins_kml.heading = pak_i1.heading;
+	ins_kml.north_velocity = (float)pak_i1.north_velocity;
+	ins_kml.east_velocity = (float)pak_i1.east_velocity;
+	ins_kml.up_velocity = (float)pak_i1.up_velocity;
+	ins_kml.roll = (float)pak_i1.roll;
+	ins_kml.pitch = (float)pak_i1.pitch;
+	ins_kml.heading = (float)pak_i1.heading;
 	Kml_Generator::Instance()->append_ins(ins_kml);
 }
 
@@ -400,8 +400,8 @@ void parse_user_packet_payload(uint8_t* buff, uint32_t nbyte) {
 		char* p = user_output_msg;
 		size_t packet_size = sizeof(user_y1_t);
 		if (payload_lenth % packet_size == 0) {
-			int num = payload_lenth / packet_size;
-			int i = 0;
+			uint32_t num = payload_lenth / (uint32_t)packet_size;
+			uint32_t i = 0;
 			for (i = 0; i < num; i++) {
 				memcpy(&pak_y1, payload + i * packet_size, packet_size);
 				if (output_user_file) {

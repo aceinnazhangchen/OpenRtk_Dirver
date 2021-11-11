@@ -113,9 +113,9 @@ void inceptio_append_early_gnss_kml() {
 	gnss_kml.latitude = (double)inceptio_pak_gN_early.latitude*180.0 / MAX_INT;
 	gnss_kml.longitude = (double)inceptio_pak_gN_early.longitude*180.0 / MAX_INT;
 	gnss_kml.height = inceptio_pak_gN_early.height;
-	gnss_kml.north_vel = (float)inceptio_pak_gN_early.velocityNorth / 100.0;
-	gnss_kml.east_vel = (float)inceptio_pak_gN_early.velocityEast / 100.0;
-	gnss_kml.up_vel = (float)inceptio_pak_gN_early.velocityUp / 100.0;
+	gnss_kml.north_vel = (float)inceptio_pak_gN_early.velocityNorth / 100.0f;
+	gnss_kml.east_vel = (float)inceptio_pak_gN_early.velocityEast / 100.0f;
+	gnss_kml.up_vel = (float)inceptio_pak_gN_early.velocityUp / 100.0f;
 	Kml_Generator::Instance()->append_gnss(gnss_kml);
 }
 
@@ -126,9 +126,9 @@ void inceptio_append_gnss_kml() {
 	gnss_kml.latitude = (double)inceptio_pak_gN.latitude*180.0 / MAX_INT;
 	gnss_kml.longitude = (double)inceptio_pak_gN.longitude*180.0 / MAX_INT;
 	gnss_kml.height = inceptio_pak_gN.height;
-	gnss_kml.north_vel = (float)inceptio_pak_gN.velocityNorth / 100.0;
-	gnss_kml.east_vel = (float)inceptio_pak_gN.velocityEast / 100.0;
-	gnss_kml.up_vel = (float)inceptio_pak_gN.velocityUp / 100.0;
+	gnss_kml.north_vel = (float)inceptio_pak_gN.velocityNorth / 100.0f;
+	gnss_kml.east_vel = (float)inceptio_pak_gN.velocityEast / 100.0f;
+	gnss_kml.up_vel = (float)inceptio_pak_gN.velocityUp / 100.0f;
 	Kml_Generator::Instance()->append_gnss(gnss_kml);
 }
 
@@ -140,12 +140,12 @@ void inceptio_append_ins_kml() {
 	ins_kml.latitude = (double)inceptio_pak_iN.latitude*180.0 / MAX_INT;
 	ins_kml.longitude = (double)inceptio_pak_iN.longitude*180.0 / MAX_INT;
 	ins_kml.height = inceptio_pak_iN.height;
-	ins_kml.north_velocity = (float)inceptio_pak_iN.velocityNorth / 100.0;
-	ins_kml.east_velocity = (float)inceptio_pak_iN.velocityEast / 100.0;
-	ins_kml.up_velocity = (float)inceptio_pak_iN.velocityUp / 100.0;
-	ins_kml.roll = (float)inceptio_pak_iN.roll / 100.0;
-	ins_kml.pitch = (float)inceptio_pak_iN.pitch / 100.0;
-	ins_kml.heading = (float)inceptio_pak_iN.heading / 100.0;
+	ins_kml.north_velocity = (float)inceptio_pak_iN.velocityNorth / 100.0f;
+	ins_kml.east_velocity = (float)inceptio_pak_iN.velocityEast / 100.0f;
+	ins_kml.up_velocity = (float)inceptio_pak_iN.velocityUp / 100.0f;
+	ins_kml.roll = (float)inceptio_pak_iN.roll / 100.0f;
+	ins_kml.pitch = (float)inceptio_pak_iN.pitch / 100.0f;
+	ins_kml.heading = (float)inceptio_pak_iN.heading / 100.0f;
 	Kml_Generator::Instance()->append_ins(ins_kml);
 }
 
@@ -408,12 +408,12 @@ void output_inceptio_s2() {
 }
 
 void output_inceptio_gN_early() {
-	float north_vel = (float)inceptio_pak_gN_early.velocityNorth / 100.0;
-	float east_vel = (float)inceptio_pak_gN_early.velocityEast / 100.0;
-	float up_vel = (float)inceptio_pak_gN_early.velocityUp / 100.0;
-	float latitude_std = (float)inceptio_pak_gN_early.latitude_std / 1000.0;
-	float longitude_std = (float)inceptio_pak_gN_early.longitude_std / 1000.0;
-	float height_std = (float)inceptio_pak_gN_early.height_std / 1000.0;
+	float north_vel = (float)inceptio_pak_gN_early.velocityNorth / 100.0f;
+	float east_vel = (float)inceptio_pak_gN_early.velocityEast / 100.0f;
+	float up_vel = (float)inceptio_pak_gN_early.velocityUp / 100.0f;
+	float latitude_std = (float)inceptio_pak_gN_early.latitude_std / 1000.0f;
+	float longitude_std = (float)inceptio_pak_gN_early.longitude_std / 1000.0f;
+	float height_std = (float)inceptio_pak_gN_early.height_std / 1000.0f;
 	double horizontal_speed = sqrt(north_vel * north_vel + east_vel * east_vel);
 	double track_over_ground = atan2(east_vel, north_vel) * R2D;
 	//csv
@@ -449,16 +449,16 @@ void output_inceptio_gN() {
 			fprintf(f_log, "%11.4f,%11.4f,%f \n", last_GPS_TimeOfWeek, inceptio_pak_gN.GPS_TimeOfWeek, span_time);
 		}
 	}
-	float north_vel = (float)inceptio_pak_gN.velocityNorth / 100.0;
-	float east_vel = (float)inceptio_pak_gN.velocityEast / 100.0;
-	float up_vel = (float)inceptio_pak_gN.velocityUp / 100.0;
-	float latitude_std = (float)inceptio_pak_gN.latitude_std / 1000.0;
-	float longitude_std = (float)inceptio_pak_gN.longitude_std / 1000.0;
-	float height_std = (float)inceptio_pak_gN.height_std / 1000.0;
-	float pos_hor_pl = (float)inceptio_pak_gN.pos_hor_pl / 1000.0;
-	float pos_ver_pl = (float)inceptio_pak_gN.pos_ver_pl / 1000.0;
-	float vel_hor_pl = (float)inceptio_pak_gN.vel_hor_pl / 1000.0;
-	float vel_ver_pl = (float)inceptio_pak_gN.vel_ver_pl / 1000.0;
+	float north_vel = (float)inceptio_pak_gN.velocityNorth / 100.0f;
+	float east_vel = (float)inceptio_pak_gN.velocityEast / 100.0f;
+	float up_vel = (float)inceptio_pak_gN.velocityUp / 100.0f;
+	float latitude_std = (float)inceptio_pak_gN.latitude_std / 1000.0f;
+	float longitude_std = (float)inceptio_pak_gN.longitude_std / 1000.0f;
+	float height_std = (float)inceptio_pak_gN.height_std / 1000.0f;
+	float pos_hor_pl = (float)inceptio_pak_gN.pos_hor_pl / 1000.0f;
+	float pos_ver_pl = (float)inceptio_pak_gN.pos_ver_pl / 1000.0f;
+	float vel_hor_pl = (float)inceptio_pak_gN.vel_hor_pl / 1000.0f;
+	float vel_ver_pl = (float)inceptio_pak_gN.vel_ver_pl / 1000.0f;
 	double horizontal_speed = sqrt(north_vel * north_vel + east_vel * east_vel);
 	double track_over_ground = atan2(east_vel, north_vel) * R2D;
 	//csv
