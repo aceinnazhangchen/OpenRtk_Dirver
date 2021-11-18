@@ -161,12 +161,12 @@
 		int16_t	 north_vel_std;
 		int16_t  east_vel_std;
 		int16_t  up_vel_std;
-		float  hor_pos_pl;
-		float  ver_pos_pl;
-		float  hor_vel_pl;
-		float  ver_vel_pl;
-		uint8_t pos_integrity_status;
-		uint8_t vel_integrity_status;
+		//float  hor_pos_pl;
+		//float  ver_pos_pl;
+		//float  hor_vel_pl;
+		//float  ver_vel_pl;
+		//uint8_t pos_integrity_status;
+		//uint8_t vel_integrity_status;
 	} inceptio_d2_t;
 
 	typedef struct

@@ -223,7 +223,7 @@ void write_inceptio_log_file(int index, char* log) {
 		if (fd2 == NULL) {
 			sprintf(file_name, "%s_d2.csv", base_inceptio_file_name);
 			fd2 = fopen(file_name, "w");
-			if (fd2) fprintf(fd2, "GPS_Week(),GPS_TimeofWeek(s),latitude_std(),longitude_std(),height_std(),north_vel_std(),east_vel_std(),up_vel_std(),hor_pos_pl(),ver_pos_pl(),hor_vel_pl(),ver_vel_pl(),pos_integrity_status(),vel_integrity_status()\n");
+			if (fd2) fprintf(fd2, "GPS_Week(),GPS_TimeofWeek(s),latitude_std(),longitude_std(),height_std(),north_vel_std(),east_vel_std(),up_vel_std()\n");
 		}
 		if (fd2) fprintf(fd2, log);
 	}
@@ -330,6 +330,10 @@ void write_inceptio_process_file(int index, int type, char* log) {
 	case INCEPTIO_OUT_ODO:
 	{
 		if (f_process) fprintf(f_process, "$GPODO,%s", log);
+	}
+	case INCEPTIO_OUT_STD2:
+	{
+		//if (f_process) fprintf(f_process, "$GPGNSS,%s", log);
 	}
 	break;
 	}
@@ -452,9 +456,9 @@ void output_inceptio_gN() {
 	float north_vel = (float)inceptio_pak_gN.velocityNorth / 100.0f;
 	float east_vel = (float)inceptio_pak_gN.velocityEast / 100.0f;
 	float up_vel = (float)inceptio_pak_gN.velocityUp / 100.0f;
-	float latitude_std = (float)inceptio_pak_gN.latitude_std / 1000.0f;
-	float longitude_std = (float)inceptio_pak_gN.longitude_std / 1000.0f;
-	float height_std = (float)inceptio_pak_gN.height_std / 1000.0f;
+	float latitude_std = (float)inceptio_pak_d2.latitude_std / 1000.0f;
+	float longitude_std = (float)inceptio_pak_d2.longitude_std / 1000.0f;
+	float height_std = (float)inceptio_pak_d2.height_std / 1000.0f;
 	float pos_hor_pl = (float)inceptio_pak_gN.pos_hor_pl / 1000.0f;
 	float pos_ver_pl = (float)inceptio_pak_gN.pos_ver_pl / 1000.0f;
 	float vel_hor_pl = (float)inceptio_pak_gN.vel_hor_pl / 1000.0f;
@@ -525,11 +529,15 @@ void output_inceptio_d1() {
 
 void output_inceptio_d2() {
 	//csv
-	sprintf(inceptio_output_msg, "%d,%11.4f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%3d,%3d\n", inceptio_pak_d2.GPS_Week, inceptio_pak_d2.GPS_TimeOfWeek,
+	//sprintf(inceptio_output_msg, "%d,%11.4f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%3d,%3d\n", inceptio_pak_d2.GPS_Week, inceptio_pak_d2.GPS_TimeOfWeek,
+	//	(float)inceptio_pak_d2.latitude_std / 100.0, (float)inceptio_pak_d2.longitude_std / 100.0, (float)inceptio_pak_d2.height_std / 100.0,
+	//	(float)inceptio_pak_d2.north_vel_std / 100.0, (float)inceptio_pak_d2.east_vel_std / 100.0, (float)inceptio_pak_d2.up_vel_std / 100.0,
+	//	inceptio_pak_d2.hor_pos_pl, inceptio_pak_d2.ver_pos_pl, inceptio_pak_d2.hor_vel_pl, inceptio_pak_d2.ver_vel_pl, inceptio_pak_d2.pos_integrity_status, inceptio_pak_d2.vel_integrity_status);
+	sprintf(inceptio_output_msg, "%d,%11.4f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f\n", inceptio_pak_d2.GPS_Week, inceptio_pak_d2.GPS_TimeOfWeek,
 		(float)inceptio_pak_d2.latitude_std / 100.0, (float)inceptio_pak_d2.longitude_std / 100.0, (float)inceptio_pak_d2.height_std / 100.0,
-		(float)inceptio_pak_d2.north_vel_std / 100.0, (float)inceptio_pak_d2.east_vel_std / 100.0, (float)inceptio_pak_d2.up_vel_std / 100.0,
-		inceptio_pak_d2.hor_pos_pl, inceptio_pak_d2.ver_pos_pl, inceptio_pak_d2.hor_vel_pl, inceptio_pak_d2.ver_vel_pl, inceptio_pak_d2.pos_integrity_status, inceptio_pak_d2.vel_integrity_status);
+		(float)inceptio_pak_d2.north_vel_std / 100.0, (float)inceptio_pak_d2.east_vel_std / 100.0, (float)inceptio_pak_d2.up_vel_std / 100.0);
 	write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
+	write_inceptio_process_file(inceptio_raw.ntype, 0, inceptio_output_msg);
 }
 
 void output_inceptio_sT() {
