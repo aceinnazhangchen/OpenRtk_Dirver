@@ -169,7 +169,6 @@ int Ins401_Tool::Ins401_decoder::input_ins_save_data(unsigned char data)
     return 0;
 }
 
-
 // char* parse_ins_save_data(char *buff, int length)
 // {
 //     int pos = 0;
@@ -186,17 +185,16 @@ char* get_ins_save_data_str()
     return ins_save_str;
 }
 
-
 void Ins401_Tool::Ins401_decoder::ins_save_finish()
-{	
+{
 	create_file(f_ins_log, ".log", NULL);
 	fprintf(f_ins_log, "pack_type = %s, parse_status = %d\n", "ins save", ins_save_flag);
 	create_file(f_ins_save, ".txt", NULL);
-    if(ins_save_flag == 1)
-    {
-        char* parse_str = get_ins_save_data_str();
-        printf("%s\r\n",parse_str);
-        fwrite(parse_str,1,strlen(parse_str),f_ins_save);
-    }
+	if (ins_save_flag == 1)
+	{
+		char* parse_str = get_ins_save_data_str();
+		printf("%s\r\n", parse_str);
+		fwrite(parse_str, 1, strlen(parse_str), f_ins_save);
+	}
 	close_all_files();
 }

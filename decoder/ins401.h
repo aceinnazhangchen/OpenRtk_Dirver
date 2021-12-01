@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <vector>
 #include <map>
+#include <list>
 #include "kml.h"
 
 namespace Ins401_Tool {
@@ -215,6 +216,17 @@ namespace Ins401_Tool {
 
 #pragma pack(pop)
 
+	enum emPackageType {
+		em_RAW_IMU = 0x0a01,
+		em_GNSS_SOL = 0x0a02,
+		em_INS_SOL = 0x0a03,
+		em_RAW_ODO = 0x0a04,
+		em_DIAGNOSTIC_MSG = 0x0a05,
+		em_ROVER_RTCM = 0x0a06,
+		em_MISALIGN = 0x0a07,
+		PowerUpDR_MES = 0x0a09
+	};
+
 	class Ins401_decoder {
 	public:
 		Ins401_decoder();
@@ -279,6 +291,9 @@ namespace Ins401_Tool {
 		int input_ins_save_data(unsigned char data);		
 		void finish();
 		void ins_save_finish();
+	public:
+		int get_current_type();
+		gnss_sol_t* get_gnss_sol();
 	};
 };
 

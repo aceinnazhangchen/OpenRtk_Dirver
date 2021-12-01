@@ -5,6 +5,7 @@
 #define MAX_INCEPTIO_PACKET_TYPES 11
 
 #pragma pack(push, 1)
+namespace RTK330LA_Tool {
 
 	typedef struct {
 		/* IMU */
@@ -216,3 +217,4 @@
 
 	extern int input_inceptio_raw(uint8_t data);
 
+}

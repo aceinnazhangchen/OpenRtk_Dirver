@@ -108,10 +108,12 @@
     <ClCompile Include="..\decoder\rtcm.c" />
     <ClCompile Include="..\decoder\rtcm_split.cpp" />
     <ClCompile Include="..\decoder\rtkcmn.c" />
+    <ClCompile Include="AnalysisConfigUI.cpp" />
     <ClCompile Include="AnalysisThread.cpp" />
     <ClCompile Include="AnalysisTools.cpp" />
     <ClCompile Include="DecodeThread.cpp" />
     <ClCompile Include="DecodeTools.cpp" />
+    <ClCompile Include="Ins401_Analysis.cpp" />
     <ClCompile Include="MergeThread.cpp" />
     <ClCompile Include="MergeTools.cpp" />
     <ClCompile Include="SingleStream.cpp" />
@@ -120,6 +122,7 @@
     <ClCompile Include="StreamConfigUI.cpp" />
     <ClCompile Include="StreamManager.cpp" />
     <QtRcc Include="OpenRtk_Dirver.qrc" />
+    <QtUic Include="AnalysisConfigUI.ui" />
     <QtUic Include="AnalysisTools.ui" />
     <QtUic Include="DecodeTools.ui" />
     <QtUic Include="MergeTools.ui" />
@@ -154,6 +157,9 @@
     <ClInclude Include="..\decoder\rtcm_split.h" />
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
+    <QtMoc Include="AnalysisConfigUI.h" />
+    <ClInclude Include="csc2kml.h" />
+    <QtMoc Include="Ins401_Analysis.h" />
     <ClInclude Include="resource.h" />
     <QtMoc Include="SplitThread.h" />
     <QtMoc Include="SplitTools.h" />

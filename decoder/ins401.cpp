@@ -6,16 +6,6 @@
 #include "rtkcmn.h"
 
 namespace Ins401_Tool {
-	enum emPackageType {
-		em_RAW_IMU = 0x0a01,
-		em_GNSS_SOL = 0x0a02,
-		em_INS_SOL = 0x0a03,
-		em_RAW_ODO = 0x0a04,
-		em_DIAGNOSTIC_MSG = 0x0a05,
-		em_ROVER_RTCM = 0x0a06,
-		em_MISALIGN = 0x0a07,
-		PowerUpDR_MES = 0x0a09
-	};
 
 	Ins401_decoder::Ins401_decoder()
 	{
@@ -542,7 +532,7 @@ IMU Temperature(),MCU Temperature(),STA9100 Temperature()\n");
 				raw.flag = 0;
 				raw.nbyte = 0;
 				raw.length = 0;
-				raw.packet_type = 0;
+				//raw.packet_type = 0;
 			}
 		}
 		return ret;
@@ -559,5 +549,15 @@ IMU Temperature(),MCU Temperature(),STA9100 Temperature()\n");
 		Kml_Generator::Instance()->write_files();
 		Kml_Generator::Instance()->close_files();
 		close_all_files();
+	}
+
+	int Ins401_decoder::get_current_type()
+	{
+		return raw.packet_type;
+	}
+
+	gnss_sol_t * Ins401_decoder::get_gnss_sol()
+	{
+		return &gnss;
 	}
 };

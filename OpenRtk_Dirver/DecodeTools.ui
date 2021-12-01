@@ -164,6 +164,16 @@
        </property>
       </spacer>
      </item>
+     <item>
+      <widget class="QToolButton" name="toolButton_setting">
+       <property name="toolTip">
+        <string>setting</string>
+       </property>
+       <property name="text">
+        <string>s</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>

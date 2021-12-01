@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AnalysisConfigUI</class>
+ <widget class="QWidget" name="AnalysisConfigUI">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>391</width>
+    <height>205</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>AnalysisConfigUI</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <item>
+    <widget class="QTableWidget" name="tableWidget">
+     <row>
+      <property name="text">
+       <string>cep_thres(%): </string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>hor_pos_err_thres(m):</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>ver_pos_err_thres(m):</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>hor_vel_err_thres(m/s):</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>ver_vel_err_thres(m/s):</string>
+      </property>
+     </row>
+     <column>
+      <property name="text">
+       <string>value</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>

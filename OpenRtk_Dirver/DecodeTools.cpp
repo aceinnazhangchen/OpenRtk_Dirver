@@ -14,8 +14,10 @@ DecodeTools::DecodeTools(QWidget *parent)
 	connect(ui.decode_btn, SIGNAL(clicked()), this, SLOT(onDecodeClicked()));
 	connect(m_DecodeThread, SIGNAL(sgnProgress(int, int)), this, SLOT(onProcess(int, int)));
 	connect(m_DecodeThread, SIGNAL(sgnFinished()), this, SLOT(onFinished()));
-
-	//ui.time_checkBox->setToolTip("");
+	connect(ui.toolButton_setting, SIGNAL(clicked()), this, SLOT(onClickedSettingButton()));
+	
+	m_AnalysisConfigUI = new AnalysisConfigUI();
+	m_AnalysisConfigUI->hide();
 }
 
 DecodeTools::~DecodeTools()
@@ -30,7 +32,13 @@ void DecodeTools::setOperable(bool enable)
 {
 	ui.filepath_edt->setEnabled(enable);
 	ui.select_btn->setEnabled(enable);
-	ui.decode_btn->setEnabled(enable);
+	//ui.decode_btn->setEnabled(enable);
+	if (enable) {
+		ui.decode_btn->setText("decode");
+	}
+	else {
+		ui.decode_btn->setText("stop");
+	}
 }
 
 void DecodeTools::dragEnterEvent(QDragEnterEvent * event)
@@ -63,6 +71,7 @@ void DecodeTools::onDecodeClicked()
 {
 	if (m_DecodeThread->isRunning())
 	{
+		m_DecodeThread->stop();
 		return;
 	}
 	QString filename = ui.filepath_edt->text();
@@ -86,6 +95,7 @@ void DecodeTools::onDecodeClicked()
 	default:
 		break;
 	}
+	m_AnalysisConfigUI->set_thres(m_DecodeThread->m_Ins401_Analysis);
 	m_DecodeThread->start();
 	setOperable(false);
 }
@@ -102,4 +112,9 @@ void DecodeTools::onProcess(int present, int msecs)
 void DecodeTools::onFinished()
 {
 	setOperable(true);
+}
+
+void DecodeTools::onClickedSettingButton()
+{
+	m_AnalysisConfigUI->show();
 }

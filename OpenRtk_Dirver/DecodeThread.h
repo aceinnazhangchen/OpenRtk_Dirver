@@ -2,7 +2,9 @@
 
 #include <QThread>
 #include <QTime>
+#include <QList>
 #include "ins401.h"
+#include "Ins401_Analysis.h"
 #include "E2E_protocol.h"
 
 enum emDecodeFormat {
@@ -35,6 +37,7 @@ protected:
 	void decode_imu();
 	void decode_ins401();
 	void decode_e2e_protocol();
+	void decode_Rtcm_EPVT();
 private:
 	bool m_isStop;
 	int m_FileFormat;
@@ -45,6 +48,9 @@ private:
 	E2E::E2E_protocol* e2e_deocder;
 	bool m_show_time;
 	int ins_kml_frequency;
+public:
+	bool m_static_point_ecp;
+	Ins401_Analysis* m_Ins401_Analysis;
 signals:
 	void sgnProgress(int present, int msecs);
 	void sgnFinished();

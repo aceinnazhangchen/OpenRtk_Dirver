@@ -36,6 +36,12 @@
     <Filter Include="Header Files\Tools">
       <UniqueIdentifier>{f58475e5-d13d-47cb-9740-e8eeca98ffba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Analysis">
+      <UniqueIdentifier>{05bad68c-917d-4ad7-ac70-5f5dddb40f5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Analysis">
+      <UniqueIdentifier>{4026000a-0201-45c0-a6a6-7c732fb33aee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="OpenRtk_Dirver.qrc">
@@ -124,6 +130,12 @@
     <ClCompile Include="SplitThread.cpp">
       <Filter>Source Files\Thread</Filter>
     </ClCompile>
+    <ClCompile Include="Ins401_Analysis.cpp">
+      <Filter>Source Files\Analysis</Filter>
+    </ClCompile>
+    <ClCompile Include="AnalysisConfigUI.cpp">
+      <Filter>Source Files\Analysis</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="StreamManager.h">
@@ -159,6 +171,12 @@
     <QtMoc Include="SplitThread.h">
       <Filter>Header Files\Thread</Filter>
     </QtMoc>
+    <QtMoc Include="Ins401_Analysis.h">
+      <Filter>Header Files\Analysis</Filter>
+    </QtMoc>
+    <QtMoc Include="AnalysisConfigUI.h">
+      <Filter>Header Files\Analysis</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="StreamConfigUI.ui">
@@ -174,6 +192,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="SplitTools.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="AnalysisConfigUI.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -221,6 +242,9 @@
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\ins_save_parse.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="csc2kml.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>
