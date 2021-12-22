@@ -18,7 +18,7 @@ namespace beidou_Tool {
 	static beidou_gN_t beidou_pak_gN;
 	static beidou_iN_t beidou_pak_iN = { 0 };
 	static beidou_o1_t beidou_pak_o1 = { 0 };
-	static beidou_hG_t beidoupak_hG = {0};
+	static beidou_hG_t beidou_pak_hG = {0};
 
 	static kml_gnss_t gnss_kml = { 0 };
 	static kml_ins_t ins_kml = { 0 };
@@ -52,6 +52,7 @@ namespace beidou_Tool {
 		memset(&beidou_pak_gN, 0, sizeof(beidou_gN_t));
 		memset(&beidou_pak_iN, 0, sizeof(beidou_iN_t));
 		memset(&beidou_pak_o1, 0, sizeof(beidou_o1_t));
+		memset(&beidou_pak_hG, 0, sizeof(beidou_hG_t));
 		Kml_Generator::Instance()->init();
 	}
 
@@ -274,6 +275,10 @@ namespace beidou_Tool {
 			if (f_process) fprintf(f_process, "$GPODO,%s", log);
 		}
 		break;
+		case beidou_OUT_HEADING:
+		{
+			if (f_process) fprintf(f_process, "$GPHEADING,%s", log);
+		}		
 		}
 	}
 
@@ -414,6 +419,17 @@ namespace beidou_Tool {
 		write_beidou_process_file(beidou_raw.ntype, 0, beidou_output_msg);
 	}
 
+	void output_beidou_hG()
+	{
+		sprintf(beidou_output_msg, "%d,%11.4f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f\n",beidou_pak_hG.gps_week, (double)beidou_pak_hG.gps_millisecs ,
+			beidou_pak_hG.length, beidou_pak_hG.heading, beidou_pak_hG.pitch, beidou_pak_hG.hdgstddev, beidou_pak_hG.ptchstddev);
+		write_beidou_log_file(beidou_raw.ntype, beidou_output_msg);
+		//txt
+		write_beidou_ex_file(beidou_raw.ntype, beidou_output_msg);
+		//process
+		write_beidou_process_file(beidou_raw.ntype, 0, beidou_output_msg);
+	}
+
 	void parse_beidou_packet_payload(uint8_t* buff, uint32_t nbyte) {
 		uint8_t payload_lenth = buff[2];
 		char packet_type[4] = { 0 };
@@ -449,6 +465,15 @@ namespace beidou_Tool {
 				memcpy(&beidou_pak_o1, payload, sizeof(beidou_o1_t));
 				output_beidou_o1();
 			}
+		}
+		else if(strcmp(packet_type, "hG") == 0)
+		{
+			beidou_raw.ntype = beidou_OUT_HEADING;
+			size_t psize = sizeof(beidou_hG_t);
+			if (payload_lenth == sizeof(beidou_hG_t)) {
+				memcpy(&beidou_pak_hG, payload, sizeof(beidou_hG_t));
+				output_beidou_hG();
+			}			
 		}
 	}
 
