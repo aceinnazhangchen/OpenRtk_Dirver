@@ -5,6 +5,7 @@
 #include "decoder_dll.h"
 #include <string.h>
 #include "ins_save_parse.h"
+#include "beidou.h"
 
 #ifndef  WIN32
 #include<ctype.h>
@@ -57,20 +58,50 @@ USERDECODERLIB_API void decode_openrtk_inceptio(char* filename)
 		size_t read_size = 0;
 		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
-		set_output_inceptio_file(1);
+		RTK330LA_Tool::set_output_inceptio_file(1);
 		createDirByFilePath(filename, dirname);
-		set_base_inceptio_file_name(dirname);
+		RTK330LA_Tool::set_base_inceptio_file_name(dirname);
 		while (!feof(file)) {
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
 			read_size += readcount;
 			for (size_t i = 0; i < readcount; i++) {
-				ret = input_inceptio_raw(read_cache[i]);
+				ret = RTK330LA_Tool::input_inceptio_raw(read_cache[i]);
 			}
 			double percent = (double)read_size / (double)file_size * 100;
 			printf("Process : %4.1f %%\r", percent);
 		}
-		write_inceptio_kml_files();
-		close_inceptio_all_log_file();
+		RTK330LA_Tool::write_inceptio_kml_files();
+		RTK330LA_Tool::close_inceptio_all_log_file();
+		fclose(file);
+		printf("\nfinished\r\n");
+	}
+}
+
+
+USERDECODERLIB_API void decode_beidou(char* filename)
+{
+	FILE* file = fopen(filename, "rb");
+	if (file) {
+		char dirname[256] = { 0 };
+		int ret = 0;
+		int file_size = getFileSize(file);
+		size_t read_size = 0;
+		size_t readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		beidou_Tool::set_output_beidou_file(1);
+		createDirByFilePath(filename, dirname);
+		beidou_Tool::set_base_beidou_file_name(dirname);
+		while (!feof(file)) {
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (size_t i = 0; i < readcount; i++) {
+				ret = beidou_Tool::input_beidou_raw(read_cache[i]);
+			}
+			double percent = (double)read_size / (double)file_size * 100;
+			printf("Process : %4.1f %%\r", percent);
+		}
+		beidou_Tool::write_beidou_kml_files();
+		beidou_Tool::close_beidou_all_log_file();
 		fclose(file);
 		printf("\nfinished\r\n");
 	}
