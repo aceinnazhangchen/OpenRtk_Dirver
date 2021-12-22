@@ -8,9 +8,13 @@
 #include "kml.h"
 #include "beidou.h"
 
+
+#define BEIDOU_HEAD 0x23
 #define MAX_INT 2147483648.0
+#define MAX_BEIDOU_TYPES		3
 
 namespace beidou_Tool {
+	const char* beidouTypeList[MAX_BEIDOU_TYPES] = {"#HEADINGA", "#BESTVELA", "#BESTPOSA"};
 	const char* beidouPacketsTypeList[MAX_beidou_PACKET_TYPES] = { "s1","gN","iN","o1","hG" };
 	static usrRaw beidou_raw = { 0 };
 	static char beidou_output_msg[1024] = { 0 };
@@ -43,6 +47,11 @@ namespace beidou_Tool {
 
 	int crc_error_num = 0;
 	double	last_GPS_TimeOfWeek = 0.0;
+
+	const char* beidou_type(int index)
+	{
+		return beidouTypeList[index];
+	}
 
 	extern void init_beidou_data() {
 		crc_error_num = 0;
@@ -477,9 +486,9 @@ namespace beidou_Tool {
 		}
 	}
 
-	int parse_beidou_nmea(uint8_t data) {
+	int parse_beidou_nmea(uint8_t data) {				//TODO:
 		if (beidou_raw.nmea_flag == 0) {
-			if (NEAM_HEAD == data) {
+			if ( (NEAM_HEAD == data) || (BEIDOU_HEAD == data) ) {
 				beidou_raw.nmea_flag = 1;
 				beidou_raw.nmeabyte = 0;
 				beidou_raw.nmea[beidou_raw.nmeabyte++] = data;
@@ -493,6 +502,21 @@ namespace beidou_Tool {
 				memcpy(NMEA, beidou_raw.nmea, 6);
 				for (i = 0; i < MAX_NMEA_TYPES; i++) {
 					if (strcmp(NMEA, nmea_type(i)) == 0) {
+						beidou_raw.nmea_flag = 2;
+						break;
+					}
+				}
+				if (beidou_raw.nmea_flag != 2) {
+					// beidou_raw.nmea_flag = 0;
+				}
+			}
+			else if(beidou_raw.nmeabyte == 9)
+			{
+				int i = 0;
+				char BEIDOU[10] = { 0 };
+				memcpy(BEIDOU, beidou_raw.nmea, 9);
+				for (i = 0; i < MAX_BEIDOU_TYPES; i++) {
+					if (strcmp(BEIDOU, beidou_type(i)) == 0) {
 						beidou_raw.nmea_flag = 2;
 						break;
 					}
@@ -560,7 +584,7 @@ namespace beidou_Tool {
 				}
 				else {
 					crc_error_num++;
-					// fprintf(f_log, "type=%c%c,crc=0x%04x:0x%04x,size=%d\n", beidou_raw.buff[0], beidou_raw.buff[1], packet_crc, cal_crc, beidou_raw.nbyte);
+					fprintf(f_log, "type=%c%c,crc=0x%04x:0x%04x,size=%d\n", beidou_raw.buff[0], beidou_raw.buff[1], packet_crc, cal_crc, beidou_raw.nbyte);
 				}
 				beidou_raw.flag = 0;
 				beidou_raw.nbyte = 0;

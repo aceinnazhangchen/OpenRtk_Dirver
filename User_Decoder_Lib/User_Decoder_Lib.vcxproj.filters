@@ -51,6 +51,9 @@
     <ClCompile Include="..\decoder\ins_save_parse.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
+    <ClCompile Include="..\decoder\beidou.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="decoder_dll.h">
@@ -90,6 +93,9 @@
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\ins_save_parse.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\beidou.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>
