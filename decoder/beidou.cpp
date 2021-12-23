@@ -63,6 +63,7 @@ namespace beidou_Tool {
 		memset(&beidou_pak_o1, 0, sizeof(beidou_o1_t));
 		memset(&beidou_pak_hG, 0, sizeof(beidou_hG_t));
 		Kml_Generator::Instance()->init();
+		Kml_Generator::Instance()->set_kml_frequency(100);
 	}
 
 	extern void set_output_beidou_file(int output) {
@@ -127,6 +128,7 @@ namespace beidou_Tool {
 		ins_kml.roll = (float)beidou_pak_iN.roll / 100.0f;
 		ins_kml.pitch = (float)beidou_pak_iN.pitch / 100.0f;
 		ins_kml.heading = (float)beidou_pak_iN.heading / 100.0f;
+		// printf("test1: %f \r\n",ins_kml.gps_secs);
 		Kml_Generator::Instance()->append_ins(ins_kml);
 	}
 
