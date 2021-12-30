@@ -12,6 +12,8 @@
 #define HOUR	(3600)
 #define MINUTE  (60)
 
+#define MAX_INT 2147483648.0
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -18,6 +18,8 @@ DecodeTools::DecodeTools(QWidget *parent)
 	
 	m_AnalysisConfigUI = new AnalysisConfigUI();
 	m_AnalysisConfigUI->hide();
+
+	ui.dateTimeEdit->setDate(QDate::currentDate());
 }
 
 DecodeTools::~DecodeTools()
@@ -95,7 +97,14 @@ void DecodeTools::onDecodeClicked()
 	default:
 		break;
 	}
-	m_AnalysisConfigUI->set_thres(m_DecodeThread->m_Ins401_Analysis);
+	if (ui.fileformat_cmb->currentIndex() == emDecodeFormat_Ins401) {
+		m_AnalysisConfigUI->set_thres_Ins401(m_DecodeThread->m_Ins401_Analysis);
+	}
+	else if(ui.fileformat_cmb->currentIndex() == emDecodeFormat_RTK330LA) {
+		m_AnalysisConfigUI->set_thres_RTK330LA(m_DecodeThread->m_RTK330LA_Analysis);
+	}	
+	QString time = ui.dateTimeEdit->dateTime().toString("yyyy/MM/dd HH:mm:ss");
+	m_DecodeThread->setDateTime(time);
 	m_DecodeThread->start();
 	setOperable(false);
 }

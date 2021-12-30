@@ -136,6 +136,15 @@
     <ClCompile Include="AnalysisConfigUI.cpp">
       <Filter>Source Files\Analysis</Filter>
     </ClCompile>
+    <ClCompile Include="..\decoder\gnss_math.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\model.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="RTK330LA_Analysis.cpp">
+      <Filter>Source Files\Analysis</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="StreamManager.h">
@@ -175,6 +184,9 @@
       <Filter>Header Files\Analysis</Filter>
     </QtMoc>
     <QtMoc Include="AnalysisConfigUI.h">
+      <Filter>Header Files\Analysis</Filter>
+    </QtMoc>
+    <QtMoc Include="RTK330LA_Analysis.h">
       <Filter>Header Files\Analysis</Filter>
     </QtMoc>
   </ItemGroup>
@@ -244,8 +256,14 @@
     <ClInclude Include="..\decoder\ins_save_parse.h">
       <Filter>decoder</Filter>
     </ClInclude>
-    <ClInclude Include="csc2kml.h">
+    <ClInclude Include="..\decoder\gnss_math.h">
       <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\model.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="Analysis_Define.h">
+      <Filter>Header Files\Analysis</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

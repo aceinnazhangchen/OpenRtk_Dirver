@@ -57,20 +57,20 @@ USERDECODERLIB_API void decode_openrtk_inceptio(char* filename)
 		size_t read_size = 0;
 		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
-		set_output_inceptio_file(1);
+		RTK330LA_Tool::set_output_inceptio_file(1);
 		createDirByFilePath(filename, dirname);
-		set_base_inceptio_file_name(dirname);
+		RTK330LA_Tool::set_base_inceptio_file_name(dirname);
 		while (!feof(file)) {
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
 			read_size += readcount;
 			for (size_t i = 0; i < readcount; i++) {
-				ret = input_inceptio_raw(read_cache[i]);
+				ret = RTK330LA_Tool::input_inceptio_raw(read_cache[i]);
 			}
 			double percent = (double)read_size / (double)file_size * 100;
 			printf("Process : %4.1f %%\r", percent);
 		}
-		write_inceptio_kml_files();
-		close_inceptio_all_log_file();
+		RTK330LA_Tool::write_inceptio_kml_files();
+		RTK330LA_Tool::close_inceptio_all_log_file();
 		fclose(file);
 		printf("\nfinished\r\n");
 	}

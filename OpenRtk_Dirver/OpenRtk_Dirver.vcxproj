@@ -98,11 +98,13 @@
   <ItemGroup>
     <ClCompile Include="..\decoder\common.c" />
     <ClCompile Include="..\decoder\E2E_protocol.cpp" />
+    <ClCompile Include="..\decoder\gnss_math.c" />
     <ClCompile Include="..\decoder\imu_raw.cpp" />
     <ClCompile Include="..\decoder\ins401.cpp" />
     <ClCompile Include="..\decoder\ins_save_parse.cpp" />
     <ClCompile Include="..\decoder\kml.cpp" />
     <ClCompile Include="..\decoder\mixed_raw.c" />
+    <ClCompile Include="..\decoder\model.c" />
     <ClCompile Include="..\decoder\openrtk_inceptio.cpp" />
     <ClCompile Include="..\decoder\openrtk_user.cpp" />
     <ClCompile Include="..\decoder\rtcm.c" />
@@ -116,6 +118,7 @@
     <ClCompile Include="Ins401_Analysis.cpp" />
     <ClCompile Include="MergeThread.cpp" />
     <ClCompile Include="MergeTools.cpp" />
+    <ClCompile Include="RTK330LA_Analysis.cpp" />
     <ClCompile Include="SingleStream.cpp" />
     <ClCompile Include="SplitThread.cpp" />
     <ClCompile Include="SplitTools.cpp" />
@@ -146,20 +149,23 @@
     <ClInclude Include="..\decoder\common.h" />
     <ClInclude Include="..\decoder\E2E_protocol.h" />
     <ClInclude Include="..\decoder\gnss_datatype.h" />
+    <ClInclude Include="..\decoder\gnss_math.h" />
     <ClInclude Include="..\decoder\imu_raw.h" />
     <ClInclude Include="..\decoder\ins401.h" />
     <ClInclude Include="..\decoder\ins_save_parse.h" />
     <ClInclude Include="..\decoder\kml.h" />
     <ClInclude Include="..\decoder\mixed_raw.h" />
+    <ClInclude Include="..\decoder\model.h" />
     <ClInclude Include="..\decoder\openrtk_inceptio.h" />
     <ClInclude Include="..\decoder\openrtk_user.h" />
     <ClInclude Include="..\decoder\rtcm.h" />
     <ClInclude Include="..\decoder\rtcm_split.h" />
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
+    <QtMoc Include="RTK330LA_Analysis.h" />
     <QtMoc Include="AnalysisConfigUI.h" />
-    <ClInclude Include="csc2kml.h" />
     <QtMoc Include="Ins401_Analysis.h" />
+    <ClInclude Include="Analysis_Define.h" />
     <ClInclude Include="resource.h" />
     <QtMoc Include="SplitThread.h" />
     <QtMoc Include="SplitTools.h" />

@@ -90,7 +90,7 @@ namespace Ins401_Tool {
 		float		up_vel_std;
 	}gnss_sol_t;
 
-	typedef struct {
+	struct ins_sol_t_20211207 {
 		uint16_t	gps_week;
 		uint32_t	gps_millisecs;
 		/*
@@ -133,7 +133,11 @@ namespace Ins401_Tool {
 		float		roll_std;
 		float		pitch_std;
 		float		heading_std;
-	}ins_sol_t;
+	};
+
+	struct ins_sol_t: ins_sol_t_20211207 {
+		int16_t id_contient;
+	};	
 
 	typedef struct {
 		uint16_t		gps_week;
@@ -263,6 +267,7 @@ namespace Ins401_Tool {
 		FILE* f_rover_rtcm;
 		FILE* f_ins_log;
 		FILE* f_ins_save;
+		FILE* f_mixed_csv;
 		bool show_format_time;
 		int pack_num;
 		int crc_right_num;
@@ -280,6 +285,7 @@ namespace Ins401_Tool {
 		void output_dm_raw();
 		void output_rover_rtcm();
 		void output_misa_sol();
+		void output_mixed_result();
 		void parse_packet_payload();
 		void save_imu_bin();
 		int8_t parse_nmea(uint8_t data);		
@@ -294,6 +300,7 @@ namespace Ins401_Tool {
 	public:
 		int get_current_type();
 		gnss_sol_t* get_gnss_sol();
+		raw_imu_t * get_imu_raw();
 	};
 };
 

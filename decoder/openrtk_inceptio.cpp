@@ -8,7 +8,6 @@
 #include "rtklib_core.h" //R2D
 #include "kml.h"
 
-#define MAX_INT 2147483648.0
 
 #define VERSION_EARLY		0
 #define VERSION_24_01_21	1
@@ -234,7 +233,7 @@ namespace RTK330LA_Tool {
 				sprintf(file_name, "%s_sT.csv", base_inceptio_file_name);
 				fsT = fopen(file_name, "w");
 				if (fsT) fprintf(fsT, "GPS_Week(),GPS_TimeofWeek(s),year(),mouth(),day(),hour(),min(),sec(),imu_temp_status,imu_acce_status,imu_gyro_status,imu_sensor_status1,imu_sensor_status2,imu_sensor_status3,imu_overall_status\
-,gnss_data_status,gnss_signal_status,power,MCU_status,pps_status,zupt_det,odo_used,odo_recv,imu_s1_state,imu_s2_state,imu_s3_state,time_valid,antenna_sensing,gnss_chipset\
+,gnss_data_status,gnss_signal_status,power,MCU_status,pps_status,zupt_det,odo_used,odo_recv,imu_s1_state,imu_s2_state,imu_s3_state,time_valid,antenna_sensing,gnss_chipset,pust_check\
 ,imu_temperature(),mcu_temperature()\n");
 			}
 			if (fsT) fprintf(fsT, log);
@@ -258,7 +257,8 @@ namespace RTK330LA_Tool {
 		char file_name[256] = { 0 };
 		switch (index)
 		{
-		case INCEPTIO_OUT_SCALED1:
+		//case INCEPTIO_OUT_SCALED1:
+		case INCEPTIO_OUT_SCALED2:
 		{
 			if (f_imu == NULL) {
 				sprintf(file_name, "%s-imu.txt", base_inceptio_file_name);
@@ -456,9 +456,9 @@ namespace RTK330LA_Tool {
 		float north_vel = (float)inceptio_pak_gN.velocityNorth / 100.0f;
 		float east_vel = (float)inceptio_pak_gN.velocityEast / 100.0f;
 		float up_vel = (float)inceptio_pak_gN.velocityUp / 100.0f;
-		float latitude_std = (float)inceptio_pak_d2.latitude_std / 1000.0f;
-		float longitude_std = (float)inceptio_pak_d2.longitude_std / 1000.0f;
-		float height_std = (float)inceptio_pak_d2.height_std / 1000.0f;
+		float latitude_std = (float)inceptio_pak_d2.latitude_std / 100.0f;
+		float longitude_std = (float)inceptio_pak_d2.longitude_std / 100.0f;
+		float height_std = (float)inceptio_pak_d2.height_std / 100.0f;
 		float pos_hor_pl = (float)inceptio_pak_gN.pos_hor_pl / 1000.0f;
 		float pos_ver_pl = (float)inceptio_pak_gN.pos_ver_pl / 1000.0f;
 		float vel_hor_pl = (float)inceptio_pak_gN.vel_hor_pl / 1000.0f;
@@ -472,19 +472,19 @@ namespace RTK330LA_Tool {
 			inceptio_pak_gN.numberOfSVs, inceptio_pak_gN.hdop, inceptio_pak_gN.vdop, inceptio_pak_gN.tdop, (float)inceptio_pak_gN.diffage,
 			north_vel, east_vel, up_vel, latitude_std, longitude_std, height_std,
 			pos_hor_pl, pos_ver_pl, inceptio_pak_gN.pos_status, vel_hor_pl, vel_ver_pl, inceptio_pak_gN.vel_status);
-		write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
+		write_inceptio_log_file(INCEPTIO_OUT_GNSS, inceptio_output_msg);
 		//txt
 		sprintf(inceptio_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%10.4f,%10.4f\n",
 			inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek, inceptio_pak_gN.latitude*180.0 / MAX_INT, inceptio_pak_gN.longitude*180.0 / MAX_INT, inceptio_pak_gN.height,
 			latitude_std, longitude_std, height_std, inceptio_pak_gN.positionMode, north_vel, east_vel, up_vel, track_over_ground);
-		write_inceptio_ex_file(inceptio_raw.ntype, inceptio_output_msg);
+		write_inceptio_ex_file(INCEPTIO_OUT_GNSS, inceptio_output_msg);
 		//process $GPGNSS
 		sprintf(inceptio_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d\n", inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek,
 			(double)inceptio_pak_gN.latitude*180.0 / MAX_INT, (double)inceptio_pak_gN.longitude*180.0 / MAX_INT, inceptio_pak_gN.height, latitude_std, longitude_std, height_std, inceptio_pak_gN.positionMode);
-		write_inceptio_process_file(inceptio_raw.ntype, 0, inceptio_output_msg);
+		write_inceptio_process_file(INCEPTIO_OUT_GNSS, 0, inceptio_output_msg);
 		//process $GPVEL
 		sprintf(inceptio_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n", inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek, horizontal_speed, track_over_ground, up_vel);
-		write_inceptio_process_file(inceptio_raw.ntype, 1, inceptio_output_msg);
+		write_inceptio_process_file(INCEPTIO_OUT_GNSS, 1, inceptio_output_msg);
 		//kml
 		inceptio_append_gnss_kml();
 
@@ -542,14 +542,15 @@ namespace RTK330LA_Tool {
 
 	void output_inceptio_sT() {
 		//csv
-		sprintf(inceptio_output_msg, "%d,%11.4f,%5d,%5d,%5d,%5d,%5d,%5d, %3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,  %8.3f,%8.3f\n", inceptio_pak_sT.GPS_Week, inceptio_pak_sT.GPS_TimeOfWeek,
+		sprintf(inceptio_output_msg, "%d,%11.4f,%5d,%5d,%5d,%5d,%5d,%5d, %3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d, %8.3f,%8.3f\n", inceptio_pak_sT.GPS_Week, inceptio_pak_sT.GPS_TimeOfWeek,
 			inceptio_pak_sT.year, inceptio_pak_sT.mouth, inceptio_pak_sT.day, inceptio_pak_sT.hour, inceptio_pak_sT.min, inceptio_pak_sT.sec,
 			inceptio_pak_sT.status_bit.imu_temp_status, inceptio_pak_sT.status_bit.imu_acce_status, inceptio_pak_sT.status_bit.imu_gyro_status,
 			inceptio_pak_sT.status_bit.imu_sensor_status1, inceptio_pak_sT.status_bit.imu_sensor_status2, inceptio_pak_sT.status_bit.imu_sensor_status3, inceptio_pak_sT.status_bit.imu_overall_status,
 			inceptio_pak_sT.status_bit.gnss_data_status, inceptio_pak_sT.status_bit.gnss_signal_status, inceptio_pak_sT.status_bit.power, inceptio_pak_sT.status_bit.MCU_status, inceptio_pak_sT.status_bit.pps_status,
 			inceptio_pak_sT.status_bit.zupt_det, inceptio_pak_sT.status_bit.odo_used, inceptio_pak_sT.status_bit.odo_recv,
 			inceptio_pak_sT.status_bit.imu_s1_state, inceptio_pak_sT.status_bit.imu_s2_state, inceptio_pak_sT.status_bit.imu_s3_state,
-			inceptio_pak_sT.status_bit.time_valid, inceptio_pak_sT.status_bit.antenna_sensing, inceptio_pak_sT.status_bit.gnss_chipset,
+			inceptio_pak_sT.status_bit.time_valid, inceptio_pak_sT.status_bit.antenna_sensing, inceptio_pak_sT.status_bit.gnss_chipset, 
+			inceptio_pak_sT.status_bit.pust_check,
 			inceptio_pak_sT.imu_temperature, inceptio_pak_sT.mcu_temperature);
 		write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
 	}
@@ -598,7 +599,7 @@ namespace RTK330LA_Tool {
 				payload_lenth == sizeof(inceptio_gN_t)) {
 				data_version = VERSION_24_01_21;
 				memcpy(&inceptio_pak_gN, payload, payload_lenth);
-				output_inceptio_gN();
+				//output_inceptio_gN();
 			}
 		}
 		else if (strcmp(packet_type, "iN") == 0) {
@@ -620,6 +621,7 @@ namespace RTK330LA_Tool {
 			if (payload_lenth == sizeof(inceptio_d2_t)) {
 				memcpy(&inceptio_pak_d2, payload, sizeof(inceptio_d2_t));
 				output_inceptio_d2();
+				output_inceptio_gN();
 			}
 		}
 		else if (strcmp(packet_type, "sT") == 0) {
@@ -729,6 +731,20 @@ namespace RTK330LA_Tool {
 			}
 		}
 		return ret;
+	}
+
+	uint8_t get_current_type() {
+		return inceptio_raw.ntype;
+	}
+
+	inceptio_gN_t * get_gnss_sol()
+	{
+		return &inceptio_pak_gN;
+	}
+
+	inceptio_s1_t * get_imu_raw()
+	{
+		return &inceptio_pak_s2;
 	}
 
 }

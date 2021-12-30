@@ -23,6 +23,7 @@ namespace Ins401_Tool {
 		f_odo_txt = NULL;
 		f_dm_csv = NULL;
 		f_rover_rtcm = NULL;
+		f_mixed_csv = NULL;
 		packets_type_list.clear();
 		packets_type_list.push_back(em_RAW_IMU);
 		packets_type_list.push_back(em_GNSS_SOL);
@@ -83,6 +84,7 @@ namespace Ins401_Tool {
 		if (f_odo_txt)fclose(f_odo_txt); f_odo_txt = NULL;
 		if (f_dm_csv)fclose(f_dm_csv); f_dm_csv = NULL;
 		if (f_rover_rtcm)fclose(f_rover_rtcm); f_rover_rtcm = NULL;
+		if (f_mixed_csv)fclose(f_mixed_csv); f_mixed_csv = NULL;
 	}
 
 	void Ins401_decoder::create_file(FILE* &file, const char* suffix, const char* title) {
@@ -210,26 +212,26 @@ namespace Ins401_Tool {
 		//csv
 		if (show_format_time) {
 			create_file(f_ins_csv, "ins.csv",
-				"DateTime(),GPS_Week(),GPS_TimeOfWeek(s),ins_status(),ins_position_type(),latitude(deg),longitude(deg),height(m),north_velocity(m/s),east_velocity(m/s),up_velocity(m/s),longitudinal_velocity(m/s),lateral_velocity(m/s),roll(deg),pitch(deg),heading(deg),latitude_std(m),longitude_std(m),height_std(m),north_velocity_std(m/s),east_velocity_std(m/s),up_velocity_std(m/s),long_vel_std(m/s),lat_vel_std(m/s),roll_std(deg),pitch_std(deg),heading_std(deg)\n");
+				"DateTime(),GPS_Week(),GPS_TimeOfWeek(s),ins_status(),ins_position_type(),latitude(deg),longitude(deg),height(m),north_velocity(m/s),east_velocity(m/s),up_velocity(m/s),longitudinal_velocity(m/s),lateral_velocity(m/s),roll(deg),pitch(deg),heading(deg),latitude_std(m),longitude_std(m),height_std(m),north_velocity_std(m/s),east_velocity_std(m/s),up_velocity_std(m/s),long_vel_std(m/s),lat_vel_std(m/s),roll_std(deg),pitch_std(deg),heading_std(deg),contient()\n");
 			gtime_t gpstime = gpst2time(ins.gps_week, (double)ins.gps_millisecs / 1000.0);
 			gtime_t utctime = gpst2utc(gpstime);
 			char* time = time_str(utctime, 2);
-			fprintf(f_ins_csv, "%s,%d,%11.4f,%3d,%3d,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f\n",
+			fprintf(f_ins_csv, "%s,%d,%11.4f,%3d,%3d,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%3d\n",
 				time, ins.gps_week, (double)ins.gps_millisecs / 1000.0, ins.ins_status, ins.ins_position_type, ins.latitude, ins.longitude, ins.height,
 				ins.north_velocity, ins.east_velocity, ins.up_velocity, ins.longitudinal_velocity, ins.lateral_velocity,
 				ins.roll, ins.pitch, ins.heading, ins.latitude_std, ins.longitude_std, ins.height_std,
 				ins.north_velocity_std, ins.east_velocity_std, ins.up_velocity_std,
-				ins.long_vel_std, ins.lat_vel_std, ins.roll_std, ins.pitch_std, ins.heading_std);
+				ins.long_vel_std, ins.lat_vel_std, ins.roll_std, ins.pitch_std, ins.heading_std, ins.id_contient);
 		}
 		else {
 			create_file(f_ins_csv, "ins.csv",
-				"GPS_Week(),GPS_TimeOfWeek(s),ins_status(),ins_position_type(),latitude(deg),longitude(deg),height(m),north_velocity(m/s),east_velocity(m/s),up_velocity(m/s),longitudinal_velocity(m/s),lateral_velocity(m/s),roll(deg),pitch(deg),heading(deg),latitude_std(m),longitude_std(m),height_std(m),north_velocity_std(m/s),east_velocity_std(m/s),up_velocity_std(m/s),long_vel_std(m/s),lat_vel_std(m/s),roll_std(deg),pitch_std(deg),heading_std(deg)\n");
-			fprintf(f_ins_csv, "%d,%11.4f,%3d,%3d,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f\n",
+				"GPS_Week(),GPS_TimeOfWeek(s),ins_status(),ins_position_type(),latitude(deg),longitude(deg),height(m),north_velocity(m/s),east_velocity(m/s),up_velocity(m/s),longitudinal_velocity(m/s),lateral_velocity(m/s),roll(deg),pitch(deg),heading(deg),latitude_std(m),longitude_std(m),height_std(m),north_velocity_std(m/s),east_velocity_std(m/s),up_velocity_std(m/s),long_vel_std(m/s),lat_vel_std(m/s),roll_std(deg),pitch_std(deg),heading_std(deg),contient()\n");
+			fprintf(f_ins_csv, "%d,%11.4f,%3d,%3d,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%3d\n",
 				ins.gps_week, (double)ins.gps_millisecs / 1000.0, ins.ins_status, ins.ins_position_type, ins.latitude, ins.longitude, ins.height,
 				ins.north_velocity, ins.east_velocity, ins.up_velocity, ins.longitudinal_velocity, ins.lateral_velocity,
 				ins.roll, ins.pitch, ins.heading, ins.latitude_std, ins.longitude_std, ins.height_std,
 				ins.north_velocity_std, ins.east_velocity_std, ins.up_velocity_std,
-				ins.long_vel_std, ins.lat_vel_std, ins.roll_std, ins.pitch_std, ins.heading_std);
+				ins.long_vel_std, ins.lat_vel_std, ins.roll_std, ins.pitch_std, ins.heading_std, ins.id_contient);
 		}
 
 #ifndef NOT_OUTPUT_INNER_FILE
@@ -274,6 +276,11 @@ namespace Ins401_Tool {
 #endif
 	}
 
+	void Ins401_decoder::output_mixed_result()
+	{
+		create_file(f_mixed_csv, "mixed.csv",
+			"GPS周内秒,经度(°),纬度(°),高度(m),向北速度(m/s),向东速度(m/s),向地速度(m/s),航向角(°),俯仰角(°),翻滚角(°),加表x(g),加表y(g),加表z(g),陀螺x(°/s),陀螺y(°/s),陀螺z(°/s),GPS定位状态,GPS定向状态,GPS卫星数量\n");
+	}
 
 	void Ins401_decoder::output_odo_raw()
 	{
@@ -363,9 +370,10 @@ IMU Temperature(),MCU Temperature(),STA9100 Temperature()\n");
 		}break;
 		case em_INS_SOL:
 		{
+			size_t packet_size_20211207 = sizeof(ins_sol_t_20211207);
 			size_t packet_size = sizeof(ins_sol_t);
-			if (raw.length == packet_size) {
-				memcpy(&ins, payload, packet_size);
+			if (raw.length == packet_size || raw.length == packet_size_20211207) {
+				memcpy(&ins, payload, raw.length);
 				output_ins_sol();
 			}
 		}break;
@@ -559,5 +567,10 @@ IMU Temperature(),MCU Temperature(),STA9100 Temperature()\n");
 	gnss_sol_t * Ins401_decoder::get_gnss_sol()
 	{
 		return &gnss;
+	}
+
+	raw_imu_t * Ins401_decoder::get_imu_raw()
+	{
+		return &imu;
 	}
 };

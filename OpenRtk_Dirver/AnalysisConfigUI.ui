@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>391</width>
-    <height>205</height>
+    <height>229</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -39,6 +39,11 @@
      <row>
       <property name="text">
        <string>ver_vel_err_thres(m/s):</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>start line</string>
       </property>
      </row>
      <column>

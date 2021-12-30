@@ -1,10 +1,10 @@
-#include "Ins401_Analysis.h"
+#include "RTK330LA_Analysis.h"
 #include "rtcm.h"
 #include "common.h"
 
-namespace Ins401_Tool {
+namespace RTK330LA_Tool {
 
-	Ins401_Analysis::Ins401_Analysis(QObject *parent)
+	RTK330LA_Analysis::RTK330LA_Analysis(QObject *parent)
 		: QObject(parent)
 	{
 		imu_1hz_file = NULL;
@@ -20,29 +20,31 @@ namespace Ins401_Tool {
 		memset(&m_imu_total, 0, sizeof(m_imu_total));
 	}
 
-	Ins401_Analysis::~Ins401_Analysis()
+	RTK330LA_Analysis::~RTK330LA_Analysis()
 	{
 	}
 
-	void Ins401_Analysis::init() {
+	void RTK330LA_Analysis::init()
+	{
 		m_gnss_sol_list.clear();
 		memset(&m_imu_total, 0, sizeof(m_imu_total));
 		m_raw_imu_list.clear();
 	}
 
-	void Ins401_Analysis::set_out_base_name(QString basename)
+	void RTK330LA_Analysis::set_out_base_name(QString basename)
 	{
 		m_OutBaseName = basename;
 	}
 
-	void Ins401_Analysis::append_gnss_sol(gnss_sol_t* gnss) {
+	void RTK330LA_Analysis::append_gnss_sol(inceptio_gN_t * gnss)
+	{
 		if (append_num >= m_start_line) {
 			m_gnss_sol_list.append(*gnss);
 		}
 		append_num++;
 	}
 
-	void Ins401_Analysis::append_imu_raw(raw_imu_t * imu)
+	void RTK330LA_Analysis::append_imu_raw(inceptio_s1_t * imu)
 	{
 		if (imu_1hz_file == NULL) {
 			create_file(imu_1hz_file, "imu_1hz.csv",
@@ -54,61 +56,61 @@ namespace Ins401_Tool {
 		}
 		bool is_append = false;
 		if (m_imu_total.last_time == 0) {
-			m_imu_total.last_time = imu->gps_millisecs;
-			m_imu_total.accel[0].max = imu->accel_x;
-			m_imu_total.accel[0].min = imu->accel_x;
-			m_imu_total.accel[0].sum = imu->accel_x;
-			m_imu_total.accel[1].max = imu->accel_y;
-			m_imu_total.accel[1].min = imu->accel_y;
-			m_imu_total.accel[1].sum = imu->accel_y;
-			m_imu_total.accel[2].max = imu->accel_z;
-			m_imu_total.accel[2].min = imu->accel_z;
-			m_imu_total.accel[2].sum = imu->accel_z;
-			m_imu_total.gyro[0].max = imu->gyro_x;
-			m_imu_total.gyro[0].min = imu->gyro_x;
-			m_imu_total.gyro[0].sum = imu->gyro_x;
-			m_imu_total.gyro[1].max = imu->gyro_y;
-			m_imu_total.gyro[1].min = imu->gyro_y;
-			m_imu_total.gyro[1].sum = imu->gyro_y;
-			m_imu_total.gyro[2].max = imu->gyro_z;
-			m_imu_total.gyro[2].min = imu->gyro_z;
-			m_imu_total.gyro[2].sum = imu->gyro_z;
+			m_imu_total.last_time = uint32_t(imu->GPS_TimeOfWeek);
+			m_imu_total.accel[0].max = imu->x_accel;
+			m_imu_total.accel[0].min = imu->x_accel;
+			m_imu_total.accel[0].sum = imu->x_accel;
+			m_imu_total.accel[1].max = imu->y_accel;
+			m_imu_total.accel[1].min = imu->y_accel;
+			m_imu_total.accel[1].sum = imu->y_accel;
+			m_imu_total.accel[2].max = imu->z_accel;
+			m_imu_total.accel[2].min = imu->z_accel;
+			m_imu_total.accel[2].sum = imu->z_accel;
+			m_imu_total.gyro[0].max = imu->x_gyro;
+			m_imu_total.gyro[0].min = imu->x_gyro;
+			m_imu_total.gyro[0].sum = imu->x_gyro;
+			m_imu_total.gyro[1].max = imu->y_gyro;
+			m_imu_total.gyro[1].min = imu->y_gyro;
+			m_imu_total.gyro[1].sum = imu->y_gyro;
+			m_imu_total.gyro[2].max = imu->z_gyro;
+			m_imu_total.gyro[2].min = imu->z_gyro;
+			m_imu_total.gyro[2].sum = imu->z_gyro;
 			is_append = true;
 		}
 		else {
-			if (uint32_t(m_imu_total.last_time / 1000) != uint32_t(imu->gps_millisecs / 1000)) {
-				m_imu_total.last_time = imu->gps_millisecs;
-				m_imu_total.accel[0].max = max(imu->accel_x, m_imu_total.accel[0].max);
-				m_imu_total.accel[0].min = min(imu->accel_x, m_imu_total.accel[0].min);
-				m_imu_total.accel[0].sum += (imu->accel_x);
-				m_imu_total.accel[1].max = max(imu->accel_y, m_imu_total.accel[1].max);
-				m_imu_total.accel[1].min = min(imu->accel_y, m_imu_total.accel[1].min);
-				m_imu_total.accel[1].sum += (imu->accel_y);
-				m_imu_total.accel[2].max = max(imu->accel_z, m_imu_total.accel[2].max);
-				m_imu_total.accel[2].min = min(imu->accel_z, m_imu_total.accel[2].min);
-				m_imu_total.accel[2].sum += (imu->accel_z);
-				m_imu_total.gyro[0].max = max(imu->gyro_x, m_imu_total.gyro[0].max);
-				m_imu_total.gyro[0].min = min(imu->gyro_x, m_imu_total.gyro[0].min);
-				m_imu_total.gyro[0].sum += imu->gyro_x;
-				m_imu_total.gyro[1].max = max(imu->gyro_y, m_imu_total.gyro[1].max);
-				m_imu_total.gyro[1].min = min(imu->gyro_y, m_imu_total.gyro[1].min);
-				m_imu_total.gyro[1].sum += imu->gyro_y;
-				m_imu_total.gyro[2].max = max(imu->gyro_z, m_imu_total.gyro[2].max);
-				m_imu_total.gyro[2].min = min(imu->gyro_z, m_imu_total.gyro[2].min);
-				m_imu_total.gyro[2].sum += imu->gyro_z;
+			if (m_imu_total.last_time != uint32_t(imu->GPS_TimeOfWeek)) {
+				m_imu_total.last_time = uint32_t(imu->GPS_TimeOfWeek);
+				m_imu_total.accel[0].max = max(imu->x_accel, m_imu_total.accel[0].max);
+				m_imu_total.accel[0].min = min(imu->x_accel, m_imu_total.accel[0].min);
+				m_imu_total.accel[0].sum += (imu->x_accel);
+				m_imu_total.accel[1].max = max(imu->y_accel, m_imu_total.accel[1].max);
+				m_imu_total.accel[1].min = min(imu->y_accel, m_imu_total.accel[1].min);
+				m_imu_total.accel[1].sum += (imu->y_accel);
+				m_imu_total.accel[2].max = max(imu->z_accel, m_imu_total.accel[2].max);
+				m_imu_total.accel[2].min = min(imu->z_accel, m_imu_total.accel[2].min);
+				m_imu_total.accel[2].sum += (imu->z_accel);
+				m_imu_total.gyro[0].max = max(imu->x_gyro, m_imu_total.gyro[0].max);
+				m_imu_total.gyro[0].min = min(imu->x_gyro, m_imu_total.gyro[0].min);
+				m_imu_total.gyro[0].sum += imu->x_gyro;
+				m_imu_total.gyro[1].max = max(imu->y_gyro, m_imu_total.gyro[1].max);
+				m_imu_total.gyro[1].min = min(imu->y_gyro, m_imu_total.gyro[1].min);
+				m_imu_total.gyro[1].sum += imu->y_gyro;
+				m_imu_total.gyro[2].max = max(imu->z_gyro, m_imu_total.gyro[2].max);
+				m_imu_total.gyro[2].min = min(imu->z_gyro, m_imu_total.gyro[2].min);
+				m_imu_total.gyro[2].sum += imu->z_gyro;
 				is_append = true;
 			}
 		}
 		if (is_append) {
-			fprintf(imu_1hz_file, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", imu->gps_week, (double)imu->gps_millisecs / 1000.0,
-				imu->accel_x, imu->accel_y, imu->accel_z, imu->gyro_x, imu->gyro_y, imu->gyro_z);
-			fprintf(imu_g_1hz_file, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", imu->gps_week, (double)imu->gps_millisecs / 1000.0,
-				imu->accel_x / _G_, imu->accel_y / _G_, imu->accel_z / _G_, imu->gyro_x, imu->gyro_y, imu->gyro_z);
+			fprintf(imu_1hz_file, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", imu->GPS_Week, (double)imu->GPS_TimeOfWeek,
+				imu->x_accel, imu->y_accel, imu->z_accel, imu->x_gyro, imu->y_gyro, imu->z_gyro);
+			fprintf(imu_g_1hz_file, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", imu->GPS_Week, (double)imu->GPS_TimeOfWeek,
+				imu->x_accel / _G_, imu->y_accel / _G_, imu->z_accel / _G_, imu->x_gyro, imu->y_gyro, imu->z_gyro);
 			m_raw_imu_list.append(*imu);
 		}
 	}
 
-	void Ins401_Analysis::static_point_cep()
+	void RTK330LA_Analysis::static_point_cep()
 	{
 		if (m_gnss_sol_list.size() == 0) {
 			return;
@@ -120,19 +122,20 @@ namespace Ins401_Tool {
 		QList<double> longitude_list;
 		QList<double> height_list;
 		for (int i = 0; i < m_gnss_sol_list.size(); i++) {
-			if (m_gnss_sol_list[i].position_type == 4) {
-				latitude_list.append(m_gnss_sol_list[i].latitude);
-				longitude_list.append(m_gnss_sol_list[i].longitude);
-				height_list.append(m_gnss_sol_list[i].height);
+			if (m_gnss_sol_list[i].positionMode == 4) {
+				latitude_list.append((double)m_gnss_sol_list[i].latitude * 180.0 / MAX_INT);
+				longitude_list.append((double)m_gnss_sol_list[i].longitude * 180.0 / MAX_INT);
+				height_list.append((double)m_gnss_sol_list[i].height);
 				fixed_num++;
 			}
-			else if (m_gnss_sol_list[i].position_type == 5) {
+			else if (m_gnss_sol_list[i].positionMode == 5) {
 				float_num++;
 			}
-			else if (m_gnss_sol_list[i].position_type == 1) {
+			else if (m_gnss_sol_list[i].positionMode == 1) {
 				spp_num++;
 			}
 		}
+
 		if (height_list.size() == 0) {
 			return;
 		}
@@ -154,15 +157,14 @@ namespace Ins401_Tool {
 		double median_xyz[3] = { 0 };
 		pos2ecef(median_pos, median_xyz);
 
-		//QList<double> dist_list;
 		QList<double> hor_dist_list;
 		QList<double> ver_dist_list;
 		QList<double> hor_vel_list;
 		QList<double> ver_vel_list;
 		for (int i = 0; i < m_gnss_sol_list.size(); i++) {
 			double pos[3] = { 0 };
-			pos[0] = m_gnss_sol_list[i].latitude;
-			pos[1] = m_gnss_sol_list[i].longitude;
+			pos[0] = (double)m_gnss_sol_list[i].latitude * 180.0 / MAX_INT;
+			pos[1] = (double)m_gnss_sol_list[i].longitude * 180.0 / MAX_INT;
 			pos[2] = m_gnss_sol_list[i].height;
 			ver_dist_list.append(fabs(pos[2] - median_pos[2]));
 
@@ -170,12 +172,6 @@ namespace Ins401_Tool {
 			pos[1] = pos[1] * D2R;
 			double xyz[3] = { 0 };
 			double d_xyz[3] = { 0 };
-			//pos2ecef(pos, xyz);		
-			//d_xyz[0] = xyz[0] - median_xyz[0];
-			//d_xyz[1] = xyz[1] - median_xyz[1];
-			//d_xyz[2] = xyz[2] - median_xyz[2];
-			//double distance = sqrt(d_xyz[0] * d_xyz[0] + d_xyz[1] * d_xyz[1] + d_xyz[2] * d_xyz[2]);
-			//dist_list.append(distance);
 
 			pos[2] = median_pos[2];
 			double xyz_hor[3] = { 0 };
@@ -186,9 +182,13 @@ namespace Ins401_Tool {
 			double distance = sqrt(d_xyz[0] * d_xyz[0] + d_xyz[1] * d_xyz[1] + d_xyz[2] * d_xyz[2]);
 			hor_dist_list.append(distance);
 
-			double hor_vel = sqrt(m_gnss_sol_list[i].north_vel*m_gnss_sol_list[i].north_vel + m_gnss_sol_list[i].east_vel*m_gnss_sol_list[i].east_vel);
+			float north_vel = (float)m_gnss_sol_list[i].velocityNorth / 100.0f;
+			float east_vel = (float)m_gnss_sol_list[i].velocityEast / 100.0f;
+			float up_vel = (float)m_gnss_sol_list[i].velocityUp / 100.0f;
+
+			double hor_vel = sqrt(north_vel*north_vel + east_vel * east_vel);
 			hor_vel_list.append(hor_vel);
-			ver_vel_list.append(fabs(m_gnss_sol_list[i].up_vel));
+			ver_vel_list.append(fabs(up_vel));
 		}
 		//qSort(dist_list);
 		qSort(hor_dist_list);
@@ -226,7 +226,7 @@ namespace Ins401_Tool {
 		}
 	}
 
-	void Ins401_Analysis::set_thres(double cep_level, double hor_dist_cep, double ver_dist_cep, double hor_vel_cep, double ver_vel_cep, int32_t start_line)
+	void RTK330LA_Analysis::set_thres(double cep_level, double hor_dist_cep, double ver_dist_cep, double hor_vel_cep, double ver_vel_cep, int32_t start_line)
 	{
 		append_num = 0;
 		cep_level_thres = cep_level;
@@ -237,7 +237,7 @@ namespace Ins401_Tool {
 		m_start_line = start_line;
 	}
 
-	void Ins401_Analysis::create_file(FILE *& file, const char * suffix, const char * title)
+	void RTK330LA_Analysis::create_file(FILE *& file, const char * suffix, const char * title)
 	{
 		if (file == NULL) {
 			char file_name[256] = { 0 };
@@ -247,18 +247,18 @@ namespace Ins401_Tool {
 		}
 	}
 
-	void Ins401_Analysis::summary()
+	void RTK330LA_Analysis::summary()
 	{
 		static_point_cep();
 		imu_summary();
 	}
 
-	void Ins401_Analysis::imu_summary()
+	void RTK330LA_Analysis::imu_summary()
 	{
 		if (imu_1hz_file) fclose(imu_1hz_file); imu_1hz_file = NULL;
 		if (imu_g_1hz_file) fclose(imu_g_1hz_file); imu_g_1hz_file = NULL;
 
-		for (int i = 0; i < 3;i++) {
+		for (int i = 0; i < 3; i++) {
 			m_imu_total.accel[i].avg = m_imu_total.accel[i].sum / m_raw_imu_list.size();
 		}
 		for (int i = 0; i < 3; i++) {
@@ -266,18 +266,18 @@ namespace Ins401_Tool {
 		}
 		double diff = 0;
 		for (int i = 0; i < m_raw_imu_list.size(); i++) {
-			diff = m_raw_imu_list[i].accel_x - m_imu_total.accel[0].avg;
+			diff = m_raw_imu_list[i].x_accel - m_imu_total.accel[0].avg;
 			m_imu_total.accel[0].square_diff_sum += (diff*diff);
-			diff = m_raw_imu_list[i].accel_y - m_imu_total.accel[1].avg;
+			diff = m_raw_imu_list[i].y_accel - m_imu_total.accel[1].avg;
 			m_imu_total.accel[1].square_diff_sum += (diff*diff);
-			diff = m_raw_imu_list[i].accel_z - m_imu_total.accel[2].avg;
+			diff = m_raw_imu_list[i].z_accel - m_imu_total.accel[2].avg;
 			m_imu_total.accel[2].square_diff_sum += (diff*diff);
 
-			diff = m_raw_imu_list[i].gyro_x - m_imu_total.gyro[0].avg;
+			diff = m_raw_imu_list[i].x_gyro - m_imu_total.gyro[0].avg;
 			m_imu_total.gyro[0].square_diff_sum += (diff*diff);
-			diff = m_raw_imu_list[i].gyro_y - m_imu_total.gyro[1].avg;
+			diff = m_raw_imu_list[i].y_gyro - m_imu_total.gyro[1].avg;
 			m_imu_total.gyro[1].square_diff_sum += (diff*diff);
-			diff = m_raw_imu_list[i].gyro_z - m_imu_total.gyro[2].avg;
+			diff = m_raw_imu_list[i].z_gyro - m_imu_total.gyro[2].avg;
 			m_imu_total.gyro[2].square_diff_sum += (diff*diff);
 		}
 		for (int i = 0; i < 3; i++) {
@@ -288,15 +288,16 @@ namespace Ins401_Tool {
 		}
 
 		FILE* imu_total_file = NULL;
-		create_file(imu_total_file, "imu_total.csv",NULL);
-		fprintf(imu_total_file," ,MAX,MIN,AVG,STD\n");
+		create_file(imu_total_file, "imu_total.csv", NULL);
+		fprintf(imu_total_file, " ,MAX,MIN,AVG,STD\n");
 		fprintf(imu_total_file, "x_accel(g),%10.5f,%10.5f,%10.5f,%10.5f\n", m_imu_total.accel[0].max / _G_, m_imu_total.accel[0].min / _G_, m_imu_total.accel[0].avg / _G_, m_imu_total.accel[0].std / _G_);
 		fprintf(imu_total_file, "y_accel(g),%10.5f,%10.5f,%10.5f,%10.5f\n", m_imu_total.accel[1].max / _G_, m_imu_total.accel[1].min / _G_, m_imu_total.accel[1].avg / _G_, m_imu_total.accel[1].std / _G_);
-		fprintf(imu_total_file, "z_accel(g),%10.5f,%10.5f,%10.5f,%10.5f\n", m_imu_total.accel[2].max / _G_, m_imu_total.accel[2].min/_G_, m_imu_total.accel[2].avg/_G_, m_imu_total.accel[2].std/_G_);
+		fprintf(imu_total_file, "z_accel(g),%10.5f,%10.5f,%10.5f,%10.5f\n", m_imu_total.accel[2].max / _G_, m_imu_total.accel[2].min / _G_, m_imu_total.accel[2].avg / _G_, m_imu_total.accel[2].std / _G_);
 		fprintf(imu_total_file, "x_gyro,%10.5f,%10.5f,%10.5f,%10.5f\n", m_imu_total.gyro[0].max, m_imu_total.gyro[0].min, m_imu_total.gyro[0].avg, m_imu_total.gyro[0].std);
 		fprintf(imu_total_file, "y_gyro,%10.5f,%10.5f,%10.5f,%10.5f\n", m_imu_total.gyro[1].max, m_imu_total.gyro[1].min, m_imu_total.gyro[1].avg, m_imu_total.gyro[1].std);
 		fprintf(imu_total_file, "z_gyro,%10.5f,%10.5f,%10.5f,%10.5f\n", m_imu_total.gyro[2].max, m_imu_total.gyro[2].min, m_imu_total.gyro[2].avg, m_imu_total.gyro[2].std);
 		fclose(imu_total_file);
 	}
+
 
 }

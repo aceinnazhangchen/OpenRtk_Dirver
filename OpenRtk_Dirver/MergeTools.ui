@@ -32,6 +32,21 @@
          <string>rtcm&amp;imu</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>ins.csv&amp;imu.txt</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>process.txt&amp;imu.txt</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>process&amp;gnss.csv</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item>
