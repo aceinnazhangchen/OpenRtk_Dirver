@@ -14,6 +14,8 @@ public:
 	~AnalysisConfigUI();
 	void set_thres_Ins401(Ins401_Tool::Ins401_Analysis * analyzer);
 	void set_thres_RTK330LA(RTK330LA_Tool::RTK330LA_Analysis * analyzer);
+	bool isStaticTotalChecked();
+	bool isMITableChecked();
 private:
 	Ui::AnalysisConfigUI ui;
 };

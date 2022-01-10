@@ -9,7 +9,6 @@ namespace RTK330LA_Tool {
 	{
 		imu_1hz_file = NULL;
 		imu_g_1hz_file = NULL;
-		m_static_point_ecp = true;
 		append_num = 0;
 		m_start_line = 30;
 		cep_level_thres = 99.7;

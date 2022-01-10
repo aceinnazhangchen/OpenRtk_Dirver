@@ -94,7 +94,9 @@ void set_approximate_time(int year, int doy, rtcm_t *rtcm);
 
 int add_obs(obsd_t* obsd, obs_t* obs);
 int add_eph(eph_t* eph, nav_t* nav);
+int add_eph_all(eph_t* eph, nav_t* nav);
 int add_geph(geph_t* eph, nav_t* nav);
+int add_geph_all(geph_t* eph, nav_t* nav);
 
 int is_complete_rtcm();
 //int gen_rtcm3(rtcm_t* rtcm, obs_t *obs, int type, int sync);

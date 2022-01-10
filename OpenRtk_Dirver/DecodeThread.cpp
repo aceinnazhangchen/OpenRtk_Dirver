@@ -99,6 +99,11 @@ void DecodeThread::setDateTime(QString time)
 	m_datatime = time;
 }
 
+void DecodeThread::setMIFileSwitch(bool write)
+{
+	ins401_decoder->set_MI_file_switch(write);
+}
+
 void DecodeThread::makeOutPath(QString filename)
 {
 	QFileInfo outDir(filename);
@@ -176,7 +181,9 @@ void DecodeThread::decode_openrtk_inceptio()
 		}
 		RTK330LA_Tool::write_inceptio_kml_files();
 		RTK330LA_Tool::close_inceptio_all_log_file();
-		m_RTK330LA_Analysis->summary();
+		if (m_static_point_ecp) {
+			m_RTK330LA_Analysis->summary();
+		}		
 		fclose(file);
 	}
 }
@@ -264,13 +271,18 @@ void DecodeThread::decode_ins401()
 					else if (Ins401_Tool::em_RAW_IMU == ins401_decoder->get_current_type()) {
 						m_Ins401_Analysis->append_imu_raw(ins401_decoder->get_imu_raw());
 					}
+					else if (Ins401_Tool::em_INS_SOL == ins401_decoder->get_current_type()) {
+
+					}
 				}
 			}
 			double percent = (double)read_size / (double)file_size * 10000;
 			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
 		}
 		ins401_decoder->finish();
-		m_Ins401_Analysis->summary();
+		if (m_static_point_ecp) {
+			m_Ins401_Analysis->summary();
+		}
 		fclose(file);
 	}
 }
@@ -366,12 +378,4 @@ void DecodeThread::decode_rtcm_convbin()
 	bat_file.write(command.toLocal8Bit());
 	bat_file.close();
 	system("run_conbin.bat");
-	//system(command.toLocal8Bit().data());
-	//sleep(100);
-	//system("notepad");
-	//WinExec(command.toLocal8Bit().data(), SW_SHOWMAXIMIZED);
-	
-	//QStringList arguments;
-	//arguments << "-r" << "rtcm3" << "-v"<<"3.04"<<"tr"<< m_datatime<<"-od"<<"-os"<<"-oi"<<"-ot"<<"-ol"<<"7"<< m_FileName<<"-p"<< m_OutBaseName + "_out.csv";
-	//QProcess::startDetached("convbin.exe", arguments, outDir.absoluteDir().absolutePath());
 }

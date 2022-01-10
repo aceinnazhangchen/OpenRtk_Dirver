@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "User_Decoder_Lib", "User_De
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RTCM_Spliter", "RTCM_Spliter\RTCM_Spliter.vcxproj", "{799A8AFC-1695-489C-90E0-BD980BC9FBFF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MountAngleCalculation", "MountAngleCalculation\MountAngleCalculation.vcxproj", "{498AC6D2-3590-47BB-9FF4-7178D803F2C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -49,6 +51,12 @@ Global
 		{799A8AFC-1695-489C-90E0-BD980BC9FBFF}.Release|x64.Build.0 = Release|x64
 		{799A8AFC-1695-489C-90E0-BD980BC9FBFF}.Release|x86.ActiveCfg = Release|Win32
 		{799A8AFC-1695-489C-90E0-BD980BC9FBFF}.Release|x86.Build.0 = Release|Win32
+		{498AC6D2-3590-47BB-9FF4-7178D803F2C2}.Debug|x64.ActiveCfg = Debug|x64
+		{498AC6D2-3590-47BB-9FF4-7178D803F2C2}.Debug|x64.Build.0 = Debug|x64
+		{498AC6D2-3590-47BB-9FF4-7178D803F2C2}.Debug|x86.ActiveCfg = Debug|x64
+		{498AC6D2-3590-47BB-9FF4-7178D803F2C2}.Release|x64.ActiveCfg = Release|x64
+		{498AC6D2-3590-47BB-9FF4-7178D803F2C2}.Release|x64.Build.0 = Release|x64
+		{498AC6D2-3590-47BB-9FF4-7178D803F2C2}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -34,7 +34,7 @@ int64_t getFileSize(FILE * file)
 #endif
 #else
 	fseeko(file, (int64_t)(0), SEEK_END);
-	file_size = ftello(fp);
+	file_size = ftello(file);
 	fseeko(file, (int64_t)(0), SEEK_SET);
 	return file_size;
 #endif

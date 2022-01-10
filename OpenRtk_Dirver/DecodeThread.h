@@ -33,6 +33,7 @@ public:
 	void setShowTime(bool show);
 	void setKmlFrequency(int frequency);
 	void setDateTime(QString time);
+	void setMIFileSwitch(bool write);
 protected:
 	void makeOutPath(QString filename);
 	void decode_openrtk_user();

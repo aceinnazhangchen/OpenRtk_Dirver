@@ -40,3 +40,13 @@ void AnalysisConfigUI::set_thres_RTK330LA(RTK330LA_Tool::RTK330LA_Analysis * ana
 
 	analyzer->set_thres(cep_level.toDouble(), hor_pos_err_thres.toDouble(), ver_pos_err_thres.toDouble(), hor_vel_err_thres.toDouble(), ver_vel_err_thres.toDouble(), start_line.toInt());
 }
+
+bool AnalysisConfigUI::isStaticTotalChecked()
+{
+	return ui.checkBox_static_total->isChecked();
+}
+
+bool AnalysisConfigUI::isMITableChecked()
+{
+	return ui.checkBox_MI_table->isChecked();
+}

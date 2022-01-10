@@ -24,7 +24,6 @@ public:
 	void imu_summary();
 private:
 	QList<gnss_sol_t> m_gnss_sol_list;
-	bool m_static_point_ecp;
 	QString m_OutBaseName;
 	double cep_level_thres;
 	double hor_dist_cep_thres;
