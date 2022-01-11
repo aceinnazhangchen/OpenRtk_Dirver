@@ -8,7 +8,7 @@
 #include "kml.h"
 #include "beidou.h"
 
-
+#define IMU_OUT_PROCESS
 #define BEIDOU_HEAD 0x23
 #define MAX_INT 2147483648.0
 #define MAX_BEIDOU_TYPES		3
@@ -348,7 +348,9 @@ namespace beidou_Tool {
 		//	beidou_pak_s1.x_accel, beidou_pak_s1.y_accel, beidou_pak_s1.z_accel, beidou_pak_s1.x_gyro, beidou_pak_s1.y_gyro, beidou_pak_s1.z_gyro);
 		//write_beidou_ex_file(beidou_raw.ntype, beidou_output_msg);
 		////process
-		//write_beidou_process_file(beidou_raw.ntype, 0, beidou_output_msg);
+#ifdef IMU_OUT_PROCESS
+		write_beidou_process_file(beidou_raw.ntype, 0, beidou_output_msg);
+#endif
 	}
 
 	void output_beidou_gN() {
