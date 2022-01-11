@@ -90,7 +90,7 @@ namespace Ins401_Tool {
 		float		up_vel_std;
 	}gnss_sol_t;
 
-	typedef struct {
+	struct ins_sol_t_20211207 {
 		uint16_t	gps_week;
 		uint32_t	gps_millisecs;
 		/*
@@ -133,7 +133,11 @@ namespace Ins401_Tool {
 		float		roll_std;
 		float		pitch_std;
 		float		heading_std;
-	}ins_sol_t;
+	};
+
+	struct ins_sol_t: ins_sol_t_20211207 {
+		int16_t id_contient;
+	};	
 
 	typedef struct {
 		uint16_t		gps_week;
@@ -214,6 +218,73 @@ namespace Ins401_Tool {
 		uint8_t crc[4];                           //!< 32-bit cyclic redundancy check (CRC)
 	}SaveMsg;
 
+	/**** Start Up ****/
+	typedef struct {
+		uint32_t adc : 4;				/* bit0: Adc_In, bit1: Adc_Core, bit2: Adc_1V2, bit3: GND */
+		uint32_t exOsc : 1;           /* exOsci = 24MHz */
+		uint32_t power : 1;
+		uint32_t ram : 3;				/* bit0: Sram0, bit1: Sram1, bit2: Sram2 */
+		uint32_t wdg : 1;
+		uint32_t flash : 2;			/* bit0: cflash bit1: wflash*/
+		uint32_t clkCSV : 1;
+		uint32_t BackUp : 19;
+	}stFdHwStUp;
+
+	/**** Run time ****/
+	typedef struct {
+		uint32_t  volt : 1;
+		uint32_t  clock : 1;
+		uint32_t  core : 1;
+		uint32_t  sram : 1;
+		uint32_t  flash : 1;
+		uint32_t  BackUp : 27;
+	}stFdHwMonitor;
+
+	typedef struct {
+		stFdHwStUp  start_up;
+		stFdHwMonitor runtime;
+	}stPacket_4D44;
+
+	typedef struct {
+		uint16_t spp_hor_pos_s : 1;
+		uint16_t spp_ver_pos_s : 1;
+		uint16_t spp_hor_vel_s : 1;
+		uint16_t spp_ver_vel_s : 1;
+		uint16_t rtk_hor_pos_s : 1;
+		uint16_t rtk_ver_pos_s : 1;
+		uint16_t rtk_hor_vel_s : 1;
+		uint16_t rtk_ver_vel_s : 1;
+		uint16_t rtk_heading_s : 1;
+		uint16_t reserved : 7;
+	}gnss_sol_integ_bit;
+
+	typedef struct {
+		uint16_t	week;
+		double		timeOfWeek;
+		uint32_t	spp_fail_rate;
+		uint32_t	rtk_fail_rate;
+		uint16_t	spp_hor_pos_pl;
+		uint16_t	spp_ver_pos_pl;
+		uint16_t	spp_hor_vel_pl;
+		uint16_t	spp_ver_vel_pl;
+		uint16_t	rtk_hor_pos_pl;
+		uint16_t	rtk_ver_pos_pl;
+		uint16_t	rtk_hor_vel_pl;
+		uint16_t	rtk_ver_vel_pl;
+		uint16_t	rtk_heading_pl;
+		uint16_t	spp_hor_pos_al;
+		uint16_t	spp_ver_pos_al;
+		uint16_t	spp_hor_vel_al;
+		uint16_t	spp_ver_vel_al;
+		uint16_t	rtk_hor_pos_al;
+		uint16_t	rtk_ver_pos_al;
+		uint16_t	rtk_hor_vel_al;
+		uint16_t	rtk_ver_vel_al;
+		uint16_t	rtk_heading_al;
+		gnss_sol_integ_bit	status_bit;
+	}gnss_integ_t;
+
+
 #pragma pack(pop)
 
 	enum emPackageType {
@@ -224,9 +295,12 @@ namespace Ins401_Tool {
 		em_DIAGNOSTIC_MSG = 0x0a05,
 		em_ROVER_RTCM = 0x0a06,
 		em_MISALIGN = 0x0a07,
-		PowerUpDR_MES = 0x0a09
+		PowerUpDR_MES = 0x0a09,
+		em_4D44 = 0x4D44,
+		em_GNSS_SOL_INTEGEITY = 0x6749,
 	};
 
+	typedef std::map<std::string, FILE*> FilesMap;
 	class Ins401_decoder {
 	public:
 		Ins401_decoder();
@@ -240,6 +314,8 @@ namespace Ins401_Tool {
 		binary_misalign_t misa;
 		diagnostic_msg_t dm;
 		SaveMsg powerup_dr;
+		stPacket_4D44 packet_4d44;
+		gnss_integ_t gnss_integ;
 		kml_gnss_t gnss_kml;
 		kml_ins_t ins_kml;
 		std::vector<uint16_t>  packets_type_list;
@@ -263,30 +339,41 @@ namespace Ins401_Tool {
 		FILE* f_rover_rtcm;
 		FILE* f_ins_log;
 		FILE* f_ins_save;
+		FILE* f_mixed_csv;
 		bool show_format_time;
 		int pack_num;
 		int crc_right_num;
 		int crc_error_num;
 		std::map<uint16_t, int> all_type_pack_num;
+		FilesMap output_file_map; //现在输出文件不断增加，把文件指针都保存到map中
+		bool m_MI_file_switch;
+		float height_msl;//海平面高
 	private:
 		void close_all_files();
 		void create_file(FILE * &file, const char * suffix, const char * title);
 		void append_gnss_kml();
 		void append_ins_kml();
 		void output_imu_raw();
+		void MI_output_imu_raw();
 		void output_gnss_sol();
+		void MI_output_gnss_sol();
 		void output_ins_sol();
+		void MI_output_ins_sol();
 		void output_odo_raw();
 		void output_dm_raw();
 		void output_rover_rtcm();
 		void output_misa_sol();
+		void output_mixed_result();
+		void output_gnss_integ();
 		void parse_packet_payload();
 		void save_imu_bin();
+		void parse_gga();
 		int8_t parse_nmea(uint8_t data);		
 	public:
 		void init();
 		void set_base_file_name(char* file_name);
 		void set_show_format_time(bool show);
+		void set_MI_file_switch(bool write);
 		int input_data(uint8_t data);
 		int input_ins_save_data(unsigned char data);		
 		void finish();
@@ -294,6 +381,8 @@ namespace Ins401_Tool {
 	public:
 		int get_current_type();
 		gnss_sol_t* get_gnss_sol();
+		ins_sol_t * get_ins_sol();
+		raw_imu_t * get_imu_raw();
 	};
 };
 

@@ -25,6 +25,13 @@ extern "C" {
 #define ARM_MCU
 #endif
 
+//#define _DEBUG_RFS_ON_
+//#define _DEBUG_EPVT_ON_
+//#define _DEBUG_POSQM_ON_
+//#define _DEBUG_IONOPAR_ON_
+//#define _DEBUG_STGBS_ON_
+//#define _DEBUG_STGRS_ON_
+//#define _DEBUG_STGST_ON_
 
 // #ifdef ARM_MCU
 // #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
@@ -39,9 +46,6 @@ extern "C" {
 #define RTCM2PREAMB 0x66 /* rtcm ver.2 frame preamble */
 #define RTCM3PREAMB 0xD3 /* rtcm ver.3 frame preamble */
 
-#define ENAQZS
-//#define _USE_PPP_
-
 typedef struct {
     /* move the observation data struct out of rtcm definiton, to save more memory for PPP only mode */
     obs_t obs[MAXSTN];
@@ -49,28 +53,6 @@ typedef struct {
     nav_t  nav;
 	double time;
 } gnss_rtcm_t;
-typedef struct
-{
-	int32_t message_number;
-	int32_t sub_type_id;
-	int32_t gps_epoch_time;
-	int32_t week;
-	int32_t leap_seconds;
-	int32_t safety_info;
-	int32_t protocol_version_flags;
-	int32_t firmware_version;
-	int32_t reserved1;
-	int32_t reserved2;
-	int32_t reserved3;
-	int32_t pps_status;
-	int32_t time_validity;
-	int32_t constellation_alarm_mask;
-	int32_t reserved4;
-	int32_t gnss_constellation_mask;
-	int32_t gnss_mf_constellation_mask;
-} RTCM_999_RSS_STRUCT;
-extern RTCM_999_RSS_STRUCT rtcm_999_rss;
-void decode_type999_subtype1(rtcm_t *rtcm, obs_t *obs);
 
 int decode_rtcm3(rtcm_t *rtcm, obs_t *obs, nav_t *nav);
 int input_rtcm3_data(rtcm_t *rtcm, unsigned char data, obs_t *obs, nav_t *nav);
@@ -112,11 +94,12 @@ void set_approximate_time(int year, int doy, rtcm_t *rtcm);
 
 int add_obs(obsd_t* obsd, obs_t* obs);
 int add_eph(eph_t* eph, nav_t* nav);
+int add_eph_all(eph_t* eph, nav_t* nav);
 int add_geph(geph_t* eph, nav_t* nav);
+int add_geph_all(geph_t* eph, nav_t* nav);
 
 int is_complete_rtcm();
 //int gen_rtcm3(rtcm_t* rtcm, obs_t *obs, int type, int sync);
-extern unsigned int rtk_crc24q(const unsigned char *buff, int len);
 
 #ifdef __cplusplus
 }

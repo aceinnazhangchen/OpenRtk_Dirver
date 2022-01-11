@@ -59,7 +59,6 @@ void AnalysisTools::onSelectFileClicked() {
 	ui.filepath_edt->setText(path);
 }
 
-
 void AnalysisTools::onAnalysisClicked()
 {
 	if (m_AnalysisThread->isRunning())
