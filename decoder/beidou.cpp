@@ -8,7 +8,7 @@
 #include "kml.h"
 #include "beidou.h"
 
-// #define IMU_OUT_PROCESS
+#define IMU_OUT_PROCESS
 #define BEIDOU_HEAD 0x23
 #define MAX_INT 2147483648.0
 #define MAX_BEIDOU_TYPES		3
@@ -18,6 +18,7 @@ namespace beidou_Tool {
 	const char* beidouPacketsTypeList[MAX_beidou_PACKET_TYPES] = { "s1","gN","iN","o1","hG" };
 	static usrRaw beidou_raw = { 0 };
 	static char beidou_output_msg[1024] = { 0 };
+	static char beidou_output_process[1024] = { 0 };
 	static beidou_s1_t beidou_pak_s1 = { 0 };
 	static beidou_gN_t beidou_pak_gN;
 	static beidou_iN_t beidou_pak_iN = { 0 };
@@ -343,13 +344,16 @@ namespace beidou_Tool {
 		sprintf(beidou_output_msg, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", beidou_pak_s1.week, beidou_pak_s1.timeOfWeek,
 			beidou_pak_s1.accel_g[0], beidou_pak_s1.accel_g[1], beidou_pak_s1.accel_g[2], beidou_pak_s1.rate_dps[0], beidou_pak_s1.rate_dps[1], beidou_pak_s1.rate_dps[2]);
 		write_beidou_log_file(beidou_raw.ntype, beidou_output_msg);
+		
+		sprintf(beidou_output_process, "%d,%11.4f,   %14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", beidou_pak_s1.week, beidou_pak_s1.timeOfWeek,
+			beidou_pak_s1.accel_g[0], beidou_pak_s1.accel_g[1], beidou_pak_s1.accel_g[2], beidou_pak_s1.rate_dps[0], beidou_pak_s1.rate_dps[1], beidou_pak_s1.rate_dps[2]);
 		////txt
 		//sprintf(beidou_output_msg, "%d,%11.4f,    ,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", beidou_pak_s1.GPS_Week, beidou_pak_s1.GPS_TimeOfWeek,
 		//	beidou_pak_s1.x_accel, beidou_pak_s1.y_accel, beidou_pak_s1.z_accel, beidou_pak_s1.x_gyro, beidou_pak_s1.y_gyro, beidou_pak_s1.z_gyro);
 		//write_beidou_ex_file(beidou_raw.ntype, beidou_output_msg);
 		////process
 #ifdef IMU_OUT_PROCESS
-		write_beidou_process_file(beidou_raw.ntype, 0, beidou_output_msg);
+		write_beidou_process_file(beidou_raw.ntype, 0, beidou_output_process);
 #endif
 	}
 
