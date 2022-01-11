@@ -8,7 +8,7 @@
 #include "kml.h"
 #include "beidou.h"
 
-#define IMU_OUT_PROCESS
+// #define IMU_OUT_PROCESS
 #define BEIDOU_HEAD 0x23
 #define MAX_INT 2147483648.0
 #define MAX_BEIDOU_TYPES		3
