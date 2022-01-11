@@ -44,6 +44,15 @@ void MergeThread::run()
 		case emMergeFromat_rover_base:
 			mergeRoverBaseFile();
 			break;
+		case emMergeFromat_ins_csv_imu_txt:
+			merge_process_txt_imu_txt_realtime();
+			break;
+		case emMergeFromat_process_txt_imu_txt:
+			merge_process_txt_imu_txt_post();
+			break;
+		case emMergeFromat_process_gnss_csv:
+			merge_process_gnss_csv();
+			break;
 		default:
 			break;
 		}
@@ -80,18 +89,28 @@ void MergeThread::makeOutFileName()
 {
 	QFileInfo outDir(m_MergeFileName1);
 	if (outDir.isFile()) {
-		if (m_MergeFormat == emMergeFromat_rtcm_imu) {
-			QString basename = outDir.baseName();
-			QString absoluteDir = outDir.absoluteDir().absolutePath();
-			m_OutFileName = absoluteDir + QDir::separator() + basename + ".imu-rtcm";
-			m_OutLogName = absoluteDir + QDir::separator() + basename + ".imu-rtcm.log";
-
-		}
-		else if (m_MergeFormat == emMergeFromat_rover_base) {
-			QString basename = outDir.baseName();
-			QString absoluteDir = outDir.absoluteDir().absolutePath();
-			m_OutFileName = absoluteDir + QDir::separator() + basename + ".rover-base";
-			m_OutLogName = absoluteDir + QDir::separator() + basename + ".rover-base.log";
+		QString basename = outDir.baseName();
+		QString absoluteDir = outDir.absoluteDir().absolutePath();
+		switch (m_MergeFormat)
+		{
+			case emMergeFromat_rtcm_imu:
+			{
+				m_OutFileName = absoluteDir + QDir::separator() + basename + ".imu-rtcm";
+				m_OutLogName = absoluteDir + QDir::separator() + basename + ".imu-rtcm.log";
+			}
+			break;
+			case emMergeFromat_rover_base:
+			{
+				m_OutFileName = absoluteDir + QDir::separator() + basename + ".rover-base";
+				m_OutLogName = absoluteDir + QDir::separator() + basename + ".rover-base.log";
+			}
+			break;
+			case emMergeFromat_process_txt_imu_txt:
+			{
+				m_OutFileName = absoluteDir + QDir::separator() + basename + "_mixed.csv";
+				m_OutLogName = absoluteDir + QDir::separator() + basename + "_mixed.log";
+			}
+			break;
 		}
 	}
 }
@@ -208,6 +227,326 @@ void MergeThread::mergeRoverBaseFile()
 	if (m_baseFile) fclose(m_baseFile); m_baseFile = NULL;
 	if (m_outFile) fclose(m_outFile); m_outFile = NULL;
 	if (m_logFile) fclose(m_logFile); m_logFile = NULL;
+}
+
+void MergeThread::merge_process_txt_imu_txt_post()
+{
+	QFile m_process_txt(m_MergeFileName1);
+	QFile m_imu_txt(m_MergeFileName2);
+	QFile m_gnss_txt(m_MergeFileName3);
+	QFile m_ins_txt(m_MergeFileName1+"_ins.txt");
+	QFile m_mixed_csv(m_MergeFileName1 + "_mixed.csv");
+
+	if (!m_process_txt.open(QIODevice::ReadOnly| QIODevice::Text))
+		return;
+	if (!m_imu_txt.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+	if (!m_gnss_txt.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+	if (!m_ins_txt.open(QIODevice::WriteOnly | QIODevice::Text))
+		return;
+	if (!m_mixed_csv.open(QIODevice::WriteOnly | QIODevice::Text))
+		return;
+
+	QMap<int, int> gnss_map;
+	while (m_gnss_txt.atEnd() == false) {
+		QByteArray buf = m_gnss_txt.readLine();
+		QString line(buf);
+		QStringList items = line.split(',');
+		if (items.size() >= 11) {
+			int time = int(items[1].toFloat());
+			int satellite = items[9].toInt();
+			gnss_map.insert(time, satellite);
+		}
+	}
+
+	QString title = QString::fromLocal8Bit("GPS周内秒,经度(°),纬度(°),高度(m),向北速度(m/s),向东速度(m/s),向地速度(m/s),航向角(°),俯仰角(°),翻滚角(°),加表x(m/s^2),加表y(m/s^2),加表z(m/s^2),陀螺x(°/s),陀螺y(°/s),陀螺z(°/s),GPS定位状态,GPS定向状态,GPS卫星数量\n");
+	m_mixed_csv.write(title.toLocal8Bit());
+	m_RawFilesSize = m_process_txt.size();
+	while (m_process_txt.atEnd() == false) {
+		QByteArray buf = m_process_txt.readLine();
+		UpdateProcess(buf.size());
+		QString line(buf);
+		QStringList items = line.split(',');
+		if (items.size() == 23) {
+			QStringList new_items;
+			for (int i = 0; i < 11; i++) {
+				new_items << items[i];
+			}
+			new_items << items[20];
+			new_items << items[19];
+			QString new_line = new_items.join(',');
+			new_line += "\n";
+			m_ins_txt.write(new_line.toLocal8Bit());
+
+			double ins_week_second = items[1].toDouble();
+			uint32_t ins_week_second_10 = uint32_t(ins_week_second * 100);
+			while (m_imu_txt.atEnd() == false) {
+				QByteArray imu_buf = m_imu_txt.readLine();
+				QString imu_line(imu_buf);
+				QStringList imu_items = imu_line.split(',');
+				if (imu_items.size() >= 9) {
+					double imu_week_second = imu_items[1].toDouble();
+					uint32_t imu_week_second_10 = uint32_t(imu_week_second * 100);
+					if (ins_week_second_10 == imu_week_second_10) {
+						QStringList mixed_items;
+						mixed_items << items[1];
+						mixed_items << items[3];
+						mixed_items << items[2];
+						for (int i = 4; i < 8; i++) {
+							mixed_items << items[i];
+						}
+						//double vel_up = items[7].toDouble();
+						//double vel_down = -vel_up;
+						//mixed_items << QString::asprintf("%8.5f", vel_down);
+						double heading = items[10].toDouble();
+						if (heading > 180) {
+							heading -= 360;
+						}
+						mixed_items << QString::asprintf("%10.5f", heading);
+						mixed_items << items[9];
+						mixed_items << items[8];
+						for (int i = 3; i < 9; i++) {
+							if (i == 8) {
+								imu_items[i].chop(1);
+								mixed_items << imu_items[i];
+							}
+							else {
+								mixed_items << imu_items[i];
+							}							
+						}
+						mixed_items << items[20];
+						mixed_items << items[19];
+
+						QMap<int, int>::iterator it = gnss_map.find(int(ins_week_second));
+						if (it != gnss_map.end()) {
+							mixed_items << QString::asprintf("%3d",it.value());
+						}
+						else {
+							mixed_items << QString::asprintf("%3d", 0);
+						}
+
+						QString mixed_line = mixed_items.join(',');
+						mixed_line += "\n";
+						m_mixed_csv.write(mixed_line.toLocal8Bit());
+						break;
+					}
+					else if(imu_week_second > ins_week_second){
+						break;
+					}
+				}
+			}
+		}
+		
+	}
+	m_process_txt.close();
+	m_imu_txt.close();
+	m_ins_txt.close();
+	m_mixed_csv.close();
+}
+
+void MergeThread::merge_process_txt_imu_txt_realtime()
+{
+	QFile m_process_txt(m_MergeFileName1);
+	QFile m_imu_txt(m_MergeFileName2);
+	QFile m_gnss_txt(m_MergeFileName3);
+	QFile m_mixed_csv(m_MergeFileName1 + "_mixed.csv");
+
+	if (!m_process_txt.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+	if (!m_imu_txt.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+	if (!m_gnss_txt.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+	if (!m_mixed_csv.open(QIODevice::WriteOnly | QIODevice::Text))
+		return;
+
+	QMap<int, int> gnss_map;
+	while (m_gnss_txt.atEnd() == false) {
+		QByteArray buf = m_gnss_txt.readLine();
+		QString line(buf);
+		QStringList items = line.split(',');
+		if (items.size() >= 11) {
+			int time = int(items[1].toFloat());
+			int satellite = items[9].toInt();
+			gnss_map.insert(time, satellite);
+		}
+	}
+
+	QString title = QString::fromLocal8Bit("GPS周内秒,经度(°),纬度(°),高度(m),向北速度(m/s),向东速度(m/s),向地速度(m/s),航向角(°),俯仰角(°),翻滚角(°),加表x(m/s^2),加表y(m/s^2),加表z(m/s^2),陀螺x(°/s),陀螺y(°/s),陀螺z(°/s),GPS定位状态,GPS定向状态,GPS卫星数量\n");
+	m_mixed_csv.write(title.toLocal8Bit());
+	m_RawFilesSize = m_process_txt.size();
+	int index = 0;
+	while (m_process_txt.atEnd() == false) {
+		QByteArray buf = m_process_txt.readLine();
+		UpdateProcess(buf.size());
+		index++;
+		if (index == 1) continue;
+		QString line(buf);
+		QStringList items = line.split(',');
+		if (items.size() >= 26) {
+
+			double ins_week_second = items[1].toDouble();
+			uint32_t ins_week_second_10 = uint32_t(ins_week_second * 100);
+			while (m_imu_txt.atEnd() == false) {
+				QByteArray imu_buf = m_imu_txt.readLine();
+				QString imu_line(imu_buf);
+				QStringList imu_items = imu_line.split(',');
+				if (imu_items.size() >= 9) {
+					double imu_week_second = imu_items[1].toDouble();
+					uint32_t imu_week_second_10 = uint32_t(imu_week_second * 100);
+					if (ins_week_second_10 == imu_week_second_10) {
+						QStringList mixed_items;
+						mixed_items << items[1];
+						mixed_items << items[5];
+						mixed_items << items[4];
+						for (int i = 6; i < 9; i++) {
+							mixed_items << items[i];
+						}
+						double vel_up = items[9].toDouble();
+						double vel_down = -vel_up;
+						mixed_items << QString::asprintf("%8.5f", vel_down);
+
+						double heading = items[14].toDouble();
+						if (heading > 180) {
+							heading -= 360;
+						}
+						mixed_items << QString::asprintf("%10.5f", heading);
+						mixed_items << items[13];
+						mixed_items << items[12];
+						for (int i = 3; i < 9; i++) {
+							if (i == 8) {
+								imu_items[i].chop(1);
+								mixed_items << imu_items[i];
+							}
+							else {
+								mixed_items << imu_items[i];
+							}
+						}
+						mixed_items << items[3];
+						mixed_items << items[2];
+
+						QMap<int, int>::iterator it = gnss_map.find(int(ins_week_second));
+						if (it != gnss_map.end()) {
+							mixed_items << QString::asprintf("%3d", it.value());
+						}
+						else {
+							mixed_items << QString::asprintf("%3d", 0);
+						}
+
+						QString mixed_line = mixed_items.join(',');
+						mixed_line += "\n";
+						m_mixed_csv.write(mixed_line.toLocal8Bit());
+						break;
+					}
+					else if (imu_week_second > ins_week_second) {
+						break;
+					}
+				}
+			}
+		}
+
+	}
+	m_process_txt.close();
+	m_imu_txt.close();
+	m_gnss_txt.close();
+	m_mixed_csv.close();
+}
+
+void MergeThread::replace_gnss_line(QStringList& process_item, QStringList& gnss_item) {
+	process_item[3] = gnss_item[3];
+	process_item[4] = gnss_item[4];
+	process_item[5] = gnss_item[5];
+	process_item[6] = gnss_item[6];
+	process_item[7] = gnss_item[7];
+	process_item[8] = gnss_item[8];
+	process_item[9] = gnss_item[2];
+}
+
+void MergeThread::replace_vel_line(QStringList& process_item, QStringList& gnss_item) {
+	float north_vel = gnss_item[13].toFloat();
+	float east_vel = gnss_item[14].toFloat();
+	float up_vel = gnss_item[15].toFloat();
+	process_item[3] = QString::asprintf("%0.4f", sqrt(pow(north_vel, 2) + pow(east_vel, 2)));
+	process_item[4] = QString::asprintf("%0.4f", atan2(east_vel, north_vel) * 57.295779513082320);
+	process_item[5] = QString::asprintf("%0.4f", up_vel);
+}
+
+void MergeThread::merge_process_gnss_csv()
+{
+	QFile m_process(m_MergeFileName1);
+	QFile m_gnss_csv(m_MergeFileName2);
+	QFile m_process_new(m_MergeFileName1+"-new");
+
+	if (!m_process.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+	if (!m_gnss_csv.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+	if (!m_process_new.open(QIODevice::WriteOnly | QIODevice::Text))
+		return;
+
+	int process_start = 0; //开始后插入gnss以外的数据
+	while (m_gnss_csv.atEnd() == false) {
+		QByteArray buf = m_gnss_csv.readLine();
+		QString gnss_line(buf);
+		QStringList gnss_items = gnss_line.trimmed().split(',');
+		if (gnss_items.size() >= 13) {
+			int week = gnss_items[0].toInt();
+			float second = gnss_items[1].toFloat();
+			while (m_process.atEnd() == false) {
+				QByteArray buf2 = m_process.readLine();
+				QString process_line(buf2);
+				if (process_line.startsWith("$GPGNSS")) {
+					QStringList process_item = process_line.trimmed().split(',');
+					if (process_item.size() >= 10) {
+						int week2 = process_item[1].toInt();
+						float second2 = process_item[2].toFloat();
+						if (week != week2) {
+							break;
+						}else if(second < second2){
+                            break;
+                        }
+						else if (fabs(second - second2) < 0.1) {
+							process_start = 1;
+							replace_gnss_line(process_item, gnss_items);
+							QString new_process_lines = process_item.join(',');
+							new_process_lines += "\n";
+							m_process_new.write(new_process_lines.toLocal8Bit());
+						}
+					}
+				}
+				else if (process_line.startsWith("$GPVEL")) {
+					QStringList process_item = process_line.trimmed().split(',');
+					if (process_item.size() >= 5) {
+						int week2 = process_item[1].toInt();
+						float second2 = process_item[2].toFloat();
+						if (week != week2) {
+							break;
+						}
+						else if (second < second2) {
+							break;
+						}
+						else if (fabs(second - second2) < 0.1) {
+							process_start = 1;
+							replace_vel_line(process_item, gnss_items);
+							QString new_process_lines = process_item.join(',');
+							new_process_lines += "\n";
+							m_process_new.write(new_process_lines.toLocal8Bit());
+						}
+					}
+				}
+				else {
+					if (process_start == 1) {
+						m_process_new.write(buf2);
+					}
+				}
+			}
+		}
+	}
+
+	m_process.close();
+	m_gnss_csv.close();
+	m_process_new.close();
 }
 
 int MergeThread::readOneRtcm() {

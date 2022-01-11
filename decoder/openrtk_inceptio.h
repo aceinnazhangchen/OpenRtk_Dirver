@@ -49,8 +49,9 @@ namespace RTK330LA_Tool {
 		uint32_t antenna_sensing : 3;
 		/* GNSS chipset fault flag: 0 ¨C fault; 1 - normal */
 		uint32_t gnss_chipset : 1;
-
-		uint32_t rexerved : 9;
+		/* MCU and peripheal power up self-test: 1 - valid, 0 - invalid */
+		uint32_t pust_check : 1;
+		uint32_t rexerved : 8;
 	} status_bit_t;
 
 
@@ -217,4 +218,7 @@ namespace RTK330LA_Tool {
 
 	extern int input_inceptio_raw(uint8_t data);
 
+	extern uint8_t get_current_type();
+	extern inceptio_gN_t * get_gnss_sol();
+	extern inceptio_s1_t * get_imu_raw();
 }

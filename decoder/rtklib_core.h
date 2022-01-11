@@ -1,16 +1,3 @@
-/*************************************************
-* Copyright (C), 2018-2020, Aceinna. Co., Ltd.
-*
-* File name: rtklib_core.h
-*
-* Description: This file contains the 'main' function.
-*              Program execution begins and ends there.
-*
-* version : $Revision: 1.1 $ $Date: 2020/08/13 14:00:00 $
-* history : 2018/08/13 1.0  new
-*           2020/08/13 1.1  Standardized code
-*************************************************/
-
 #ifndef _RTKLIB_CORE_H_
 #define _RTKLIB_CORE_H_
 
@@ -26,7 +13,8 @@ extern "C" {
 
 #define _USE_RTK_
 #define _POST_RTK_
-
+//#define _ST_811_
+#define _ST_812_
 //#define RTK_ENABLE
 //#define _USE_PPP_
 //#define _USE_INS_
@@ -35,7 +23,7 @@ extern "C" {
 #define ENAGLO
 #define ENACMP
 #define ENAGAL
-//#define ENAQZS
+#define ENAQZS
 
 #define NFREQ       2
 #ifndef NFREQ
@@ -50,31 +38,13 @@ extern "C" {
 #define RANGE_MS    (299792.458)         /* range in 1 ms */
 #define CLIGHT      299792458.0          /* speed of light (m/s) */
 #define PI          3.1415926535897932   /* pi */
-#define R2D         (57.295779513082320) /* radian to degree */
-#define D2R         (0.017453292519943)  /* degree to radian */
-#define AS2R        (D2R / 3600.0)       /* arc sec to radian */
+#define R2D         (57.295779513082320)
+#define D2R         (0.017453292519943)
 #define OMGE        7.2921151467E-5      /* earth angular velocity (IS-GPS) (rad/s) */
 #define RE_WGS84    6378137.0            /* earth semimajor axis (WGS84) (m) */
 #define FE_WGS84    (1.0/298.257223563)  /* earth flattening (WGS84) */
 #define SECONDS_IN_WEEK (604800)
-
-#define SOL_NONE    0                    /* solution status: no solution */
-#define SOL_SPP     1                    /* solution status: single */
-#define SOL_DGNSS   2                    /* solution status: DGPS/DGNSS */
-#define SOL_FIX     4                    /* solution status: fix */
-#define SOL_FLOAT   5                    /* solution status: float */
-
-#define SOL_INTV    1.0                  /* solution interval */
-
-/* configure of rtk engine */
-#define MIN_SOLSAT  4                    /* minimum solution satellites */
-#define MIN_SOLELE  10.0                 /* minimum solution elevation */
-#define MAX_SOLAGE  120.0                /* maximum rtcm delay age */   
-#define MEAS_P      1                    /* measurement type of pseudorange */
-#define MEAS_D      2                    /* measurement type of doppler */
-#define MEAS_L      3                    /* measurement type of carrier-phase */
-#define SOL_AMB     1                    /* flag of solution ambiguity */
-
+// #define CLIGHT                (299792458.0)            /* speed of light (m/s) */
 
 #define SC2RAD      PI                   /* semi-circle to radian (IS-GPS) */
 #define SQR(x)      ((x)*(x))
@@ -141,7 +111,7 @@ extern "C" {
 
 
 #define MINPRNGPS     1                   /* min satellite PRN number of GPS */
-#define MAXPRNGPS     45                  /* max satellite PRN number of GPS */
+#define MAXPRNGPS     40                  /* max satellite PRN number of GPS */
 #define NSATGP0       35                  /* number of GPS satellites */
 #define NSATGPS       (MAXPRNGPS-MINPRNGPS+1) /* number of GPS + QZSS satellites */
 #define NSYSGPS       1                   /* 1-35 for GPS, 36-40 for QZSS */
@@ -165,7 +135,7 @@ extern "C" {
 
 #ifdef ENAQZS
 #define MINPRNQZS     1                 /* min satellite PRN number of QZSS */
-#define MAXPRNQZS     10                /* max satellite PRN number of QZSS */
+#define MAXPRNQZS     7                 /* max satellite PRN number of QZSS */
 //#define MINPRNQZS_S   183                 /* min satellite PRN number of QZSS SAIF */
 //#define MAXPRNQZS_S   189                 /* max satellite PRN number of QZSS SAIF */
 #define NSATQZS       (MAXPRNQZS-MINPRNQZS+1) /* number of QZSS satellites */
@@ -180,7 +150,7 @@ extern "C" {
 #endif
 
 #define MINPRNCMP     1                   /* min satellite sat number of BeiDou */
-#define MAXPRNCMP     50                  /* max satellite sat number of BeiDou */
+#define MAXPRNCMP     40                  /* max satellite sat number of BeiDou */
 #define NSATCMP       (MAXPRNCMP-MINPRNCMP+1) /* number of BeiDou satellites */
 #define NSYSCMP       1
 
@@ -316,9 +286,9 @@ extern "C" {
 #define MAXCODE     55                  /* max number of obs code */
 
 #define MAXFREQ      7 /* max NFREQ */
-#define MAXOBS      45
-#define MAXEPH      55
-#define MAXEPH_R    15
+#define MAXOBS      48
+#define MAXEPH      1200
+#define MAXEPH_R    1200
 #define MAXSSR      24
 #define MAXANT       2
 
@@ -484,7 +454,7 @@ typedef struct {                      /* SSR correction type */
 	int ura;                          /* URA indicator */
 	int refd;                         /* sat ref datum (0:ITRF,1:regional) */
 	double deph[3];                   /* delta orbit {radial,along,cross} (m) */
-	double ddeph[3];                  /* dot_a delta orbit {radial,along,cross} (m/s) */
+	double ddeph[3];                  /* dot delta orbit {radial,along,cross} (m/s) */
 	double dclk[3];                   /* delta clock {c0,c1,c2} (m,m/s,m/s^2) */
 	double hrclk;                     /* high-rate clock corection (m) */
 	double  cbias[NFREQ];             /* code biases (m) */
@@ -504,7 +474,7 @@ typedef struct {                      /* navigation data type */
 	unsigned int ns;
 	eph_t eph[MAXEPH];                /* GPS/QZS/GAL ephemeris */
 	geph_t geph[MAXEPH_R];            /* GLONASS ephemeris */
-	//ssr_t ssr[MAXSSR];              /* output of ssr corrections */
+	ssr_t ssr[MAXSSR];                /* output of ssr corrections */
 	//vtec_t vtec;                    /* output of vtec*/
 	unsigned char ephsat;
 } nav_t;
@@ -514,11 +484,14 @@ typedef struct {                      /* observation data */
 	obsd_t data[MAXOBS];              /* observation data records */
 	gtime_t time;
 	double pos[6];                    /* station position (ecef) (m) */
+    double spp_pt;
 	double refpos[6];                 /* reference pos & vel for comparison purpose */
-	double spp_std[3];                /* position variance*/
 	unsigned char obsflag;            /* obs data complete flag (1:ok,0:not complete) */
 	unsigned int staid;               /* station id */
 	unsigned char rtcmtype;           /* flag of rtcm 999 */ 
+    char antdes[32];
+    char rcvmaker[32];
+    char fwv[128];
 } obs_t;
 
 typedef struct
@@ -538,14 +511,16 @@ typedef struct
 	unsigned int  ref_id;             /* Differential Reference Station ID */
 	int sys;                          /* Time ID */
 	double  time;                     /* GNSS time, second */
-	// unsigned int  week;               /* Extended Week Number */
 	unsigned char leap_sec;           /* Leap Seconds, GPS-UTC */
 	double pos[3];                    /* position XYZ */
+	double vel_enu[3];				  /* velocity NEU */
 	double vel[3];                    /* velocity XYZ */
-	double std_pos[3];                /* position variance*/
+	double pl_enu[3];				  /* Protection Level of position */
 	double lev_pos[3];                /* Protection Level of position */
+    double std_neu[3];
 	double cbias;                     /* Receiver clock bias, mm */
 	double cdt;                       /* Receiver Clock Drift, hz/100 */
+    char   fwv[128];
 } type_999_t;
 
 typedef struct {                      /* RTCM control struct type */
@@ -560,9 +535,10 @@ typedef struct {                      /* RTCM control struct type */
 	unsigned char key;
 	unsigned char icode[NSYS*NFREQ];  /* code indicator (CODE_???) */	
 	type_999_t teseo;                 /* Teseo V output rtcm type 999 */
-	double cp[MAXSAT][NFREQ + NEXOBS];/* carrier-phase measurement, used in encode */
-	gtime_t lltime[MAXSAT][NFREQ + NEXOBS]; /* last lock time */
+    int nav_mode;
 	int seqno;                        /* sequence number for rtcm 2 or iods msm */
+    char antdes[32];
+    char rec[32];
 } rtcm_t;
 
 #define MAXSTN (2)

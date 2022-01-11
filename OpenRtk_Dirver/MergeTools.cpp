@@ -133,15 +133,32 @@ void MergeTools::onFinished()
 {
 	setOperable(true);
 }
-
+     
 void MergeTools::onFileFormatChanged(int index)
 {
 	if (index == emMergeFromat_rover_base) {
 		ui.label->setText("rover:");
 		ui.label_2->setText("base:");
+		ui.label_3->setText("rover2:");
 	}
 	else if (index == emMergeFromat_rtcm_imu) {
 		ui.label->setText("rtcm:");
 		ui.label_2->setText("imu:");
+		ui.label_3->setText("rover2:");
+	}
+	else if (index == emMergeFromat_ins_csv_imu_txt) {
+		ui.label->setText("ins.csv:");
+		ui.label_2->setText("imu.txt:");
+		ui.label_3->setText("gnss.csv:");
+	}
+	else if (index == emMergeFromat_process_txt_imu_txt) {
+		ui.label->setText("process.txt:");
+		ui.label_2->setText("imu.txt:");
+		ui.label_3->setText("gnss.csv:");
+	}
+	else if (index == emMergeFromat_process_gnss_csv) {
+		ui.label->setText("process:");
+		ui.label_2->setText("gnss.csv:");
+		ui.label_3->setText("");
 	}
 }
