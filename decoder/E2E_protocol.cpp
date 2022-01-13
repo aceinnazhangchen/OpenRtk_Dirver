@@ -97,8 +97,13 @@ namespace E2E {
 				m_header.counter = (header.counter << 8 & 0xFF00) | (header.counter >> 8 & 0x00FF);
 				m_header.data_id = (header.data_id << 24 & 0xFF000000) | (header.data_id << 8 & 0x00FF0000) | (header.data_id >> 8 & 0x0000FF00) | (header.data_id >>24 & 0x000000FF);
 				m_header.crc = (header.crc << 24 & 0xFF000000) | (header.crc << 8 & 0x00FF0000) | (header.crc >> 8 & 0x0000FF00) | (header.crc >> 24 & 0x000000FF);
-				m_e2e.flag = 1;
-				m_e2e.length = 0;
+				if (m_header.length >= 1280) {
+					memset(&m_header, 0, sizeof(m_header));
+				}
+				else {
+					m_e2e.flag = 1;
+					m_e2e.length = 0;
+				}
 				write_header_log();
 			}
 		}

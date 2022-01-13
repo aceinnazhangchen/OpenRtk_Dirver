@@ -10,7 +10,7 @@ namespace Ins401_Tool {
 //#define MI_OUTPUT_FILE  //小米输出文件在项目属性中定义
 
 	Ins401_decoder::Ins401_decoder()
-		:m_MI_file_switch(true)
+		:m_MI_file_switch(false)
 	{
 		f_log = NULL;
 		f_nmea = NULL;
@@ -36,7 +36,7 @@ namespace Ins401_Tool {
 		packets_type_list.push_back(em_ROVER_RTCM);
 		packets_type_list.push_back(em_MISALIGN);
 		packets_type_list.push_back(PowerUpDR_MES);
-		packets_type_list.push_back(em_4D44);
+		packets_type_list.push_back(em_CHECK);
 		packets_type_list.push_back(em_GNSS_SOL_INTEGEITY);
 		all_type_pack_num.clear();
 		output_file_map.clear();
@@ -55,6 +55,7 @@ namespace Ins401_Tool {
 		crc_error_num = 0;
 		show_format_time = 0;
 		height_msl = 0.0f;
+		last_gnss_integ_millisecs = 0;
 		memset(&raw, 0, sizeof(raw));
 		memset(&imu, 0, sizeof(imu));
 		memset(&gnss, 0, sizeof(gnss));
@@ -76,7 +77,7 @@ namespace Ins401_Tool {
 		all_type_pack_num[em_ROVER_RTCM] = 0;
 		all_type_pack_num[em_MISALIGN] = 0;
 		all_type_pack_num[PowerUpDR_MES] = 0;
-		all_type_pack_num[em_4D44] = 0;
+		all_type_pack_num[em_CHECK] = 0;
 		all_type_pack_num[em_GNSS_SOL_INTEGEITY] = 0;
 		Kml_Generator::Instance()->init();
 	}
@@ -162,7 +163,6 @@ namespace Ins401_Tool {
 		else {
 			create_file(f_imu_csv, "imu.csv",
 				"GPS_Week(),GPS_TimeOfWeek(s),x_accel(m/s^2),y_accel(m/s^2),z_accel(m/s^2),x_gyro(deg/s),y_gyro(deg/s),z_gyro(deg/s)\n");
-
 			fprintf(f_imu_csv, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", imu.gps_week, (double)imu.gps_millisecs / 1000.0,
 				imu.accel_x, imu.accel_y, imu.accel_z, imu.gyro_x, imu.gyro_y, imu.gyro_z);
 		}
@@ -204,32 +204,49 @@ namespace Ins401_Tool {
 
 	void Ins401_decoder::output_gnss_sol()
 	{
-		double track_over_ground = atan2(gnss.east_vel, gnss.north_vel)*R2D;
-		double horizontal_speed = sqrt(gnss.north_vel * gnss.north_vel + gnss.east_vel * gnss.east_vel);
 		//csv
 		if (show_format_time) {
-			create_file(f_gnss_csv, "gnss.csv",
-				"DateTime(),GPS_Week(),GPS_TimeOfWeek(s),position_type(),latitude(deg),longitude(deg),height(m),latitude_standard_deviation(m),longitude_standard_deviation(m),height_standard_deviation(m),number_of_satellites(),number_of_satellites_in_solution(),hdop(),diffage(s),north_vel(m/s),east_vel(m/s),up_vel(m/s),north_vel_standard_deviation(m/s),east_vel_standard_deviation(m/s),up_vel_standard_deviation(m/s)\n");
+			std::string gnss_title = "DataTime(),GPS_Week(),GPS_TimeOfWeek(s),position_type()"
+				",latitude(deg),longitude(deg),height(m)"
+				",latitude_standard_deviation(m),longitude_standard_deviation(m),height_standard_deviation(m)"
+				",number_of_satellites(),number_of_satellites_in_solution()"
+				",hdop(),diffage(s)"
+				",north_vel(m/s),east_vel(m/s),up_vel(m/s)"
+				",north_vel_standard_deviation(m/s),east_vel_standard_deviation(m/s),up_vel_standard_deviation(m/s)\n";
+			create_file(f_gnss_csv, "gnss.csv", gnss_title.c_str());
 			gtime_t gpstime = gpst2time(gnss.gps_week, (double)gnss.gps_millisecs / 1000.0);
 			gtime_t utctime = gpst2utc(gpstime);
 			char* time = time_str(utctime, 2);
-			fprintf(f_gnss_csv, "%s,%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%3d,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n",
-				time, gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, gnss.position_type, gnss.latitude, gnss.longitude, gnss.height,
-				gnss.latitude_std, gnss.longitude_std, gnss.height_std,
-				gnss.numberOfSVs, gnss.numberOfSVs_in_solution, gnss.hdop, gnss.diffage, gnss.north_vel, gnss.east_vel, gnss.up_vel,
-				gnss.north_vel_std, gnss.east_vel_std, gnss.up_vel_std);
+			fprintf(f_gnss_csv, "%s,%d,%11.4f,%3d", time, gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, gnss.position_type);
+			fprintf(f_gnss_csv, ",%14.9f,%14.9f,%10.4f", gnss.latitude, gnss.longitude, gnss.height);
+			fprintf(f_gnss_csv, ",%10.4f,%10.4f,%10.4f", gnss.latitude_std, gnss.longitude_std, gnss.height_std);
+			fprintf(f_gnss_csv, ",%3d,%3d", gnss.numberOfSVs, gnss.numberOfSVs_in_solution);
+			fprintf(f_gnss_csv, ",%5.1f,%5.1f", gnss.hdop, gnss.diffage);
+			fprintf(f_gnss_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel, gnss.east_vel, gnss.up_vel);
+			fprintf(f_gnss_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel_std, gnss.east_vel_std, gnss.up_vel_std);
+			fprintf(f_gnss_csv, "\n");
 		}
 		else {
-			create_file(f_gnss_csv, "gnss.csv",
-				"GPS_Week(),GPS_TimeOfWeek(s),position_type(),latitude(deg),longitude(deg),height(m),latitude_standard_deviation(m),longitude_standard_deviation(m),height_standard_deviation(m),number_of_satellites(),number_of_satellites_in_solution(),hdop(),diffage(s),north_vel(m/s),east_vel(m/s),up_vel(m/s),north_vel_standard_deviation(m/s),east_vel_standard_deviation(m/s),up_vel_standard_deviation(m/s)\n");
-
-			fprintf(f_gnss_csv, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%3d,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n",
-				gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, gnss.position_type, gnss.latitude, gnss.longitude, gnss.height,
-				gnss.latitude_std, gnss.longitude_std, gnss.height_std,
-				gnss.numberOfSVs, gnss.numberOfSVs_in_solution, gnss.hdop, gnss.diffage, gnss.north_vel, gnss.east_vel, gnss.up_vel,
-				gnss.north_vel_std, gnss.east_vel_std, gnss.up_vel_std);
+			std::string gnss_title = "GPS_Week(),GPS_TimeOfWeek(s),position_type()"
+				",latitude(deg),longitude(deg),height(m)"
+				",latitude_standard_deviation(m),longitude_standard_deviation(m),height_standard_deviation(m)"
+				",number_of_satellites(),number_of_satellites_in_solution()"
+				",hdop(),diffage(s)"
+				",north_vel(m/s),east_vel(m/s),up_vel(m/s)"
+				",north_vel_standard_deviation(m/s),east_vel_standard_deviation(m/s),up_vel_standard_deviation(m/s)\n";
+			create_file(f_gnss_csv, "gnss.csv", gnss_title.c_str());
+			fprintf(f_gnss_csv, "%d,%11.4f,%3d", gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, gnss.position_type);
+			fprintf(f_gnss_csv, ",%14.9f,%14.9f,%10.4f", gnss.latitude, gnss.longitude, gnss.height);
+			fprintf(f_gnss_csv, ",%10.4f,%10.4f,%10.4f", gnss.latitude_std, gnss.longitude_std, gnss.height_std);
+			fprintf(f_gnss_csv, ",%3d,%3d", gnss.numberOfSVs, gnss.numberOfSVs_in_solution);
+			fprintf(f_gnss_csv, ",%5.1f,%5.1f", gnss.hdop, gnss.diffage);
+			fprintf(f_gnss_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel, gnss.east_vel, gnss.up_vel);
+			fprintf(f_gnss_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel_std, gnss.east_vel_std, gnss.up_vel_std);
+			fprintf(f_gnss_csv, "\n");
 		}
 #ifndef NOT_OUTPUT_INNER_FILE
+		double track_over_ground = atan2(gnss.east_vel, gnss.north_vel)*R2D;
+		double horizontal_speed = sqrt(gnss.north_vel * gnss.north_vel + gnss.east_vel * gnss.east_vel);
 		//txt
 		create_file(f_gnss_txt, "gnssposvel.txt", NULL);
 		fprintf(f_gnss_txt, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%10.4f,%10.4f\n",
@@ -408,6 +425,8 @@ namespace Ins401_Tool {
 
 	void Ins401_decoder::output_gnss_integ()
 	{
+		if (last_gnss_integ_millisecs == (uint32_t)gnss_integ.gps_millisecs)
+			return;
 		FILE* f_gnss_integ_csv = NULL;
 		std::string gnss_integ_name = "gnss_integrity.csv";
 		FilesMap::iterator it = output_file_map.find(gnss_integ_name);
@@ -424,7 +443,7 @@ namespace Ins401_Tool {
 		}
 		f_gnss_integ_csv = output_file_map[gnss_integ_name];
 		if (f_gnss_integ_csv) {
-			fprintf(f_gnss_integ_csv, "%4d,%11.4f,%8.3f,%8.3f", gnss_integ.week, gnss_integ.timeOfWeek/1000, (float)gnss_integ.spp_fail_rate / 1.0e-10, (float)gnss_integ.rtk_fail_rate / 1.0e-10);
+			fprintf(f_gnss_integ_csv, "%4d,%11.4f,%8.3f,%8.3f", gnss_integ.week, gnss_integ.gps_millisecs/1000, (float)gnss_integ.spp_fail_rate / 1.0e-10, (float)gnss_integ.rtk_fail_rate / 1.0e-10);
 			fprintf(f_gnss_integ_csv, ",%8.3f,%8.3f,%8.3f,%8.3f", (float)gnss_integ.spp_hor_pos_pl / 100, (float)gnss_integ.spp_ver_pos_pl / 100, (float)gnss_integ.spp_hor_vel_pl / 100, (float)gnss_integ.spp_ver_vel_pl / 100);
 			fprintf(f_gnss_integ_csv, ",%8.3f,%8.3f,%8.3f,%8.3f,%8.3f", (float)gnss_integ.rtk_hor_pos_pl / 100, (float)gnss_integ.rtk_ver_pos_pl / 100, (float)gnss_integ.rtk_hor_vel_pl / 100, (float)gnss_integ.rtk_ver_vel_pl / 100, (float)gnss_integ.rtk_heading_pl / 100);
 			fprintf(f_gnss_integ_csv, ",%8.3f,%8.3f,%8.3f,%8.3f", (float)gnss_integ.spp_hor_pos_al / 100, (float)gnss_integ.spp_ver_pos_al / 100, (float)gnss_integ.spp_hor_vel_al / 100, (float)gnss_integ.spp_ver_vel_al / 100);
@@ -432,6 +451,61 @@ namespace Ins401_Tool {
 			fprintf(f_gnss_integ_csv, ",%2d,%2d,%2d,%2d", gnss_integ.status_bit.spp_hor_pos_s, gnss_integ.status_bit.spp_ver_pos_s, gnss_integ.status_bit.spp_hor_vel_s, gnss_integ.status_bit.spp_ver_vel_s);
 			fprintf(f_gnss_integ_csv, ",%2d,%2d,%2d,%2d,%2d", gnss_integ.status_bit.rtk_hor_pos_s, gnss_integ.status_bit.rtk_ver_pos_s, gnss_integ.status_bit.rtk_hor_vel_s, gnss_integ.status_bit.rtk_ver_vel_s, gnss_integ.status_bit.rtk_heading_s);
 			fprintf(f_gnss_integ_csv, "\n");
+		}
+	}
+
+	void Ins401_decoder::output_gnss_sol_and_integ()
+	{
+		if (gnss.gps_week == 0 || gnss_integ.week == 0)
+			return;
+		if (last_gnss_integ_millisecs == (uint32_t)gnss_integ.gps_millisecs)
+			return;
+		if (gnss.gps_millisecs != (uint32_t)gnss_integ.gps_millisecs)
+			return;
+		FILE* f_gnss_sol_integ_csv = NULL;
+		std::string gnss_sol_integ_name = "gnss_and_integrity.csv";
+		FilesMap::iterator it = output_file_map.find(gnss_sol_integ_name);
+		if (it == output_file_map.end()) {
+			std::string gnss_and_integ_title = "GPS_Week(),GPS_TimeOfWeek(s),position_type()"
+				",latitude(deg),longitude(deg),height(m)"
+				",latitude_standard_deviation(m),longitude_standard_deviation(m),height_standard_deviation(m)"
+				",number_of_satellites(),number_of_satellites_in_solution()"
+				",hdop(),diffage(s)"
+				",north_vel(m/s),east_vel(m/s),up_vel(m/s)"
+				",north_vel_standard_deviation(m/s),east_vel_standard_deviation(m/s),up_vel_standard_deviation(m/s)"
+				",rtk_hor_pos_pl(m),rtk_ver_pos_pl(m),rtk_hor_pos_stat,rtk_ver_pos_stat"
+				",rtk_hor_vel_pl(m/s),rtk_ver_vel_pl(m/s),rtk_hor_vel_stat,rtk_ver_vel_stat\n";
+			create_file(f_gnss_sol_integ_csv, gnss_sol_integ_name.c_str(), gnss_and_integ_title.c_str());
+			output_file_map[gnss_sol_integ_name] = f_gnss_sol_integ_csv;
+		}
+		f_gnss_sol_integ_csv = output_file_map[gnss_sol_integ_name];
+		if (f_gnss_sol_integ_csv) {
+			fprintf(f_gnss_sol_integ_csv, "%d,%11.4f,%3d", gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, gnss.position_type);
+			fprintf(f_gnss_sol_integ_csv, ",%14.9f,%14.9f,%10.4f", gnss.latitude, gnss.longitude, gnss.height);
+			fprintf(f_gnss_sol_integ_csv, ",%10.4f,%10.4f,%10.4f", gnss.latitude_std, gnss.longitude_std, gnss.height_std);
+			fprintf(f_gnss_sol_integ_csv, ",%3d,%3d", gnss.numberOfSVs, gnss.numberOfSVs_in_solution);
+			fprintf(f_gnss_sol_integ_csv, ",%5.1f,%5.1f", gnss.hdop, gnss.diffage);
+			fprintf(f_gnss_sol_integ_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel, gnss.east_vel, gnss.up_vel);
+			fprintf(f_gnss_sol_integ_csv, ",%10.4f,%10.4f,%10.4f",gnss.north_vel_std, gnss.east_vel_std, gnss.up_vel_std);
+			fprintf(f_gnss_sol_integ_csv, ",%8.3f,%8.3f,%2d,%2d", (float)gnss_integ.rtk_hor_pos_pl / 100, (float)gnss_integ.rtk_ver_pos_pl / 100, gnss_integ.status_bit.rtk_hor_pos_s, gnss_integ.status_bit.rtk_ver_pos_s);
+			fprintf(f_gnss_sol_integ_csv, ",%8.3f,%8.3f,%2d,%2d", (float)gnss_integ.rtk_hor_vel_pl / 100, (float)gnss_integ.rtk_ver_vel_pl / 100, gnss_integ.status_bit.rtk_hor_vel_s, gnss_integ.status_bit.rtk_ver_vel_s);
+			fprintf(f_gnss_sol_integ_csv, "\n");
+		}
+	}
+
+	void Ins401_decoder::output_check()
+	{
+		FILE* f_check_csv = NULL;
+		std::string check_name = "check.csv";
+		FilesMap::iterator it = output_file_map.find(check_name);
+		if (it == output_file_map.end()) {
+			std::string check_title = "";
+			create_file(f_check_csv, check_name.c_str(), check_title.c_str());
+			output_file_map[check_name] = f_check_csv;
+		}
+		f_check_csv = output_file_map[check_name];
+		if (f_check_csv) {
+
 		}
 	}
 
@@ -519,6 +593,7 @@ IMU Temperature(),MCU Temperature(),STA9100 Temperature()\n");
 			if (raw.length == packet_size) {
 				memcpy(&gnss, payload, packet_size);
 				output_gnss_sol();
+				output_gnss_sol_and_integ();
 			}
 		}break;
 		case em_INS_SOL:
@@ -570,11 +645,11 @@ IMU Temperature(),MCU Temperature(),STA9100 Temperature()\n");
 			// ins_save_finish();
 		}
 		break;
-		case em_4D44:
+		case em_CHECK:
 		{
-			size_t packet_size = sizeof(stPacket_4D44);
+			size_t packet_size = sizeof(stPacketCheck);
 			if (raw.length == packet_size){
-				memcpy(&packet_4d44, payload, packet_size);
+				memcpy(&packetcheck, payload, packet_size);
 			}
 		}
 		break;
@@ -584,6 +659,8 @@ IMU Temperature(),MCU Temperature(),STA9100 Temperature()\n");
 			if (raw.length == packet_size) {
 				memcpy(&gnss_integ, payload, packet_size);
 				output_gnss_integ();
+				output_gnss_sol_and_integ();
+				last_gnss_integ_millisecs = (uint32_t)gnss_integ.gps_millisecs;
 			}
 		}
 		break;
