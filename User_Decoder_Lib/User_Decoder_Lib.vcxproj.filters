@@ -51,6 +51,8 @@
     <ClCompile Include="..\decoder\ins_save_parse.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
+    <ClCompile Include="..\decoder\beidou.cpp">
+      <Filter>decoder</Filter>
     <ClCompile Include="..\decoder\E2E_protocol.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
@@ -102,6 +104,10 @@
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\ins_save_parse.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+
+    <ClInclude Include="..\decoder\beidou.h">
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\E2E_protocol.h">
