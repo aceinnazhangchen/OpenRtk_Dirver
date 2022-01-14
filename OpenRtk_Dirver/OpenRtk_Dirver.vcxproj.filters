@@ -145,6 +145,9 @@
     <ClCompile Include="RTK330LA_Analysis.cpp">
       <Filter>Source Files\Analysis</Filter>
     </ClCompile>
+    <ClCompile Include="..\decoder\beidou.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="StreamManager.h">
@@ -264,6 +267,9 @@
     </ClInclude>
     <ClInclude Include="Analysis_Define.h">
       <Filter>Header Files\Analysis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\beidou.h">
+      <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

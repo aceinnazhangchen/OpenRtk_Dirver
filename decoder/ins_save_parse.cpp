@@ -187,9 +187,9 @@ char* get_ins_save_data_str()
 
 void Ins401_Tool::Ins401_decoder::ins_save_finish()
 {
-	create_file(f_ins_log, ".log", NULL);
+	create_file(f_ins_log, ".log", NULL, show_format_time);
 	fprintf(f_ins_log, "pack_type = %s, parse_status = %d\n", "ins save", ins_save_flag);
-	create_file(f_ins_save, ".txt", NULL);
+	create_file(f_ins_save, ".txt", NULL, show_format_time);
 	if (ins_save_flag == 1)
 	{
 		char* parse_str = get_ins_save_data_str();

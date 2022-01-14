@@ -12,7 +12,7 @@
 #define VERSION_EARLY		0
 #define VERSION_24_01_21	1
 namespace RTK330LA_Tool {
-	const char* inceptioPacketsTypeList[MAX_INCEPTIO_PACKET_TYPES] = { "s1","s2","gN","iN","d1","d2","sT","o1","fM","rt","sP" };
+	const char* inceptioPacketsTypeList[MAX_INCEPTIO_PACKET_TYPES] = { "s1","s2","gN","iN","d1","d2","sT","o1","fM","rt","sP","gI" };
 
 	static int data_version = 0;
 	static usrRaw inceptio_raw = { 0 };
@@ -440,8 +440,6 @@ namespace RTK330LA_Tool {
 		sprintf(inceptio_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n", inceptio_pak_gN_early.GPS_Week, inceptio_pak_gN_early.GPS_TimeOfWeek, horizontal_speed, track_over_ground, up_vel);
 		write_inceptio_process_file(inceptio_raw.ntype, 1, inceptio_output_msg);
 		//kml
-		//write_inceptio_gnss_kml_file(&inceptio_pak_gN_early);
-		//gN_early_sol_list.push_back(inceptio_pak_gN_early);
 		inceptio_append_early_gnss_kml();
 	}
 
@@ -466,12 +464,21 @@ namespace RTK330LA_Tool {
 		double horizontal_speed = sqrt(north_vel * north_vel + east_vel * east_vel);
 		double track_over_ground = atan2(east_vel, north_vel) * R2D;
 		//csv
-		sprintf(inceptio_output_msg, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%3d,%5.1f,%5.1f,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%3d\n",
-			inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek,
-			inceptio_pak_gN.positionMode, (double)inceptio_pak_gN.latitude*180.0 / MAX_INT, (double)inceptio_pak_gN.longitude*180.0 / MAX_INT, inceptio_pak_gN.height,
-			inceptio_pak_gN.numberOfSVs, inceptio_pak_gN.hdop, inceptio_pak_gN.vdop, inceptio_pak_gN.tdop, (float)inceptio_pak_gN.diffage,
-			north_vel, east_vel, up_vel, latitude_std, longitude_std, height_std,
-			pos_hor_pl, pos_ver_pl, inceptio_pak_gN.pos_status, vel_hor_pl, vel_ver_pl, inceptio_pak_gN.vel_status);
+		sprintf(inceptio_output_msg, 
+			"%d,%11.4f,%3d"
+			",%14.9f,%14.9f,%10.4f"
+			",%3d,%5.1f,%5.1f,%5.1f,%5.1f"
+			",%10.4f,%10.4f,%10.4f"
+			",%10.4f,%10.4f,%10.4f"
+			",%10.4f,%10.4f"
+			",%3d,%10.4f,%10.4f,%3d\n"
+			,inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek, inceptio_pak_gN.positionMode
+			,(double)inceptio_pak_gN.latitude*180.0 / MAX_INT, (double)inceptio_pak_gN.longitude*180.0 / MAX_INT, inceptio_pak_gN.height
+			,inceptio_pak_gN.numberOfSVs, inceptio_pak_gN.hdop, inceptio_pak_gN.vdop, inceptio_pak_gN.tdop, (float)inceptio_pak_gN.diffage
+			,north_vel, east_vel, up_vel
+			,latitude_std, longitude_std, height_std
+			,pos_hor_pl, pos_ver_pl
+			,inceptio_pak_gN.pos_status, vel_hor_pl, vel_ver_pl, inceptio_pak_gN.vel_status);
 		write_inceptio_log_file(INCEPTIO_OUT_GNSS, inceptio_output_msg);
 		//txt
 		sprintf(inceptio_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%10.4f,%10.4f\n",
@@ -542,7 +549,11 @@ namespace RTK330LA_Tool {
 
 	void output_inceptio_sT() {
 		//csv
-		sprintf(inceptio_output_msg, "%d,%11.4f,%5d,%5d,%5d,%5d,%5d,%5d, %3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d, %8.3f,%8.3f\n", inceptio_pak_sT.GPS_Week, inceptio_pak_sT.GPS_TimeOfWeek,
+		sprintf(inceptio_output_msg, "%d,%11.4f"
+			",%5d,%5d,%5d,%5d,%5d,%5d"
+			",%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d,%3d"
+			",%8.3f,%8.3f\n"
+			,inceptio_pak_sT.GPS_Week, inceptio_pak_sT.GPS_TimeOfWeek,
 			inceptio_pak_sT.year, inceptio_pak_sT.mouth, inceptio_pak_sT.day, inceptio_pak_sT.hour, inceptio_pak_sT.min, inceptio_pak_sT.sec,
 			inceptio_pak_sT.status_bit.imu_temp_status, inceptio_pak_sT.status_bit.imu_acce_status, inceptio_pak_sT.status_bit.imu_gyro_status,
 			inceptio_pak_sT.status_bit.imu_sensor_status1, inceptio_pak_sT.status_bit.imu_sensor_status2, inceptio_pak_sT.status_bit.imu_sensor_status3, inceptio_pak_sT.status_bit.imu_overall_status,

@@ -53,6 +53,7 @@
     </ClCompile>
     <ClCompile Include="..\decoder\beidou.cpp">
       <Filter>decoder</Filter>
+    </ClCompile>
     <ClCompile Include="..\decoder\E2E_protocol.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
@@ -63,6 +64,9 @@
       <Filter>decoder</Filter>
     </ClCompile>
     <ClCompile Include="..\decoder\rtcm_split.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\decode_interface.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
   </ItemGroup>
@@ -106,7 +110,6 @@
     <ClInclude Include="..\decoder\ins_save_parse.h">
       <Filter>decoder</Filter>
     </ClInclude>
-
     <ClInclude Include="..\decoder\beidou.h">
       <Filter>decoder</Filter>
     </ClInclude>
@@ -120,6 +123,9 @@
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\rtcm_split.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\decode_interface.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>
