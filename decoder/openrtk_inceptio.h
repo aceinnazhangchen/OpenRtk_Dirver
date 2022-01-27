@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include "openrtk_user.h"
 
-#define MAX_INCEPTIO_PACKET_TYPES 11
+#define MAX_INCEPTIO_PACKET_TYPES 12
 
 #pragma pack(push, 1)
 namespace RTK330LA_Tool {

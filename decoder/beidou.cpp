@@ -162,7 +162,7 @@ namespace beidou_Tool {
 			if (fgN == NULL) {
 				sprintf(file_name, "%s_gN.csv", base_beidou_file_name);
 				fgN = fopen(file_name, "w");
-				if (fgN) fprintf(fgN, "GPS_Week(),GPS_TimeofWeek(s),positionMode(),latitude(deg),longitude(deg),height(m),numberOfSVs(),hdop(),diffage(),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),latitude_std(),longitude_std(),height_std()\n");
+				if (fgN) fprintf(fgN, "GPS_Week(),GPS_TimeofWeek(s),positionMode(),latitude(deg),longitude(deg),height(m),numberOfSVs(),hdop(),vdop(),tdop(),diffage(),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),latitude_std(),longitude_std(),height_std()\n");
 			}
 			if (fgN) fprintf(fgN, log);
 		}
@@ -373,12 +373,20 @@ namespace beidou_Tool {
 		float height_std = (float)beidou_pak_gN.height_std / 1000.0f;
 		double horizontal_speed = sqrt(north_vel * north_vel + east_vel * east_vel);
 		double track_over_ground = atan2(east_vel, north_vel) * R2D;
+		float vdop = 0.0f;
+		float tdop = 0.0f;
 		//csv
-		sprintf(beidou_output_msg, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%3d,%5.1f,%5.1f,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%3d\n",
-			beidou_pak_gN.week, beidou_pak_gN.timeOfWeek,
-			beidou_pak_gN.positionMode, (double)beidou_pak_gN.latitude*180.0 / MAX_INT, (double)beidou_pak_gN.longitude*180.0 / MAX_INT, beidou_pak_gN.height,
-			beidou_pak_gN.numberOfSVs, beidou_pak_gN.hdop, (float)beidou_pak_gN.diffage,
-			north_vel, east_vel, up_vel, latitude_std, longitude_std, height_std);
+		sprintf(beidou_output_msg, 
+			"%d,%11.4f,%3d"
+			",%14.9f,%14.9f,%10.4f"
+			",%3d,%5.1f,%5.1f,%5.1f,%5.1f"
+			",%5.1f,%5.1f,%5.1f"
+			",%10.4f,%10.4f,%10.4f\n"
+			,beidou_pak_gN.week, beidou_pak_gN.timeOfWeek, beidou_pak_gN.positionMode
+			,(double)beidou_pak_gN.latitude*180.0 / MAX_INT, (double)beidou_pak_gN.longitude*180.0 / MAX_INT, beidou_pak_gN.height
+			,beidou_pak_gN.numberOfSVs, beidou_pak_gN.hdop, vdop, tdop, (float)beidou_pak_gN.diffage
+			,north_vel, east_vel, up_vel
+			,latitude_std, longitude_std, height_std);
 		write_beidou_log_file(beidou_raw.ntype, beidou_output_msg);
 		//txt
 		sprintf(beidou_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%10.4f,%10.4f\n",

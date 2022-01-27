@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <list>
+#include <string>
 #include "kml.h"
 
 namespace Ins401_Tool {
@@ -243,7 +244,7 @@ namespace Ins401_Tool {
 	typedef struct {
 		stFdHwStUp  start_up;
 		stFdHwMonitor runtime;
-	}stPacket_4D44;
+	}stPacketCheck;
 
 	typedef struct {
 		uint16_t spp_hor_pos_s : 1;
@@ -260,7 +261,7 @@ namespace Ins401_Tool {
 
 	typedef struct {
 		uint16_t	week;
-		double		timeOfWeek;
+		double		gps_millisecs;
 		uint32_t	spp_fail_rate;
 		uint32_t	rtk_fail_rate;
 		uint16_t	spp_hor_pos_pl;
@@ -296,7 +297,7 @@ namespace Ins401_Tool {
 		em_ROVER_RTCM = 0x0a06,
 		em_MISALIGN = 0x0a07,
 		PowerUpDR_MES = 0x0a09,
-		em_4D44 = 0x4D44,
+		em_CHECK = 0x4D44,
 		em_GNSS_SOL_INTEGEITY = 0x6749,
 	};
 
@@ -314,11 +315,10 @@ namespace Ins401_Tool {
 		binary_misalign_t misa;
 		diagnostic_msg_t dm;
 		SaveMsg powerup_dr;
-		stPacket_4D44 packet_4d44;
+		stPacketCheck packetcheck;
 		gnss_integ_t gnss_integ;
 		kml_gnss_t gnss_kml;
 		kml_ins_t ins_kml;
-		std::vector<uint16_t>  packets_type_list;
 		char base_file_name[256];
 		char output_msg[1024];
 		FILE* f_log;
@@ -339,18 +339,19 @@ namespace Ins401_Tool {
 		FILE* f_rover_rtcm;
 		FILE* f_ins_log;
 		FILE* f_ins_save;
-		FILE* f_mixed_csv;
 		bool show_format_time;
 		int pack_num;
 		int crc_right_num;
 		int crc_error_num;
 		std::map<uint16_t, int> all_type_pack_num;
-		FilesMap output_file_map; //现在输出文件不断增加，把文件指针都保存到map中
-		bool m_MI_file_switch;
-		float height_msl;//海平面高
+		FilesMap output_file_map;			//现在输出文件不断增加，把文件指针都保存到map中
+		bool m_MI_file_switch;				//输出小米文件开关
+		float height_msl;					//海平面高
+		uint32_t last_gnss_integ_millisecs;	//上次gnss完好性包的周内秒，因为在没有gnss的情况下会不断输出同一个包
 	private:
 		void close_all_files();
-		void create_file(FILE * &file, const char * suffix, const char * title);
+		void create_file(FILE * &file, const char * suffix, const char * title, bool format_time);
+		char * week_2_time_str(int week, uint32_t millisecs);
 		void append_gnss_kml();
 		void append_ins_kml();
 		void output_imu_raw();
@@ -363,8 +364,9 @@ namespace Ins401_Tool {
 		void output_dm_raw();
 		void output_rover_rtcm();
 		void output_misa_sol();
-		void output_mixed_result();
 		void output_gnss_integ();
+		void output_gnss_sol_and_integ();
+		void output_check();
 		void parse_packet_payload();
 		void save_imu_bin();
 		void parse_gga();
