@@ -2,9 +2,11 @@
 #include <stdint.h>
 #include <vector>
 #include <map>
+#include <list>
 #include "kml.h"
 
-namespace Ins401 {
+namespace Ins401_Tool {
+
 #pragma pack(push, 1)
 	typedef struct {
 		uint8_t nmea_flag;
@@ -32,13 +34,20 @@ namespace Ins401 {
 		uint32_t crc_err : 1; // 0 = normal; 1 = Application CRC error detected
 		uint32_t tx_overflow_err : 1; // 0 = normal; 1 = Tx Overflow occurred 10 consecutive cycles
 		/* GNSS unit status */
-		uint32_t pps_status : 1;  // 0 锟紺 normal; 1 锟紺 1PPS pulse exception
-		uint32_t gnss_data_status : 1; // 0 锟紺 normal; 1 锟紺 GNSS chipset has NO data output
-		uint32_t gnss_signal_status : 1; // 0 锟紺 normal; 1 锟紺 GNSS chipset has data output but no valid signal detected
+		uint32_t pps_status : 1;  // 0 = normal; 1 = 1PPS pulse exception
+		uint32_t gnss_data_status : 1; // 0 = normal; 1 = GNSS chipset has NO data output
+		uint32_t gnss_signal_status : 1; // 0 = normal; 1 = GNSS chipset has data output but no valid signal detected
 		/* operation */
-		uint32_t power : 1; //  0 锟紺 normal; 1 - any component has no power
-		uint32_t MCU_status : 1; // 0 锟紺 normal; 1 锟紺 MCU failure
-		uint32_t reserved : 17;
+		uint32_t power : 1; //  0 = normal; 1 = any component has no power
+		uint32_t MCU_status : 1; // 0 = normal; 1 = MCU failure
+		uint32_t temperature_under_mcu_flag : 1;  // 0 = normal; 1 = under temperature
+		uint32_t temperature_under_sta_flag : 1;  // 0 = normal; 1 = under temperature
+		uint32_t temperature_under_imu_flag : 1;  // 0 = normal; 1 = under temperature
+
+		uint32_t temperature_over_mcu_flag : 1;   // 0 = normal; 1 = over temperature
+		uint32_t temperature_over_sta_flag : 1;   // 0 = normal; 1 = over temperature
+		uint32_t temperature_over_imu_flag : 1;   // 0 = normal; 1 = over temperature
+		uint32_t reserved : 11;
 	} status_bit_t;
 
 	typedef struct {
@@ -56,7 +65,7 @@ namespace Ins401 {
 		uint16_t	gps_week;
 		uint32_t	gps_millisecs;
 		/*
-		0:INVALID
+		0: INVALID
 		1: Single-point positioning (SPP)
 		2: Real time differential GNSS (RTD)
 		4: Real time kinematic (RTK), ambiguity fixed (RTK_FIXED)
@@ -81,7 +90,7 @@ namespace Ins401 {
 		float		up_vel_std;
 	}gnss_sol_t;
 
-	typedef struct {
+	struct ins_sol_t_20211207 {
 		uint16_t	gps_week;
 		uint32_t	gps_millisecs;
 		/*
@@ -124,14 +133,19 @@ namespace Ins401 {
 		float		roll_std;
 		float		pitch_std;
 		float		heading_std;
-	}ins_sol_t;
+	};
+
+	struct ins_sol_t: ins_sol_t_20211207 {
+		int16_t id_contient;
+	};	
 
 	typedef struct {
-		uint16_t	gps_week;
-		uint32_t	gps_millisecs;
-		uint32_t	Device_status_bit_field;
-		float		IMU_Unit_temperature;
-		float		MCU_temperature;
+		uint16_t		gps_week;
+		uint32_t		gps_millisecs;
+		status_bit_t	status_bit;
+		float			IMU_Unit_temperature;
+		float			MCU_temperature;
+		float			STA9100_temperature;
 	}diagnostic_msg_t;
 
 	typedef struct
@@ -204,8 +218,89 @@ namespace Ins401 {
 		uint8_t crc[4];                           //!< 32-bit cyclic redundancy check (CRC)
 	}SaveMsg;
 
+	/**** Start Up ****/
+	typedef struct {
+		uint32_t adc : 4;				/* bit0: Adc_In, bit1: Adc_Core, bit2: Adc_1V2, bit3: GND */
+		uint32_t exOsc : 1;           /* exOsci = 24MHz */
+		uint32_t power : 1;
+		uint32_t ram : 3;				/* bit0: Sram0, bit1: Sram1, bit2: Sram2 */
+		uint32_t wdg : 1;
+		uint32_t flash : 2;			/* bit0: cflash bit1: wflash*/
+		uint32_t clkCSV : 1;
+		uint32_t BackUp : 19;
+	}stFdHwStUp;
+
+	/**** Run time ****/
+	typedef struct {
+		uint32_t  volt : 1;
+		uint32_t  clock : 1;
+		uint32_t  core : 1;
+		uint32_t  sram : 1;
+		uint32_t  flash : 1;
+		uint32_t  BackUp : 27;
+	}stFdHwMonitor;
+
+	typedef struct {
+		stFdHwStUp  start_up;
+		stFdHwMonitor runtime;
+	}stPacket_4D44;
+
+	typedef struct {
+		uint16_t spp_hor_pos_s : 1;
+		uint16_t spp_ver_pos_s : 1;
+		uint16_t spp_hor_vel_s : 1;
+		uint16_t spp_ver_vel_s : 1;
+		uint16_t rtk_hor_pos_s : 1;
+		uint16_t rtk_ver_pos_s : 1;
+		uint16_t rtk_hor_vel_s : 1;
+		uint16_t rtk_ver_vel_s : 1;
+		uint16_t rtk_heading_s : 1;
+		uint16_t reserved : 7;
+	}gnss_sol_integ_bit;
+
+	typedef struct {
+		uint16_t	week;
+		double		timeOfWeek;
+		uint32_t	spp_fail_rate;
+		uint32_t	rtk_fail_rate;
+		uint16_t	spp_hor_pos_pl;
+		uint16_t	spp_ver_pos_pl;
+		uint16_t	spp_hor_vel_pl;
+		uint16_t	spp_ver_vel_pl;
+		uint16_t	rtk_hor_pos_pl;
+		uint16_t	rtk_ver_pos_pl;
+		uint16_t	rtk_hor_vel_pl;
+		uint16_t	rtk_ver_vel_pl;
+		uint16_t	rtk_heading_pl;
+		uint16_t	spp_hor_pos_al;
+		uint16_t	spp_ver_pos_al;
+		uint16_t	spp_hor_vel_al;
+		uint16_t	spp_ver_vel_al;
+		uint16_t	rtk_hor_pos_al;
+		uint16_t	rtk_ver_pos_al;
+		uint16_t	rtk_hor_vel_al;
+		uint16_t	rtk_ver_vel_al;
+		uint16_t	rtk_heading_al;
+		gnss_sol_integ_bit	status_bit;
+	}gnss_integ_t;
+
+
 #pragma pack(pop)
 
+	enum emPackageType {
+		em_RAW_IMU = 0x0a01,
+		em_GNSS_SOL = 0x0a02,
+		em_INS_SOL = 0x0a03,
+		em_RAW_ODO = 0x0a04,
+		em_DIAGNOSTIC_MSG = 0x0a05,
+		em_ROVER_RTCM = 0x0a06,
+		em_MISALIGN = 0x0a07,
+		PowerUpDR_MES = 0x0a09,
+		em_4D44 = 0x4D44,
+		em_GNSS_SOL_INTEGEITY = 0x6749,
+	};
+
+	typedef std::map<std::string, FILE*> FilesMap;
 	class Ins401_decoder {
 	public:
 		Ins401_decoder();
@@ -219,6 +314,8 @@ namespace Ins401 {
 		binary_misalign_t misa;
 		diagnostic_msg_t dm;
 		SaveMsg powerup_dr;
+		stPacket_4D44 packet_4d44;
+		gnss_integ_t gnss_integ;
 		kml_gnss_t gnss_kml;
 		kml_ins_t ins_kml;
 		std::vector<uint16_t>  packets_type_list;
@@ -242,34 +339,50 @@ namespace Ins401 {
 		FILE* f_rover_rtcm;
 		FILE* f_ins_log;
 		FILE* f_ins_save;
+		FILE* f_mixed_csv;
 		bool show_format_time;
 		int pack_num;
 		int crc_right_num;
 		int crc_error_num;
 		std::map<uint16_t, int> all_type_pack_num;
+		FilesMap output_file_map; //现在输出文件不断增加，把文件指针都保存到map中
+		bool m_MI_file_switch;
+		float height_msl;//海平面高
 	private:
 		void close_all_files();
 		void create_file(FILE * &file, const char * suffix, const char * title);
 		void append_gnss_kml();
 		void append_ins_kml();
 		void output_imu_raw();
+		void MI_output_imu_raw();
 		void output_gnss_sol();
+		void MI_output_gnss_sol();
 		void output_ins_sol();
+		void MI_output_ins_sol();
 		void output_odo_raw();
 		void output_dm_raw();
 		void output_rover_rtcm();
 		void output_misa_sol();
+		void output_mixed_result();
+		void output_gnss_integ();
 		void parse_packet_payload();
 		void save_imu_bin();
+		void parse_gga();
 		int8_t parse_nmea(uint8_t data);		
 	public:
 		void init();
 		void set_base_file_name(char* file_name);
 		void set_show_format_time(bool show);
+		void set_MI_file_switch(bool write);
 		int input_data(uint8_t data);
 		int input_ins_save_data(unsigned char data);		
 		void finish();
 		void ins_save_finish();
+	public:
+		int get_current_type();
+		gnss_sol_t* get_gnss_sol();
+		ins_sol_t * get_ins_sol();
+		raw_imu_t * get_imu_raw();
 	};
 };
 

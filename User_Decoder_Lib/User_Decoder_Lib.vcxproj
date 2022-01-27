@@ -23,7 +23,7 @@
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{0607a2b9-0754-49d8-8bd2-0e4e464f6186}</ProjectGuid>
     <RootNamespace>UserDecoderLib</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -48,7 +48,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -149,29 +149,39 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\decoder\beidou.cpp" />
     <ClCompile Include="..\decoder\common.c" />
+    <ClCompile Include="..\decoder\E2E_protocol.cpp" />
+    <ClCompile Include="..\decoder\gnss_math.c" />
     <ClCompile Include="..\decoder\imu_raw.cpp" />
     <ClCompile Include="..\decoder\ins401.cpp" />
     <ClCompile Include="..\decoder\ins_save_parse.cpp" />
     <ClCompile Include="..\decoder\kml.cpp" />
     <ClCompile Include="..\decoder\mixed_raw.c" />
+    <ClCompile Include="..\decoder\model.c" />
     <ClCompile Include="..\decoder\openrtk_inceptio.cpp" />
     <ClCompile Include="..\decoder\openrtk_user.cpp" />
     <ClCompile Include="..\decoder\rtcm.c" />
+    <ClCompile Include="..\decoder\rtcm_split.cpp" />
     <ClCompile Include="..\decoder\rtkcmn.c" />
     <ClCompile Include="decoder_dll.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\decoder\beidou.h" />
     <ClInclude Include="..\decoder\common.h" />
+    <ClInclude Include="..\decoder\E2E_protocol.h" />
     <ClInclude Include="..\decoder\gnss_datatype.h" />
+    <ClInclude Include="..\decoder\gnss_math.h" />
     <ClInclude Include="..\decoder\imu_raw.h" />
     <ClInclude Include="..\decoder\ins401.h" />
     <ClInclude Include="..\decoder\ins_save_parse.h" />
     <ClInclude Include="..\decoder\kml.h" />
     <ClInclude Include="..\decoder\mixed_raw.h" />
+    <ClInclude Include="..\decoder\model.h" />
     <ClInclude Include="..\decoder\openrtk_inceptio.h" />
     <ClInclude Include="..\decoder\openrtk_user.h" />
     <ClInclude Include="..\decoder\rtcm.h" />
+    <ClInclude Include="..\decoder\rtcm_split.h" />
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
     <ClInclude Include="decoder_dll.h" />

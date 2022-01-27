@@ -10,6 +10,9 @@ enum emMergeFromat
 {
 	emMergeFromat_rover_base,
 	emMergeFromat_rtcm_imu,
+	emMergeFromat_ins_csv_imu_txt,
+	emMergeFromat_process_txt_imu_txt,
+	emMergeFromat_process_gnss_csv
 };
 
 class MergeThread : public QThread
@@ -28,6 +31,11 @@ public:
 	void makeOutFileName();
 	void mergeRtcmImuFile();
 	void mergeRoverBaseFile();
+	void merge_process_txt_imu_txt_post();
+	void merge_process_txt_imu_txt_realtime();
+	void replace_gnss_line(QStringList & process_item, QStringList & gnss_item);
+	void replace_vel_line(QStringList & process_item, QStringList & gnss_item);
+	void merge_process_gnss_csv();
 	int readOneRtcm();
 	int readOneImu();
 	void readOneRover();
@@ -67,6 +75,7 @@ private:
 
 	uint32_t per10Hz;
 	uint32_t last_per10Hz;
+
 signals:
 	void sgnProgress(int present, int msecs);
 	void sgnFinished();

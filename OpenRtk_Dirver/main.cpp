@@ -2,7 +2,7 @@
 #include <QtWidgets/QApplication>
 
 #define PROGRAM "OpenRTK Driver"
-#define VERSION "v1.5.3"
+#define VERSION "v1.8.16"
 
 int main(int argc, char *argv[])
 {
@@ -12,7 +12,3 @@ int main(int argc, char *argv[])
     w.show();
     return a.exec();
 }
-
-
-//windows Npcap
-//libux libcap

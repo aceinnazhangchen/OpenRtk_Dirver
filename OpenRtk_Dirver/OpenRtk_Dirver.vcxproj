@@ -13,18 +13,18 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3EBD8D3E-15E2-4740-88EE-550240BDA287}</ProjectGuid>
     <Keyword>QtVS_v304</Keyword>
-    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0.17763.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0.17763.0</WindowsTargetPlatformVersion>
     <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
@@ -60,13 +60,14 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\decoder;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\decoder;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>MI_OUTPUT_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\decoder;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\decoder;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>MI_OUTPUT_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -97,25 +98,35 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\decoder\common.c" />
+    <ClCompile Include="..\decoder\E2E_protocol.cpp" />
+    <ClCompile Include="..\decoder\gnss_math.c" />
     <ClCompile Include="..\decoder\imu_raw.cpp" />
     <ClCompile Include="..\decoder\ins401.cpp" />
+    <ClCompile Include="..\decoder\ins_save_parse.cpp" />
     <ClCompile Include="..\decoder\kml.cpp" />
     <ClCompile Include="..\decoder\mixed_raw.c" />
+    <ClCompile Include="..\decoder\model.c" />
     <ClCompile Include="..\decoder\openrtk_inceptio.cpp" />
     <ClCompile Include="..\decoder\openrtk_user.cpp" />
     <ClCompile Include="..\decoder\rtcm.c" />
     <ClCompile Include="..\decoder\rtcm_split.cpp" />
     <ClCompile Include="..\decoder\rtkcmn.c" />
+    <ClCompile Include="AnalysisConfigUI.cpp" />
     <ClCompile Include="AnalysisThread.cpp" />
     <ClCompile Include="AnalysisTools.cpp" />
     <ClCompile Include="DecodeThread.cpp" />
     <ClCompile Include="DecodeTools.cpp" />
+    <ClCompile Include="Ins401_Analysis.cpp" />
     <ClCompile Include="MergeThread.cpp" />
     <ClCompile Include="MergeTools.cpp" />
+    <ClCompile Include="RTK330LA_Analysis.cpp" />
     <ClCompile Include="SingleStream.cpp" />
+    <ClCompile Include="SplitThread.cpp" />
+    <ClCompile Include="SplitTools.cpp" />
     <ClCompile Include="StreamConfigUI.cpp" />
     <ClCompile Include="StreamManager.cpp" />
     <QtRcc Include="OpenRtk_Dirver.qrc" />
+    <QtUic Include="AnalysisConfigUI.ui" />
     <QtUic Include="AnalysisTools.ui" />
     <QtUic Include="DecodeTools.ui" />
     <QtUic Include="MergeTools.ui" />
@@ -123,6 +134,7 @@
     <QtMoc Include="OpenRtk_Dirver.h" />
     <ClCompile Include="OpenRtk_Dirver.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="SplitTools.ui" />
     <QtUic Include="StreamConfigUI.ui" />
   </ItemGroup>
   <ItemGroup>
@@ -136,18 +148,28 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\decoder\common.h" />
+    <ClInclude Include="..\decoder\E2E_protocol.h" />
     <ClInclude Include="..\decoder\gnss_datatype.h" />
+    <ClInclude Include="..\decoder\gnss_math.h" />
     <ClInclude Include="..\decoder\imu_raw.h" />
     <ClInclude Include="..\decoder\ins401.h" />
+    <ClInclude Include="..\decoder\ins_save_parse.h" />
     <ClInclude Include="..\decoder\kml.h" />
     <ClInclude Include="..\decoder\mixed_raw.h" />
+    <ClInclude Include="..\decoder\model.h" />
     <ClInclude Include="..\decoder\openrtk_inceptio.h" />
     <ClInclude Include="..\decoder\openrtk_user.h" />
     <ClInclude Include="..\decoder\rtcm.h" />
     <ClInclude Include="..\decoder\rtcm_split.h" />
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
+    <QtMoc Include="RTK330LA_Analysis.h" />
+    <QtMoc Include="AnalysisConfigUI.h" />
+    <QtMoc Include="Ins401_Analysis.h" />
+    <ClInclude Include="Analysis_Define.h" />
     <ClInclude Include="resource.h" />
+    <QtMoc Include="SplitThread.h" />
+    <QtMoc Include="SplitTools.h" />
     <QtMoc Include="AnalysisTools.h" />
     <QtMoc Include="AnalysisThread.h" />
     <QtMoc Include="MergeThread.h" />

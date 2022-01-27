@@ -10,14 +10,16 @@ DecodeTools::DecodeTools(QWidget *parent)
 	ui.setupUi(this);
 	setAcceptDrops(true);
 	m_DecodeThread = new DecodeThread(this);
-
 	connect(ui.select_btn, SIGNAL(clicked()), this, SLOT(onSelectFileClicked()));
 	connect(ui.decode_btn, SIGNAL(clicked()), this, SLOT(onDecodeClicked()));
-
 	connect(m_DecodeThread, SIGNAL(sgnProgress(int, int)), this, SLOT(onProcess(int, int)));
 	connect(m_DecodeThread, SIGNAL(sgnFinished()), this, SLOT(onFinished()));
+	connect(ui.toolButton_setting, SIGNAL(clicked()), this, SLOT(onClickedSettingButton()));
+	
+	m_AnalysisConfigUI = new AnalysisConfigUI();
+	m_AnalysisConfigUI->hide();
 
-	//ui.time_checkBox->setToolTip("");
+	ui.dateTimeEdit->setDate(QDate::currentDate());
 }
 
 DecodeTools::~DecodeTools()
@@ -32,7 +34,13 @@ void DecodeTools::setOperable(bool enable)
 {
 	ui.filepath_edt->setEnabled(enable);
 	ui.select_btn->setEnabled(enable);
-	ui.decode_btn->setEnabled(enable);
+	//ui.decode_btn->setEnabled(enable);
+	if (enable) {
+		ui.decode_btn->setText("decode");
+	}
+	else {
+		ui.decode_btn->setText("stop");
+	}
 }
 
 void DecodeTools::dragEnterEvent(QDragEnterEvent * event)
@@ -65,6 +73,7 @@ void DecodeTools::onDecodeClicked()
 {
 	if (m_DecodeThread->isRunning())
 	{
+		m_DecodeThread->stop();
 		return;
 	}
 	QString filename = ui.filepath_edt->text();
@@ -75,6 +84,29 @@ void DecodeTools::onDecodeClicked()
 	m_DecodeThread->setFileFormat(ui.fileformat_cmb->currentIndex());
 	m_DecodeThread->setFileName(filename);
 	m_DecodeThread->setShowTime(ui.time_checkBox->isChecked());
+	switch (ui.frequency_cmb->currentIndex()) {
+	case 0:
+		m_DecodeThread->setKmlFrequency(1000);
+		break;
+	case 1:
+		m_DecodeThread->setKmlFrequency(100);
+		break;
+	case 2:
+		m_DecodeThread->setKmlFrequency(10);
+		break;
+	default:
+		break;
+	}
+	if (ui.fileformat_cmb->currentIndex() == emDecodeFormat_Ins401) {
+		m_AnalysisConfigUI->set_thres_Ins401(m_DecodeThread->m_Ins401_Analysis);
+	}
+	else if(ui.fileformat_cmb->currentIndex() == emDecodeFormat_RTK330LA) {
+		m_AnalysisConfigUI->set_thres_RTK330LA(m_DecodeThread->m_RTK330LA_Analysis);
+	}	
+	m_DecodeThread->m_static_point_ecp = m_AnalysisConfigUI->isStaticTotalChecked();
+	m_DecodeThread->setMIFileSwitch(m_AnalysisConfigUI->isMITableChecked());
+	QString time = ui.dateTimeEdit->dateTime().toString("yyyy/MM/dd HH:mm:ss");
+	m_DecodeThread->setDateTime(time);
 	m_DecodeThread->start();
 	setOperable(false);
 }
@@ -91,4 +123,9 @@ void DecodeTools::onProcess(int present, int msecs)
 void DecodeTools::onFinished()
 {
 	setOperable(true);
+}
+
+void DecodeTools::onClickedSettingButton()
+{
+	m_AnalysisConfigUI->show();
 }

@@ -4,7 +4,6 @@
 * Description: package some _hal function
 *******************************************************************************/
 #include "rtcm.h"
-
 /*--------------------------------------------------------*/
 
 #include <time.h>
@@ -13,6 +12,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "model.h"
 
 #ifdef RTK_ENABLE
 #include "gpOS_time.h"
@@ -28,6 +28,7 @@
 //#endif
 #endif
 
+#define AS2R (D2R / 3600.0)    /* arc sec to radian */
 #define CCMRAM __attribute__((section(".ccmram")))
 
 static int decode_type4001(rtcm_t *rtcm);
@@ -46,8 +47,8 @@ TIME_S sensor_time_s;
 extern void set_glo_frq(int prn, int frq)
 {
 	int default_glo_frq_table[30] = {
-	1, -4, 5, 6, 1, -4, 5, 6, -2, -7, 0, -1, -2, -7, 0, -1,
-	4, -3, 3, 2, 4, -3, 3, 2, 0, -5, -99, -99, -99, -99 };
+	1, -4, 05, 06, 01, -4, 05, 06, -2, -7, 00, -1, -2, -7, 00, -1,
+	04, -3, 03, 02, 04, -3, 03, 02, 0, -5, -99, -99, -99, -99 };
 
 	int max_prn;
 	max_prn = sizeof(default_glo_frq_table) / sizeof(int);
@@ -61,8 +62,8 @@ extern void set_glo_frq(int prn, int frq)
 extern int get_glo_frq(int prn)
 {
 	int default_glo_frq_table[30] = {
-	1, -4, 5, 6, 1, -4, 5, 6, -2, -7, 0, -1, -2, -7, 0, -1,
-	4, -3, 3, 2, 4, -3, 3, 2, 0, -5, -99, -99, -99, -99 };
+	1, -4, 05, 06, 01, -4, 05, 06, -2, -7, 00, -1, -2, -7, 00, -1,
+	04, -3, 03, 02, 04, -3, 03, 02, 0, -5, -99, -99, -99, -99 };
 
 	int max_prn;
 	max_prn = sizeof(default_glo_frq_table) / sizeof(int);
@@ -214,7 +215,7 @@ const char *msm_sig_sbs[32] = {
 const char *msm_sig_cmp[32] = {
 	/* BeiDou: ref [15] table 3.5-106 */
 	"", "1I", "1Q", "1X", ""  , ""  , "", "6I", "6Q", "6X", ""  , ""  ,
-	"", "7I", "7Q", "7X", ""  , "5Q"  , "", ""  , ""  , "5I", "5Q", "5X",
+	"", "7I", "7Q", "7X", ""  , ""  , "", ""  , ""  , "5I", "5Q", "5X",
 	"", ""  , ""  , ""  , ""  , ""  , "", "" };
 
 /* ssr signal and tracking mode ids ------------------------------------------*/
@@ -778,34 +779,56 @@ extern double satwavelen(int sat, int code)
 extern unsigned char obs2code(int sys, const char *obs, int *freq)
 {
     int i;
-    if (freq)
-        *freq = 0;
+
+	if (freq)
+	{
+		*freq = 0;
+	}
     for (i = 1; *obscodes[i]; i++)
     {
-        if (strcmp(obscodes[i], obs))
-            continue;
+		if (strcmp(obscodes[i], obs))
+		{
+			continue;
+		}
         if (freq)
         {
-            if (sys == _SYS_GPS_)
-                *freq = obsfreqs_gps[i];
-            else if (sys == _SYS_GLO_)
-                *freq = obsfreqs_glo[i];
-            else if (sys == _SYS_GAL_)
-                *freq = obsfreqs_gal[i];
-            else if (sys == _SYS_QZS_)
-                *freq = obsfreqs_qzs[i];
-            else if (sys == _SYS_SBS_)
-                *freq = obsfreqs_sbs[i];
-            else if (sys == _SYS_BDS_)
-                *freq = obsfreqs_cmp[i];
-            else if (sys == _SYS_IRN_)
-                *freq = obsfreqs_irn[i];
+			if (sys == _SYS_GPS_)
+			{
+				*freq = obsfreqs_gps[i];
+			}
+			else if (sys == _SYS_GLO_)
+			{
+				*freq = obsfreqs_glo[i];
+			}
+			else if (sys == _SYS_GAL_)
+			{
+				*freq = obsfreqs_gal[i];
+			}
+			else if (sys == _SYS_QZS_)
+			{
+				*freq = obsfreqs_qzs[i];
+			}
+			else if (sys == _SYS_SBS_)
+			{
+				*freq = obsfreqs_sbs[i];
+			}
+			else if (sys == _SYS_BDS_)
+			{
+				*freq = obsfreqs_cmp[i];
+			}
+			else if (sys == _SYS_IRN_)
+			{
+				*freq = obsfreqs_irn[i];
+			}
 			*freq = NFREQ + 1;
         }
+
         return (unsigned char)i;
     }
+
     return CODE_NONE;
 }
+
 /* obs type string to obs code -------------------------------------------------
 * convert obs code type string to obs code
 * args   : char   *str   I      obs code string ("1C","1P","1Y",...)
@@ -817,33 +840,56 @@ extern unsigned char obs2code(int sys, const char *obs, int *freq)
 extern unsigned char obs2coderinex(int sys, const char *obs, int *freq)
 {
 	int i;
+
 	if (freq)
+	{
 		*freq = 0;
+	}
+
 	for (i = 1; *obscodes[i]; i++)
 	{
 		if (strcmp(obscodes[i], obs))
+		{
 			continue;
+		}
 		if (freq)
 		{
 			if (sys == _SYS_GPS_)
+			{
 				*freq = obsfreqs_gps[i];
+			}
 			else if (sys == _SYS_GLO_)
+			{
 				*freq = obsfreqs_glo[i];
+			}
 			else if (sys == _SYS_GAL_)
+			{
 				*freq = obsfreqs_gal[i];
+			}
 			else if (sys == _SYS_QZS_)
+			{
 				*freq = obsfreqs_qzs[i];
+			}
 			else if (sys == _SYS_SBS_)
+			{
 				*freq = obsfreqs_sbs[i];
+			}
 			else if (sys == _SYS_BDS_)
+			{
 				*freq = obsfreqs_cmp[i];
+			}
 			else if (sys == _SYS_IRN_)
+			{
 				*freq = obsfreqs_irn[i];
+			}
 		}
+
 		return (unsigned char)i;
 	}
+
 	return CODE_NONE;
 }
+
 /* obs code to obs code string -------------------------------------------------
 * convert obs code to obs code string
 * args   : unsigned char code I obs code (CODE_???)
@@ -855,26 +901,44 @@ extern unsigned char obs2coderinex(int sys, const char *obs, int *freq)
 *-----------------------------------------------------------------------------*/
 extern char *code2obs(int sys, unsigned char code, int *freq)
 {
-    if (freq)
-        *freq = 0;
-    if (code <= CODE_NONE || MAXCODE < code)
-        return "";
+	if (freq)
+	{
+		*freq = 0;
+	}
+	if (code <= CODE_NONE || MAXCODE < code)
+	{
+		return "";
+	}
     if (freq)
     {
-        if (sys == _SYS_GPS_)
-            *freq = obsfreqs_gps[code];
-        else if (sys == _SYS_GLO_)
-            *freq = obsfreqs_glo[code];
-        else if (sys == _SYS_GAL_)
-            *freq = obsfreqs_gal[code];
-        else if (sys == _SYS_QZS_)
-            *freq = obsfreqs_qzs[code];
-        else if (sys == _SYS_SBS_)
-            *freq = obsfreqs_sbs[code];
-        else if (sys == _SYS_BDS_)
-            *freq = obsfreqs_cmp[code];
-        else if (sys == _SYS_IRN_)
-            *freq = obsfreqs_irn[code];
+		if (sys == _SYS_GPS_)
+		{
+			*freq = obsfreqs_gps[code];
+		}
+		else if (sys == _SYS_GLO_)
+		{
+			*freq = obsfreqs_glo[code];
+		}
+		else if (sys == _SYS_GAL_)
+		{
+			*freq = obsfreqs_gal[code];
+		}
+		else if (sys == _SYS_QZS_)
+		{
+			*freq = obsfreqs_qzs[code];
+		}
+		else if (sys == _SYS_SBS_)
+		{
+			*freq = obsfreqs_sbs[code];
+		}
+		else if (sys == _SYS_BDS_)
+		{
+			*freq = obsfreqs_cmp[code];
+		}
+		else if (sys == _SYS_IRN_)
+		{
+			*freq = obsfreqs_irn[code];
+		}
     }
     return obscodes[code];
 }
@@ -890,22 +954,41 @@ extern void setcodepri(int sys, int freq, const char *pri)
 {
     trace(3, "setcodepri:sys=%c freq=%d pri=%s\n", sys2char(sys), freq, pri);
 
-    if (freq <= 0 || MAXFREQ < freq)
-        return;
-    if (sys & _SYS_GPS_)
-        strcpy(codepris[0][freq - 1], pri);
-    if (sys & _SYS_GLO_)
-        strcpy(codepris[1][freq - 1], pri);
-    if (sys & _SYS_GAL_)
-        strcpy(codepris[2][freq - 1], pri);
-    if (sys & _SYS_QZS_)
-        strcpy(codepris[3][freq - 1], pri);
-    if (sys & _SYS_SBS_)
-        strcpy(codepris[4][freq - 1], pri);
-    if (sys & _SYS_BDS_)
-        strcpy(codepris[5][freq - 1], pri);
-    if (sys & _SYS_IRN_)
-        strcpy(codepris[6][freq - 1], pri);
+	if (freq <= 0 || MAXFREQ < freq)
+	{
+		return;
+	}
+
+	if (sys & _SYS_GPS_)
+	{
+		strcpy(codepris[0][freq - 1], pri);
+	}
+	if (sys & _SYS_GLO_)
+	{
+		strcpy(codepris[1][freq - 1], pri);
+	}
+	if (sys & _SYS_GAL_)
+	{
+		strcpy(codepris[2][freq - 1], pri);
+	}
+	if (sys & _SYS_QZS_)
+	{
+		strcpy(codepris[3][freq - 1], pri);
+	}
+	if (sys & _SYS_SBS_)
+	{
+		strcpy(codepris[4][freq - 1], pri);
+	}
+	if (sys & _SYS_BDS_)
+	{
+		strcpy(codepris[5][freq - 1], pri);
+	}
+	if (sys & _SYS_IRN_)
+	{
+		strcpy(codepris[6][freq - 1], pri);
+	}
+
+	return;
 }
 /* get code priority -----------------------------------------------------------
 * get code priority for multiple codes in a frequency
@@ -962,6 +1045,7 @@ extern int getcodepri(int sys, unsigned char code, const char *opt)
             continue;
         return str[1] == obs[1] ? 15 : 0;
     }
+
     /* search code priority */
     return (p = strchr(codepris[i][j - 1], obs[1])) ? 14 - (int)(p - codepris[i][j - 1]) : 0;
 }
@@ -989,21 +1073,29 @@ static void sigindex(int sys, const unsigned char *code, const int *freq, int n,
         /* select highest priority signal */
         if (pri > pri_h[freq[i] - 1])
         {
-            if (index[freq[i] - 1])
-                ex[index[freq[i] - 1] - 1] = 1;
+			if (index[freq[i] - 1])
+			{
+				ex[index[freq[i] - 1] - 1] = 1;
+			}
             pri_h[freq[i] - 1] = pri;
             index[freq[i] - 1] = i + 1;
         }
-        else
-            ex[i] = 1;
+		else
+		{
+			ex[i] = 1;
+		}
     }
     /* signal index in obs data */
     for (i = nex = 0; i < n; i++)
     {
-        if (ex[i] == 0)
-            ind[i] = freq[i] - 1;
-        else if (freq[i] <= NFREQ + NEXOBS)
+		if (ex[i] == 0)
+		{
 			ind[i] = freq[i] - 1;
+		}
+		else if (freq[i] <= NFREQ + NEXOBS)
+		{
+			ind[i] = freq[i] - 1;
+		}
         else
         { /* no space in obs data */
             trace(2, "rtcm msm: no space in obs data sys=%c code=%d\n", sys2char(sys), code[i]);
@@ -1013,6 +1105,8 @@ static void sigindex(int sys, const unsigned char *code, const int *freq, int n,
         trace(2,"sig pos: sys=%c code=%d ex=%d ind=%d\n", sys2char(sys),code[i],ex[i],ind[i]);
 #endif
     }
+
+	return;
 }
 
 /* adjust carrier-phase rollover ---------------------------------------------*/
@@ -1024,25 +1118,68 @@ static double adjcp(rtcm_t *rtcm, int sat, int freq, double cp)
     //rtcm->cp[sat-1][freq]=cp;
     return cp;
 }
+
 /* loss-of-lock indicator ----------------------------------------------------*/
 static int lossoflock(rtcm_t *rtcm, int sat, int freq, int lock)
 {
 	int lli = (!lock && !rtcm->lock[sat - 1][freq]) || lock < rtcm->lock[sat - 1][freq];
+
 	rtcm->lock[sat - 1][freq] = (unsigned short)lock;
+
 	return lli;
 }
+
 /* s/n ratio -----------------------------------------------------------------*/
 static unsigned char snratio(double snr)
 {
     return (unsigned char)(snr <= 0.0 || 255.5 <= snr ? 0.0 : snr * 4.0 + 0.5);
 }
+
+/* receiver Status and Safety (RSS) */
+static void decode_type999_id1(rtcm_t *rtcm, obs_t *obs)
+{
+    int i = 44, gnss_id, week, sf_info, proc_flag, fm_ver, pps_status, time_valid, const_alarm_mask, const_mask, const_mfreq_mask;
+    double tow, leap_sec;
+    tow = rtcm_getbitu(rtcm->buff, i, 30) * 0.001f;
+    i += 30;
+    week = rtcm_getbitu(rtcm->buff, i, 16);
+    i += 16;
+    leap_sec= rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+    sf_info = rtcm_getbitu(rtcm->buff, i, 1);
+    i += 1;
+    proc_flag = rtcm_getbitu(rtcm->buff, i, 7);
+    i += 7;
+    fm_ver = rtcm_getbitu(rtcm->buff, i, 24);
+    i += 24;
+
+    i += 8;
+    i += 8;
+    i += 8;
+    pps_status = rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+    time_valid = rtcm_getbitu(rtcm->buff, i, 4);
+    i += 4;
+    const_alarm_mask = rtcm_getbitu(rtcm->buff, i, 32);
+    i += 32;
+    i += 32;
+    const_mask       = rtcm_getbitu(rtcm->buff, i, 32);
+    i += 32;
+    const_mfreq_mask = rtcm_getbitu(rtcm->buff, i, 32);
+    i += 32;
+
+#ifdef _DEBUG_ON_
+    printf("tow:%10.1f,fw_ver:%8d,safety_info:%4d,pps_status:%4d,time_valid:%4d\n", tow, fm_ver, sf_info, pps_status, time_valid);
+#endif
+}
+
+
+
+
 /* receiver PVT */
 static void decode_type999_id4(rtcm_t *rtcm, obs_t *obs)
 {
-	int i = 44;
-    int gnss_id;
-    int week;
-    double tow;
+	int i = 44, gnss_id, week;
 
     rtcm->teseo.ref_id = rtcm_getbitu(rtcm->buff, i, 12);
     i += 12;
@@ -1054,72 +1191,48 @@ static void decode_type999_id4(rtcm_t *rtcm, obs_t *obs)
     i += 8;
 	rtcm->teseo.nsat_view = rtcm_getbitu(rtcm->buff, i, 8);
     i += 8;
-	if ((rtcm->teseo.nsat_use == 255) || (rtcm->teseo.nsat_view == 255))
-	{
-		rtcm->teseo.fix_status = 0;
-	}
 	rtcm->teseo.hdop = rtcm_getbitu(rtcm->buff, i, 8);
     i += 8;
 	rtcm->teseo.vdop = rtcm_getbitu(rtcm->buff, i, 8);
     i += 8;
 	rtcm->teseo.pdop = rtcm_getbitu(rtcm->buff, i, 8);
     i += 8;
-	if ((rtcm->teseo.hdop == 255) || (rtcm->teseo.vdop == 255)|| 
-		(rtcm->teseo.pdop == 255))
-	{
-		rtcm->teseo.fix_status = 0;
-	}
-	rtcm->teseo.geo_sep = rtcm_getbits(rtcm->buff, i, 15) * 0.01f;
-	i += 15;
-	if (fabs(rtcm->teseo.geo_sep) > 100.0)
-	{
-		rtcm->teseo.geo_sep = 0.0;
-	}
-
-	rtcm->teseo.age = rtcm_getbits(rtcm->buff, i, 24) * 0.001f;
-	i += 24;
-	/* Reserved for Differential Reference Station ID */
-	i += 12;
+	rtcm->teseo.geo_sep = (float)rtcm_getbitu(rtcm->buff, i, 15) * 0.01f;
+    i += 15;
+	rtcm->teseo.age = (float)rtcm_getbitu(rtcm->buff, i, 24) * 0.001f;
+    i += 24;
+	//rtcm->teseo.ref_id = rtcm_getbitu(rtcm->buff, i, 12);
+    i += 12;
 	gnss_id = rtcm_getbitu(rtcm->buff, i, 4);
-	i += 4;
-	if (gnss_id > 11)
-	{
-		rtcm->teseo.sys = SYS_NONE;
-	}
-	else
-	{
-		rtcm->teseo.sys = GNSS_ID[gnss_id];
-	}	
-
-	tow = rtcm_getbitu(rtcm->buff, i, 30) * 0.001f;
-	i += 30;
+	rtcm->teseo.sys = GNSS_ID[gnss_id];
+    i += 4;
+	rtcm->teseo.time = (float)rtcm_getbitu(rtcm->buff, i, 30) * 0.001f;
+    i += 30;
 	week = rtcm_getbitu(rtcm->buff, i, 16);
-	i += 16;
-	if ((week > 1024) && (week < 4096) && (tow < (SECONDS_IN_WEEK + 0.1)))
+
+	if (week > 1024 && week < 4096 && rtcm->teseo.time < SECONDS_IN_WEEK + 0.1)
 	{
-		rtcm->teseo.time = tow + (week * SECONDS_IN_WEEK);
-		rtcm->time = gpst2time(week, tow);
+		rtcm->teseo.time += week * SECONDS_IN_WEEK;
 	}
 	else
 	{
 		rtcm->teseo.time = 0.0;
 	}
-	
+    i += 16;
 	rtcm->teseo.leap_sec = rtcm_getbitu(rtcm->buff, i, 8);
-	i += 8;
-	rtcm->teseo.pos[0] = rtcm_getbits_38(rtcm->buff, i) *0.0001f;
-	i += 38;
-	rtcm->teseo.pos[1] = rtcm_getbits_38(rtcm->buff, i) *0.0001f;
-	i += 38;
-	rtcm->teseo.pos[2] = rtcm_getbits_38(rtcm->buff, i) *0.0001f;
-	i += 38;
-
-	rtcm->teseo.vel[0] = rtcm_getbits(rtcm->buff, i, 32) * 0.000001f;
-	i += 32;
-	rtcm->teseo.vel[1] = rtcm_getbits(rtcm->buff, i, 32) * 0.000001f;
-	i += 32;
-	rtcm->teseo.vel[2] = rtcm_getbits(rtcm->buff, i, 32) * 0.000001f;
-	i += 32;
+    i += 8;
+	rtcm->teseo.pos[0] = (double)rtcm_getbits_38(rtcm->buff, i) *0.0001f;
+    i += 38;
+	rtcm->teseo.pos[1] = (double)rtcm_getbits_38(rtcm->buff, i) *0.0001f;
+    i += 38;
+	rtcm->teseo.pos[2] = (double)rtcm_getbits_38(rtcm->buff, i) *0.0001f;
+    i += 38;
+	rtcm->teseo.vel[0] = (float)rtcm_getbits(rtcm->buff, i, 32) * 0.000001f;
+    i += 32;
+	rtcm->teseo.vel[1] = (float)rtcm_getbits(rtcm->buff, i, 32) * 0.000001f;
+    i += 32;
+	rtcm->teseo.vel[2] = (float)rtcm_getbits(rtcm->buff, i, 32) * 0.000001f;
+    i += 32;
 
 	if (rtcm->teseo.pdop > 25)
 	{
@@ -1129,26 +1242,53 @@ static void decode_type999_id4(rtcm_t *rtcm, obs_t *obs)
 	obs->rtcmtype = 99;
 }
 
+/* decode Position Quality Metrics (POSQM) */
+static void decode_type999_id5(rtcm_t *rtcm, obs_t *obs)
+{
+    double tow, qual_metric[16] = { 0.0 };
+    int i = 24, j, nsat = 0, nmet = 0, temps, mesnum, subtypeID, TimeID, qual_metric_mask[16];
+    int prn[40] = { 0 }, metrics[32] = { 0 }, sys = _SYS_NONE_;
+
+    mesnum = (int)rtcm_getbitu(rtcm->buff, i, 12);
+    i += 12;
+    subtypeID = (int)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+    tow = (double)rtcm_getbitu(rtcm->buff, i, 30)*0.001f;
+    i += 30;
+    TimeID = (int)rtcm_getbitu(rtcm->buff, i, 4);
+    i += 4;
+
+    //temps = (int)rtcm_getbitu(rtcm->buff, i, 16);
+    //i += 16;
+    for (j = 0; j < 16; j++)
+    {
+        qual_metric_mask[15-j] = (int)rtcm_getbitu(rtcm->buff, i, 1);
+        i += 1;
+    }
+
+    //qual_metric[0] = (double)rtcm_getbitu(rtcm->buff, i, 20)*0.1f;
+    //i += 20;
+    for (j = 0; j < 16; j++)
+    {
+        if (qual_metric_mask[j] == 1)
+        {
+            qual_metric[j] = (double)rtcm_getbitu(rtcm->buff, i, 20)*0.1;
+        }
+        i += 20;
+    }
+#ifdef _DEBUG_ON_
+    printf("tow:%10.1f,plh:%8.3f\n", tow, qual_metric[0]);
+#endif
+}
+
+
 /* decode Observable Quality Metric */
 static void decode_type999_id6(rtcm_t *rtcm, obs_t *obs)
 {
-	double tow;
-	// MAXOBS * 5
-	double metValue[240];
-	int i = 24;
-	int j;
-	int nsat = 0;
-	int nmet = 0;
-	int temps;
-	int mesnum;
-	int subtypeID;
-	int gnssID;
-	unsigned int gnssSatM;
-	unsigned int metMask;
-	unsigned int mmind;
-	int prn[40] = { 0 };
-	int metrics[32] = {0};
-	int sys = _SYS_NONE_;
+	double tow, metValue[MAXOBS*5];
+	int i = 24, j, nsat = 0, nmet = 0, temps, mesnum, subtypeID;
+	unsigned int gnssID, gnssSatM, metMask, mmind;
+	int prn[40] = { 0 }, metrics[32] = {0}, sys = _SYS_NONE_;
 
 	mesnum = (int)rtcm_getbitu(rtcm->buff, i, 12);
 	i += 12;
@@ -1159,54 +1299,304 @@ static void decode_type999_id6(rtcm_t *rtcm, obs_t *obs)
 	gnssID = (int)rtcm_getbitu(rtcm->buff, i, 4);
 	i += 4;
 
-    if (gnssID <= 11) {
-        sys = GNSS_ID[gnssID];
+	if (gnssID > 11)
+	{
+		return;
+	}
 
-        for (j = 0; j < 40; j++)
-        {
-            gnssSatM = (unsigned int)rtcm_getbitu(rtcm->buff, i, 1);
-            i += 1;
-            if (gnssSatM > 0u)
-            {
-                prn[nsat++] = j + 1;
-            }
-        }
+	sys = GNSS_ID[gnssID];
 
-        for (j = 0; j < 32; j++)
+	for (j = 0; j < 40; j++)
+	{
+		gnssSatM = (unsigned int)rtcm_getbitu(rtcm->buff, i, 1);
+		i += 1;
+		if (gnssSatM)
+		{
+			prn[nsat++] = j + 1;
+		}
+	}
+
+	for (j = 0; j < 32; j++)
+	{
+		metMask = (unsigned int)rtcm_getbitu(rtcm->buff, i, 1);
+		if (metMask)
+		{
+			metrics[nmet++] = 31 - j;
+		}
+		i += 1;
+	}
+	for (j = 0; j < (int)nmet*0.5; j++)
+	{
+		temps = metrics[j];
+		metrics[j] = metrics[nmet - j - 1];
+		metrics[nmet - j - 1] = temps;
+	}
+	mmind = (unsigned int)rtcm_getbitu(rtcm->buff, i, 1);
+	i += 1;
+	for (j = 0; j < nsat * nmet && j < MAXOBS * 5; j++)
+	{
+		metValue[j] = (double)0.001*rtcm_getbitu_64(rtcm->buff, i, 32);
+		i += 32;
+	}
+
+	return;
+}
+
+/* GLONASS Inter Channel Biases (ICB) */
+static void decode_type999_id7(rtcm_t *rtcm, obs_t *obs)
+{
+    double tow;
+    int i = 24, j = 0, mesnum, subtypeID, L1_flag, L2_flag;
+    unsigned int gnssID;
+    double icb[14][2]={ 0.0 };
+    mesnum = (int)rtcm_getbitu(rtcm->buff, i, 12);
+    i += 12;
+    subtypeID = (int)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+    tow = (double)rtcm_getbitu(rtcm->buff, i, 30);
+    i += 30;
+
+    L1_flag = (int)rtcm_getbitu(rtcm->buff, i, 1);
+    i += 1;
+    L2_flag = (int)rtcm_getbitu(rtcm->buff, i, 1);
+    i += 1;
+
+    if (L1_flag)
+    {
+        for (j = 0; j < 14; j++)
         {
-            metMask = (unsigned int)rtcm_getbitu(rtcm->buff, i, 1);
-            if (metMask > 0u)
-            {
-                metrics[nmet++] = 31 - j;
-            }
-            i += 1;
+            icb[j][0] = (double)rtcm_getbits(rtcm->buff, i, 16);
+            i += 16;
         }
-        for (j = 0; j < (int)nmet*0.5; j++)
+    }
+
+    if (L2_flag)
+    {
+        for (j = 0; j < 14; j++)
         {
-            temps = metrics[j];
-            metrics[j] = metrics[nmet - j - 1];
-            metrics[nmet - j - 1] = temps;
+            icb[j][1] = (double)rtcm_getbitu(rtcm->buff, i, 16);
+            i += 16;
         }
-        mmind = (unsigned int)rtcm_getbitu(rtcm->buff, i, 1);
-        i += 1;
-        for (j = 0; j < nsat * nmet && j < MAXOBS * 5; j++)
-        {
-            metValue[j] = (double)0.001*rtcm_getbitu_64(rtcm->buff, i, 32);
-            i += 32;
-        }
+    }
+
+}
+
+/* decode Inter Frequency Biases */
+static void decode_type999_id8(rtcm_t *rtcm, obs_t *obs)
+{
+	double tow;
+	int i = 24, j=0, mesnum, subtypeID, sys = _SYS_NONE_;
+	unsigned int bias_mask, ifb_mask, ifb_type_mask;
+    double ifb[8] = { 0.0 };
+
+	mesnum = (int)rtcm_getbitu(rtcm->buff, i, 12);
+	i += 12;
+	subtypeID = (int)rtcm_getbitu(rtcm->buff, i, 8);
+	i += 8;
+	tow = (double)rtcm_getbitu(rtcm->buff, i, 30);
+	i += 30;
+    bias_mask = (int)rtcm_getbitu(rtcm->buff, i, 8);
+	i += 8;
+
+    ifb_mask = (int)rtcm_getbitu(rtcm->buff, i, 16);
+    i += 16;
+
+    ifb_type_mask = (int)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+
+    for (j = 0; j < 8; j++)
+    {
+        ifb[j] = (double)rtcm_getbitu(rtcm->buff, i, 16);
+        i += 16;
     }
 
 	return;
 }
 
+/* decode Datum Reference (STDTM) */
+static void decode_type999_id17(rtcm_t *rtcm, obs_t *obs)
+{
+    double tow, blh_offset[3] = { 0.0 };
+    int i = 24, j, nsat = 0, nmet = 0, temps, mesnum, subtypeID, local_datum_code, ref_datum;
+    unsigned int gnssID, gnssSatM, metMask, mmind;
+    int prn[40] = { 0 }, metrics[32] = { 0 }, sys = _SYS_NONE_;
+
+    mesnum = (int)rtcm_getbitu(rtcm->buff, i, 12);
+    i += 12;
+    subtypeID = (int)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+    local_datum_code = (double)rtcm_getbitu(rtcm->buff, i, 16);
+    i += 16;
+    blh_offset[0] = (double)rtcm_getbitu(rtcm->buff, i, 20);
+    i += 20;
+    blh_offset[1] = (double)rtcm_getbitu(rtcm->buff, i, 20);
+    i += 20;
+    blh_offset[2] = (double)rtcm_getbitu(rtcm->buff, i, 16);
+    i += 16;
+    ref_datum = (double)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+}
+
+/* decode Ionospheric Model Parameters */
+static void decode_type999_id9(rtcm_t *rtcm, obs_t *obs)
+{
+	double tow;
+	int i = 24, j, mesnum, subtypeID, sys = _SYS_NONE_;
+	unsigned int gnssID, ai0, ai1, ai2, regions;
+	unsigned int ioncof[8] = { 0 };
+
+	mesnum = (int)rtcm_getbitu(rtcm->buff, i, 12);
+	i += 12;
+	subtypeID = (int)rtcm_getbitu(rtcm->buff, i, 8);
+	i += 8;
+	tow = (double)rtcm_getbitu(rtcm->buff, i, 30);
+	i += 30;
+	gnssID = (int)rtcm_getbitu(rtcm->buff, i, 4);
+	i += 4;
+
+	if (gnssID > 11)
+	{
+		return;
+	}
+	sys = GNSS_ID[gnssID];
+
+	if (sys == _SYS_GAL_)
+	{
+		ai0 = (unsigned int)rtcm_getbitu(rtcm->buff, i, 11);
+		i += 11;
+		ai1 = (unsigned int)rtcm_getbitu(rtcm->buff, i, 11);
+		i += 11;
+		ai2 = (unsigned int)rtcm_getbitu(rtcm->buff, i, 14);
+		i += 14;
+		regions = (unsigned int)rtcm_getbitu(rtcm->buff, i, 5);
+		i += 5;
+	}
+	else
+	{
+		for (j = 0; j < 8; j++)
+		{
+			ioncof[j] = (unsigned int)rtcm_getbitu(rtcm->buff, i, 8);
+			i += 8;
+		}
+
+	}
+
+	return;
+}
+
+#ifdef _ST_811_
 /* Extended PVT (EPVT) */
 static void decode_type999_id21(rtcm_t *rtcm, obs_t *obs)
 {
-	int dat_sta, gnss_id, fix_frq, raim, rfu, time_vail;
+	int i = 44, gnss_id, week;
+	double blh[3], vel_enu[3], vel_horz, vel_ver, cour_anl;
+
+	rtcm->teseo.ref_id = rtcm_getbitu(rtcm->buff, i, 12);
+	i += 12;
+	//rtcm_999_receiver_PVT.reserved_ITRF = rtcm_getbitu(rtcm->buff, i, 6);
+	i += 6;
+	rtcm->teseo.fix_status = rtcm_getbitu(rtcm->buff, i, 4);
+	i += 4;
+	rtcm->teseo.nsat_use = rtcm_getbitu(rtcm->buff, i, 8);
+	i += 8;
+	rtcm->teseo.nsat_view = rtcm_getbitu(rtcm->buff, i, 8);
+	i += 8;
+	rtcm->teseo.hdop = rtcm_getbitu(rtcm->buff, i, 8);
+	i += 8;
+	rtcm->teseo.vdop = rtcm_getbitu(rtcm->buff, i, 8);
+	i += 8;
+	rtcm->teseo.pdop = rtcm_getbitu(rtcm->buff, i, 8);
+	i += 8;
+	rtcm->teseo.geo_sep = (float)rtcm_getbitu(rtcm->buff, i, 15) * 0.01;
+	i += 15;
+	rtcm->teseo.age = (float)rtcm_getbitu(rtcm->buff, i, 24) * 0.001;
+	i += 24;
+	//rtcm->teseo.ref_id = rtcm_getbitu(rtcm->buff, i, 12);
+	i += 12;
+	gnss_id = rtcm_getbitu(rtcm->buff, i, 4);
+	rtcm->teseo.sys = GNSS_ID[gnss_id];
+	i += 4;
+	rtcm->teseo.time = (float)rtcm_getbitu(rtcm->buff, i, 30) * 0.001;
+	i += 30;
+
+	if (rtcm->teseo.pdop > 25)
+	{
+		rtcm->teseo.fix_status = 0;
+	}
+	week = rtcm_getbitu(rtcm->buff, i, 16);
+	if (week > 1024 && week < 4096 && rtcm->teseo.time < SECONDS_IN_WEEK + 0.1)
+	{
+		rtcm->teseo.time += week * SECONDS_IN_WEEK;
+	}
+	else
+	{
+		rtcm->teseo.time = 0.0;
+	}
+	
+	i += 16;
+	rtcm->teseo.leap_sec = rtcm_getbitu(rtcm->buff, i, 8);
+	i += 8;
+	blh[0] = (double)rtcm_getbits(rtcm->buff, i, 32) * 0.001/3600 * D2R;
+	i += 32;
+	blh[1] = (double)rtcm_getbits(rtcm->buff, i, 32) * 0.001/3600 * D2R;
+	i += 32;
+	blh[2] = (double)rtcm_getbits(rtcm->buff, i, 16) * 0.1;
+	i += 16;
+	vel_horz = (double)rtcm_getbits(rtcm->buff, i, 16) * 0.01;
+	i += 16;
+	vel_ver  = (double)rtcm_getbits(rtcm->buff, i, 16) * 0.01;
+	i += 16;
+	cour_anl = (double)rtcm_getbits(rtcm->buff, i, 16);
+	if (cour_anl < 0.0)
+	{
+		cour_anl += 360;
+	}
+	i += 16;
+
+	//blh[2] += rtcm->teseo.geo_sep;
+	pos2ecef(blh, rtcm->teseo.pos);
+	vel_enu[0] = vel_horz * sin(cour_anl*D2R);
+	vel_enu[1] = vel_horz * cos(cour_anl*D2R);
+	vel_enu[2] = vel_ver;
+	enu2ecef(blh, vel_enu, rtcm->teseo.vel);
+
+	vel_horz = (double)rtcm_getbits(rtcm->buff, i, 16) * 0.01;
+	i += 16;
+	vel_ver  = (double)rtcm_getbits(rtcm->buff, i, 16) * 0.01;
+	i += 16;
+	cour_anl = (double)rtcm_getbits(rtcm->buff, i, 16) * 0.01;
+	if (cour_anl < 0.0)
+	{
+		cour_anl += 360;
+	}
+	i += 16;
+
+	vel_enu[0] = vel_horz * sin(cour_anl*D2R);
+	vel_enu[1] = vel_horz * cos(cour_anl*D2R);
+	vel_enu[2] = vel_ver;
+	enu2ecef(blh, vel_enu, rtcm->teseo.lev_pos);
+
+	rtcm->teseo.cbias = (double)rtcm_getbits(rtcm->buff, i, 32) * 0.001;
+	i += 32;
+
+	rtcm->teseo.cdt = (double)rtcm_getbits(rtcm->buff, i, 32) * 0.01;
+	i += 32;
+
+	obs->rtcmtype = 99;
+}
+#endif //  _ST_811_
+
+#ifdef _ST_812_
+/* Extended PVT (EPVT) */
+static void decode_type999_id21(rtcm_t *rtcm, obs_t *obs)
+{
+	int dat_sta, gnss_id, fix_frq, raim, rfu, time_vail, year;
 	int fw_ver = 811, week, i = 44;
-	double blh[3], vel_enu[3], pl_enu[3];
+	double blh[3];
 	double vel_horz, vel_ver, cour_anl, tow, plh, plv, pla;
 	gtime_t time = { 0 };
+
+
 
 	if (rtcm->len >= 60)
 	{
@@ -1215,6 +1605,7 @@ static void decode_type999_id21(rtcm_t *rtcm, obs_t *obs)
 
 	rtcm->teseo.ref_id = rtcm_getbitu(rtcm->buff, i, 12);
 	i += 12;
+    year = rtcm_getbitu(rtcm->buff, i, 6);
 	/* ITRF Realization Year */
 	i += 6;
 	rtcm->teseo.fix_status = rtcm_getbitu(rtcm->buff, i, 4);
@@ -1236,6 +1627,11 @@ static void decode_type999_id21(rtcm_t *rtcm, obs_t *obs)
 			rtcm->teseo.fix_status = 0;
 		}
 	}
+
+#ifdef _DEBUG_EPVT_ON_
+    printf("%3u,%2u,%4u,%4u,%2u,", 999, 21, rtcm->teseo.ref_id, year, rtcm->teseo.fix_status);
+    printf("%3u,%2u,%4u,%2u,", dat_sta, fix_frq, raim, rfu);
+#endif
 
 	rtcm->teseo.nsat_use = rtcm_getbitu(rtcm->buff, i, 8);
 	i += 8;
@@ -1277,12 +1673,8 @@ static void decode_type999_id21(rtcm_t *rtcm, obs_t *obs)
 		rtcm->teseo.sys = GNSS_ID[gnss_id];
 	}
 
-	/* decode time validity for version 5.8.12 ... */
-	if (fw_ver == 812)
-	{
-		time_vail = rtcm_getbitu(rtcm->buff, i, 4);
-		i += 4;
-	}
+	time_vail = rtcm_getbitu(rtcm->buff, i, 4);
+	i += 4;
 
 	tow = rtcm_getbitu(rtcm->buff, i, 30) * 0.001;
 	i += 30;
@@ -1297,7 +1689,7 @@ static void decode_type999_id21(rtcm_t *rtcm, obs_t *obs)
 	{
 		rtcm->teseo.time = 0.0;
 	}
-	
+
 	rtcm->teseo.leap_sec = rtcm_getbitu(rtcm->buff, i, 8);
 	i += 8;
 	blh[0] = rtcm_getbits(rtcm->buff, i, 32) * 0.001 / 3600 * D2R;
@@ -1306,34 +1698,20 @@ static void decode_type999_id21(rtcm_t *rtcm, obs_t *obs)
 	i += 32;
 
 	/* decode position and velocity for version 5.8.11 */
-	if (fw_ver == 811)
-	{
-		blh[2] = rtcm_getbits(rtcm->buff, i, 16) * 0.1;
-		i += 16;
-		if (fabs(blh[2]) > 18000.0)
-		{
-			rtcm->teseo.fix_status = 0;
-		}
-		vel_horz = rtcm_getbits(rtcm->buff, i, 16) * 0.01 * 1000.0 / 3600.0;
-		i += 16;
-		vel_ver = rtcm_getbits(rtcm->buff, i, 20) * 0.01 * 1000.0 / 3600.0;
-		i += 16;
-	}
-	else
-	{
-		blh[2] = rtcm_getbits(rtcm->buff, i, 20) * 0.1;
-		i += 20;
-		if (fabs(blh[2]) > 18000.0)
-		{
-			rtcm->teseo.fix_status = 0;
-		}
-		vel_horz = rtcm_getbits(rtcm->buff, i, 20) * 0.01;
-		i += 20;
-		vel_ver = rtcm_getbits(rtcm->buff, i, 20) * 0.01;
-		i += 20;
-	}
 
-	cour_anl = rtcm_getbits(rtcm->buff, i, 16);
+	blh[2] = rtcm_getbits(rtcm->buff, i, 20) * 0.1;
+	i += 20;
+	if (fabs(blh[2]) > 18000.0)
+	{
+		rtcm->teseo.fix_status = 0;
+	}
+	vel_horz = rtcm_getbits(rtcm->buff, i, 20) * 0.01;
+	i += 20;
+	vel_ver = rtcm_getbits(rtcm->buff, i, 20) * 0.01;
+	i += 20;
+
+
+	cour_anl = rtcm_getbits(rtcm->buff, i, 16)*0.1;
 	i += 16;
 	if (fabs(cour_anl) > 360.0)
 	{
@@ -1346,26 +1724,33 @@ static void decode_type999_id21(rtcm_t *rtcm, obs_t *obs)
 
 	blh[2] += rtcm->teseo.geo_sep;
 	pos2ecef(blh, rtcm->teseo.pos);
-	vel_enu[0] = vel_horz * sin(cour_anl*D2R);
-	vel_enu[1] = vel_horz * cos(cour_anl*D2R);
-	vel_enu[2] = vel_ver;
-	//enu2ecef(blh, vel_enu, rtcm->teseo.vel);
+	rtcm->teseo.vel_enu[0] = vel_horz * sin(cour_anl*D2R);
+	rtcm->teseo.vel_enu[1] = vel_horz * cos(cour_anl*D2R);
+	rtcm->teseo.vel_enu[2] = vel_ver;
+	enu2ecef(blh, rtcm->teseo.vel_enu, rtcm->teseo.vel);
+
+
+#ifdef _DEBUG_EPVT_ON_
+    printf("%2u,%2u,%3u,%3u,%3u,%6.3f,", rtcm->teseo.nsat_use, rtcm->teseo.nsat_view, rtcm->teseo.hdop, rtcm->teseo.vdop, rtcm->teseo.pdop, rtcm->teseo.geo_sep);
+    printf("%4.1f,%2u,%4u,%4u,%10.1f,%4u", rtcm->teseo.age, gnss_id, time_vail, week, tow, rtcm->teseo.leap_sec);
+    printf("%14.8f,%14.8f,%8.3f,%6.3f,%6.3f,%6.1f", blh[0]*R2D, blh[1] * R2D, blh[2], vel_horz, vel_ver, cour_anl);
+#endif
 
 	plh = rtcm_getbitu(rtcm->buff, i, 16) * 0.01;
 	i += 16;
 	plv = rtcm_getbitu(rtcm->buff, i, 16) * 0.01;
 	i += 16;
-	pla = rtcm_getbits(rtcm->buff, i, 16) * 0.01;
+	pla = rtcm_getbitu(rtcm->buff, i, 16) * 0.01;
 	if (pla < 0.0)
 	{
 		pla += 360.0;
 	}
 	i += 16;
 
-	pl_enu[0] = plh * sin(pla*D2R);
-	pl_enu[1] = plh * cos(pla*D2R);
-	pl_enu[2] = plv;
-	//enu2ecef(blh, pl_enu, rtcm->teseo.lev_pos);
+	rtcm->teseo.pl_enu[0] = plh * sin(pla*D2R);
+	rtcm->teseo.pl_enu[1] = plh * cos(pla*D2R);
+	rtcm->teseo.pl_enu[2] = plv;
+	enu2ecef(blh, rtcm->teseo.pl_enu, rtcm->teseo.lev_pos);
 
 	rtcm->teseo.cbias = rtcm_getbits(rtcm->buff, i, 32) * 0.001;
 	i += 32;
@@ -1373,57 +1758,256 @@ static void decode_type999_id21(rtcm_t *rtcm, obs_t *obs)
 	i += 32;
 
 	obs->rtcmtype = 99;
-
+#ifdef _DEBUG_EPVT_ON_
+    printf("%4.1f,%4.1f,%4.1,%10.3f,%10.3f\n", plh, plv, pla, rtcm->teseo.cbias, rtcm->teseo.cdt);
+    //printf("%4.1f,%2u,%4u,%4u,%10.1f,%4.1f", rtcm->teseo.age, gnss_id, time_vail, week, tow, rtcm->teseo.leap_sec);
+#endif
 	return;
 }
+#endif
+
+static void decode_type999_id22(rtcm_t *rtcm, obs_t *obs)
+{
+    double tow;
+    int i = 24, j = 0, mesnum, subtypeID;
+    int aux_id = 0;
+    mesnum = (int)rtcm_getbitu(rtcm->buff, i, 12);
+    i += 12;
+    subtypeID = (int)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+    aux_id = (double)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+
+    printf("type999_id22: aux_id:%2d\n", aux_id);
+
+    if (aux_id == 1)
+    {
+
+    }
+    else if (aux_id == 2)
+    {
+        //aux_id = (double)rtcm_getbitu(rtcm->buff, i, 8);
+        i += 8;
+
+    }
+    else if (aux_id == 3)
+    {
+        //aux_id = (double)rtcm_getbitu(rtcm->buff, i, 8);
+        i += 8;
+
+    }
+    else if (aux_id == 4)
+    {
+        //aux_id = (double)rtcm_getbitu(rtcm->buff, i, 8);
+        i += 8;
+
+    }
+}
+
 
 /* decode RF Status */
 static void decode_type999_id24(rtcm_t *rtcm, obs_t *obs)
 {
-	double tow;
-	int i = 24;
-	int mesnum;
-	int subtypeID;
-	int sys = _SYS_NONE_;
-	int gnssID;
+    double tow;
+    int i = 24, j = 0, mesnum, subtypeID, sys = _SYS_NONE_;
+    int status_mask[8] = { 0 }, IF_CW_mask[4] = { 0 }, CW_mask[8] = { 0 }, AGC_valid_mask[4] = { 0 }, IFM_valid_mask[6] = { 0 };
+    double CW_candidate[8] = { 0.0 }, noise_floor[6] = { 0.0 };
+    unsigned int gnssID, num_CW_Validity=0;
+    unsigned int Ant_sens[4], CW_Detect, CW_Validity_Mask[8], CW_Validity, CW_Status_Mask, CW_Constellation_Mask;
+    unsigned int status, Anti_spoofing, AGC_mask,AGC_value[4],IFM_mask, IFM_const, DDC_value[6];
+    unsigned int antispf_data_format, antispf_mask, antispf_list_len, antispf_list_field[64];
+    mesnum = (int)rtcm_getbitu(rtcm->buff, i, 12);
+    i += 12;
+    subtypeID = (int)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+    tow = (double)rtcm_getbitu(rtcm->buff, i, 30)*0.001;
+    i += 30;
 
-	mesnum = (int)rtcm_getbitu(rtcm->buff, i, 12);
-	i += 12;
-	subtypeID = (int)rtcm_getbitu(rtcm->buff, i, 8);
-	i += 8;
-	tow = (double)rtcm_getbitu(rtcm->buff, i, 30);
-	i += 30;
-	gnssID = (int)rtcm_getbitu(rtcm->buff, i, 4);
-	i += 4;
-	if (gnssID <= 11)
-	{
-		sys = GNSS_ID[gnssID];
-	}
+#ifdef _DEBUG_RFS_ON_
+    printf("%3u,%2u,%10.1f,", mesnum, subtypeID, tow);
+#endif
+    //Reported status mask 
+    status = (int)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
 
-	return;
+    //IFDATA CW Detection Mask
+    CW_Detect= (int)rtcm_getbitu(rtcm->buff, i, 4);
+    i += 4;
+
+    //CW Notch Insertion Status Mask
+    CW_Status_Mask=(int)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+
+    //CW Affected Constellation Mask
+    CW_Constellation_Mask = (int)rtcm_getbitu(rtcm->buff, i, 32);
+    i += 32;
+
+    CW_Validity = (int)rtcm_getbitu(rtcm->buff, i, 8);
+    for (j = 0; j < 8; j++)
+    {
+        //CW Candidate Validity Mask 
+        CW_Validity_Mask[j] = (int)rtcm_getbitu(rtcm->buff, i, 1);
+        i += 1;
+        if (CW_Validity_Mask[j]>0)
+            num_CW_Validity++;
+    }
+#ifdef _DEBUG_RFS_ON_
+    printf("%3u,%3u,%3u,%3u,%3u,", status, CW_Detect, CW_Status_Mask, CW_Constellation_Mask, CW_Validity);
+#endif
+
+    //CW Candidate #0 Power/Freq.
+   // i += 32;
+   // //CW Candidate #1 Power/Freq. 
+   // i += 32;
+   // //CW Candidate #2 Power/Freq. 
+   // i += 32;
+   // //CW Candidate #3 Power/Freq. 
+   // i += 32;
+   //// CW Candidate #4 Power/Freq. 
+   // i += 32;
+   // //CW Candidate #5 Power/Freq. 
+   // i += 32;
+   // //CW Candidate #6 Power/Freq. 
+   // i += 32;
+   // //CW Candidate #7 Power/Freq. 
+   // i += 32;
+    for (j = 0; j < num_CW_Validity; j++)
+    {
+        i += 32;
+    }
+
+    //AGC validity mask
+    AGC_mask= (int)rtcm_getbitu(rtcm->buff, i, 4);
+
+    i += 4;
+    //AGC Integrated G2: I,Q 
+    AGC_value[0] = (int)rtcm_getbitu(rtcm->buff, i, 12);
+    i += 12;
+    //AGC Integrated GC: I,Q
+    AGC_value[1] = (int)rtcm_getbitu(rtcm->buff, i, 12);
+    i += 12;
+    //AGC External G2: I,Q 
+    AGC_value[2] = (int)rtcm_getbitu(rtcm->buff, i, 12);
+    i += 12;
+    //AGC External GC: I,Q 
+    AGC_value[3] = (int)rtcm_getbitu(rtcm->buff, i, 12);
+    i += 12;
+#ifdef _DEBUG_RFS_ON_
+    printf("%3u,%5u,%5u,%5u,%5u,", AGC_mask,AGC_value[0], AGC_value[1], AGC_value[2], AGC_value[3]);
+#endif
+    //Wide-band (IFM) Jamming Detection
+    IFM_mask = (int)rtcm_getbitu(rtcm->buff, i, 6);
+    i += 6;
+    // Wide-band Jamming Affected Constellation Mask
+    IFM_const = (int)rtcm_getbitu(rtcm->buff, i, 32);
+    i += 32;
+   
+    //Noise floor DDC1
+    DDC_value[0] = (int)rtcm_getbitu(rtcm->buff, i, 32);
+    i += 32;
+    //Noise floor DDC2
+    DDC_value[1] = (int)rtcm_getbitu(rtcm->buff, i, 32);
+    i += 32;
+    //Noise floor DDC3
+    DDC_value[2] = (int)rtcm_getbitu(rtcm->buff, i, 32);
+    i += 32;
+    //Noise floor DDC4
+    DDC_value[3] = (int)rtcm_getbitu(rtcm->buff, i, 32);
+    i += 32;
+    //Noise floor DDC5
+    DDC_value[4] = (int)rtcm_getbitu(rtcm->buff, i, 32);
+    i += 32;
+    //Noise floor DDC6
+    DDC_value[5] = (int)rtcm_getbitu(rtcm->buff, i, 32);
+    i += 32;
+#ifdef _DEBUG_RFS_ON_
+    printf("%5u,%11u,%5u,%5u,%5u,%5u,%5u,%5u,", IFM_mask, IFM_const, DDC_value[0], DDC_value[1], DDC_value[2], DDC_value[3], DDC_value[4], DDC_value[5]);
+#endif 
+    //Antenna sensing power switch 
+    Ant_sens[0] = (int)rtcm_getbitu(rtcm->buff, i, 1);
+    i += 1;
+    //Antenna sensing op mode
+    Ant_sens[1] = (int)rtcm_getbitu(rtcm->buff, i, 1);
+    i += 1;
+    //Antenna sensing RF path 
+    Ant_sens[2] = (int)rtcm_getbitu(rtcm->buff, i, 3);
+    i += 3;
+    //Antenna sensing status 
+    Ant_sens[3] = (int)rtcm_getbitu(rtcm->buff, i, 3);
+    i += 3;
+    //Anti-spoofing list length / Anti-spoofing data format
+    Anti_spoofing = (int)rtcm_getbitu(rtcm->buff, i, 6);
+    i += 6;
+
+    if (Anti_spoofing == 63)
+    {
+        antispf_data_format = (int)rtcm_getbitu(rtcm->buff, i, 4);
+        i += 4;
+        antispf_mask = (int)rtcm_getbitu(rtcm->buff, i, 32);
+        i += 32;
+        antispf_list_len = (int)rtcm_getbitu(rtcm->buff, i, 6);
+        i += 6;
+        for (j = 0; j < antispf_list_len; j++)
+        {
+            antispf_list_field[i] = (int)rtcm_getbitu(rtcm->buff, i, 16);
+            i += 16;
+        }
+    }
+    else
+    {
+        for (j = 0; j < Anti_spoofing; j++)
+        {
+            antispf_list_field[i] = (int)rtcm_getbitu(rtcm->buff, i, 16);
+            i += 16;
+        }
+    }
+#ifdef _DEBUG_RFS_ON_
+    printf("%3d,%3d,%3d,%3d,%3d\n", Ant_sens[0], Ant_sens[1], Ant_sens[2], Ant_sens[3], Anti_spoofing);
+#endif 
+
+    return;
+}
+
+/* Firmware Version (FWVER) */
+static void decode_type999_id25(rtcm_t *rtcm, obs_t *obs)
+{
+    int i = 24, j=0, mesnum, subtypeID, fwv_datalen;
+    int fwv[128] = { 0 };
+    unsigned int gnssID;
+    mesnum = (int)rtcm_getbitu(rtcm->buff, i, 12);
+    i += 12;
+    subtypeID = (int)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+    fwv_datalen = (int)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+
+#ifdef _DEBUG_ON_
+    printf("FW VER:");
+#endif
+    for (j = 0; j < fwv_datalen; j++)
+    {
+        fwv[j] = (char)((int)rtcm_getbitu(rtcm->buff, i, 8));
+        rtcm->teseo.fwv[j]= (char)fwv[j];
+#ifdef _DEBUG_ON_
+        printf("%c", fwv[j]);
+#endif
+        i += 8;
+    } 
+#ifdef _DEBUG_ON_
+    printf("\n");
+#endif
+
+    return;
 }
 
 /* decode Signal Quality Metrics 2 */
 static void decode_type999_id26(rtcm_t *rtcm, obs_t *obs)
 {
-	double tow;
-	double metValue[384]; /* MAXOBS * 8 */
-	int i = 24;
-	int j;
-	int nsat = 0;
-	int nmet = 0;
-	int temps;
-	int mesnum;
-	int subtypeID;
-	int gnssID;
-	unsigned int gnssSatM;
-	unsigned int metMask;
-	unsigned int mmind;
-	int prn[40] = { 0 };
-	int metrics[32] = { 0 };
-	int sys = _SYS_NONE_;
-	int sat;
-	int f;
+	double tow, metValue[MAXOBS * 8];
+	int i = 24, j, nsat = 0, nmet = 0, temps, mesnum, subtypeID;
+	unsigned int gnssID, gnssSatM, metMask, mmind;
+	int prn[40] = { 0 }, metrics[32] = { 0 }, sys = _SYS_NONE_;
+	int sat, f;
 	unsigned char stdest;
 	//double stdest;
 
@@ -1436,169 +2020,300 @@ static void decode_type999_id26(rtcm_t *rtcm, obs_t *obs)
 	gnssID = (int)rtcm_getbitu(rtcm->buff, i, 4);
 	i += 4;
 
-    if (gnssID <= 11) {
-        sys = GNSS_ID[gnssID];
+	if (gnssID > 11)
+	{
+		return;
+	}
 
-        for (j = 0; j < 40; j++)
-        {
-            gnssSatM = (unsigned int)rtcm_getbitu(rtcm->buff, i, 1);
-            i += 1;
-            if (gnssSatM > 0u)
-            {
-                prn[nsat++] = j + 1;
-            }
-        }
+	sys = GNSS_ID[gnssID];
 
-        for (j = 0; j < 32; j++)
-        {
-            metMask = (unsigned int)rtcm_getbitu(rtcm->buff, i, 1);
-            if (metMask > 0u)
-            {
-                metrics[nmet++] = 31 - j;
-            }
-            i += 1;
-        }
+	for (j = 0; j < 40; j++)
+	{
+		gnssSatM = (unsigned int)rtcm_getbitu(rtcm->buff, i, 1);
+		i += 1;
+		if (gnssSatM)
+		{
+			prn[nsat++] = j + 1;
+		}
+	}
 
-        for (j = 0; j < (int)nmet*0.5; j++)
-        {
-            temps = metrics[j];
-            metrics[j] = metrics[nmet - j - 1];
-            metrics[nmet - j - 1] = temps;
-        }
+	for (j = 0; j < 32; j++)
+	{
+		metMask = (unsigned int)rtcm_getbitu(rtcm->buff, i, 1);
+		if (metMask)
+		{
+			metrics[nmet++] = 31 - j;
+		}
+		i += 1;
+	}
+	for (j = 0; j < (int)nmet*0.5; j++)
+	{
+		temps = metrics[j];
+		metrics[j] = metrics[nmet - j - 1];
+		metrics[nmet - j - 1] = temps;
+	}
 
-        mmind = (unsigned int)rtcm_getbitu(rtcm->buff, i, 1);
-        i += 1;
+	mmind = (unsigned int)rtcm_getbitu(rtcm->buff, i, 1);
+	i += 1;
 
-        for (j = 0; j < nsat && j < (int)MAXOBS*0.5; j++)
-        {
-            metValue[j * 16 + 0] = rtcm_getbitu(rtcm->buff, i, 8);		        i += 8;
-            metValue[j * 16 + 1] = rtcm_getbitu(rtcm->buff, i, 16)*D2R*0.001;	i += 16;
-            metValue[j * 16 + 2] = rtcm_getbitu(rtcm->buff, i, 16)*0.01;		i += 16;
-            metValue[j * 16 + 3] = rtcm_getbits(rtcm->buff, i, 16)*0.01;		i += 16;
-            metValue[j * 16 + 4] = rtcm_getbits(rtcm->buff, i, 16);				i += 16;
-            metValue[j * 16 + 5] = rtcm_getbitu(rtcm->buff, i, 32);				i += 32;
-            //metValue[j * 16 + 6] = rtcm_getbitu(rtcm->buff, i, 8);	i += 8;
-            //metValue[j * 16 + 7] = rtcm_getbitu(rtcm->buff, i, 8);	i += 8;
-            //metValue[j * 16 + 8] = rtcm_getbitu(rtcm->buff, i, 8);	i += 8;
-            //metValue[j * 16 + 9] = rtcm_getbitu(rtcm->buff, i, 8);	i += 8;
-            metValue[j * 16 + 10] = rtcm_getbitu(rtcm->buff, i, 8);		i += 8;
-            metValue[j * 16 + 11] = rtcm_getbitu(rtcm->buff, i, 16)*D2R*0.001;	i += 16;
-            metValue[j * 16 + 12] = rtcm_getbitu(rtcm->buff, i, 16)*0.01;		i += 16;
-            metValue[j * 16 + 13] = rtcm_getbits(rtcm->buff, i, 16)*0.01;		i += 16;
-            metValue[j * 16 + 14] = rtcm_getbits(rtcm->buff, i, 16);			i += 16;
-            metValue[j * 16 + 15] = rtcm_getbitu(rtcm->buff, i, 32);			i += 32;
-        }
+	for (j = 0; j < nsat && j < (int)MAXOBS*0.5; j++)
+	{
+		metValue[j * 16 + 0] = rtcm_getbitu(rtcm->buff, i, 8);		        i += 8;
+		metValue[j * 16 + 1] = rtcm_getbitu(rtcm->buff, i, 16)*D2R*0.001;	i += 16;
+		metValue[j * 16 + 2] = rtcm_getbitu(rtcm->buff, i, 16)*0.01;		i += 16;
+		metValue[j * 16 + 3] = rtcm_getbits(rtcm->buff, i, 16)*0.01;		i += 16;
+		metValue[j * 16 + 4] = rtcm_getbits(rtcm->buff, i, 16);				i += 16;
+		metValue[j * 16 + 5] = rtcm_getbitu(rtcm->buff, i, 32);				i += 32;
+		//metValue[j * 16 + 6] = rtcm_getbitu(rtcm->buff, i, 8);	i += 8;
+		//metValue[j * 16 + 7] = rtcm_getbitu(rtcm->buff, i, 8);	i += 8;
+		//metValue[j * 16 + 8] = rtcm_getbitu(rtcm->buff, i, 8);	i += 8;
+		//metValue[j * 16 + 9] = rtcm_getbitu(rtcm->buff, i, 8);	i += 8;
+		metValue[j * 16 + 10] = rtcm_getbitu(rtcm->buff, i, 8);		i += 8;
+		metValue[j * 16 + 11] = rtcm_getbitu(rtcm->buff, i, 16)*D2R*0.001;	i += 16;
+		metValue[j * 16 + 12] = rtcm_getbitu(rtcm->buff, i, 16)*0.01;		i += 16;
+		metValue[j * 16 + 13] = rtcm_getbits(rtcm->buff, i, 16)*0.01;		i += 16;
+		metValue[j * 16 + 14] = rtcm_getbits(rtcm->buff, i, 16);			i += 16;
+		metValue[j * 16 + 15] = rtcm_getbitu(rtcm->buff, i, 32);			i += 32;
+	}
 
-        for (j = 0; j < nsat; j++)
-        {
-            sat = satno(sys, prn[j]);
-            if (sat > 0 && sat <= MAXSAT)
-            {
-                for (f = 0; f < NFREQ; f++)
-                {
-                    if (fabs(metValue[j * 16 + f * 10 + 1]) < 0.15)
-                    {
-                        stdest = 1;
-                    }
-                    else
-                    {
-                        stdest = 4;
-                    }
-                    //stdest = metValue[j * 16 + f * 10 + 1];
-                    rtcm->teseo.sigqm2[f * MAXSAT + sat - 1][1] = stdest;
+	for (j = 0; j < nsat; j++)
+	{
+		sat = satno(sys, prn[j]);
+		if (sat <= 0 || sat > MAXSAT)
+		{
+			continue;
+		}
 
-                    if ((metValue[j * 16 + f * 10 + 2] < 100.0 && metValue[j * 16 + f * 10 + 2] > 10.0) ||
-                        metValue[j * 16 + f * 10 + 2] > 655.34)
-                    {
-                        stdest = 4;
-                    }
-                    else
-                    {
-                        stdest = 1;
-                    }
-                    //stdest = metValue[j * 16 + f * 10 + 2];
-                    rtcm->teseo.sigqm2[f * MAXSAT + sat - 1][0] = stdest;
-                }
-            }
-        }
-    }
+		for (f = 0; f < NFREQ; f++)
+		{
+			if (fabs(metValue[j * 16 + f * 10 + 1]) < 0.15)
+			{
+				stdest = 1;
+			}
+			else
+			{
+				stdest = 4;
+			}
+			//stdest = metValue[j * 16 + f * 10 + 1];
+			rtcm->teseo.sigqm2[f * MAXSAT + sat - 1][1] = stdest;
 
+			if ((metValue[j * 16 + f * 10 + 2] < 100.0 && metValue[j * 16 + f * 10 + 2] > 10.0) ||
+				metValue[j * 16 + f * 10 + 2] > 655.34)
+			{
+				stdest = 4;
+			}
+			else
+			{
+				stdest = 1;
+			}
+			//stdest = metValue[j * 16 + f * 10 + 2];
+			rtcm->teseo.sigqm2[f * MAXSAT + sat - 1][0] = stdest;
+		}
+
+	}
 	return;
 }
 
-RTCM_999_RSS_STRUCT rtcm_999_rss;
-void decode_type999_subtype1(rtcm_t *rtcm, obs_t *obs)
+/* Inter-frequency Bias Data (IFBDATA) */
+static void decode_type999_id27(rtcm_t *rtcm, obs_t *obs)
 {
-	int i = 24;
-	rtcm_999_rss.message_number = rtcm_getbitu(rtcm->buff, i, 12);
-	i += 12;
-	rtcm_999_rss.sub_type_id = rtcm_getbitu(rtcm->buff, i, 8);
-	i += 8;
-	rtcm_999_rss.gps_epoch_time = rtcm_getbitu(rtcm->buff, i, 30);
-	i += 30;
-	rtcm_999_rss.week = rtcm_getbitu(rtcm->buff, i, 16);
-	i += 16;
-	rtcm_999_rss.leap_seconds = rtcm_getbitu(rtcm->buff, i, 8);
-	i += 8;
-	rtcm_999_rss.safety_info = rtcm_getbitu(rtcm->buff, i, 1);
-	i += 1;
-	rtcm_999_rss.protocol_version_flags = rtcm_getbitu(rtcm->buff, i, 7);
-	i += 7;
-	rtcm_999_rss.firmware_version = rtcm_getbitu(rtcm->buff, i, 24);
-	i += 24;
-	rtcm_999_rss.reserved1 = rtcm_getbitu(rtcm->buff, i, 8);
-	i += 8;
-	rtcm_999_rss.reserved2 = rtcm_getbitu(rtcm->buff, i, 8);
-	i += 8;
-	rtcm_999_rss.reserved3 = rtcm_getbitu(rtcm->buff, i, 8);
-	i += 8;
-	rtcm_999_rss.pps_status = rtcm_getbitu(rtcm->buff, i, 8);
-	i += 8;
-	rtcm_999_rss.time_validity = rtcm_getbitu(rtcm->buff, i, 4);
-	i += 4;
-	rtcm_999_rss.constellation_alarm_mask = rtcm_getbitu(rtcm->buff, i, 32);
-	i += 32;
-	rtcm_999_rss.reserved4 = rtcm_getbitu(rtcm->buff, i, 32);
-	i += 32;
-	rtcm_999_rss.gnss_constellation_mask = rtcm_getbitu(rtcm->buff, i, 32);
-	i += 32;
-	int gnss_mf_constellation_mask = rtcm_getbitu(rtcm->buff, i, 32);
-	i += 32;
+    double tow;
+    int i = 24, mesnum, subtypeID, IFB_est_state, sat_mask[32], IFB_mask[16],j;
+    unsigned int gnssID;
 
-	// 	char bufff1[100] = "abcdefg\r\n";
+    mesnum = (int)rtcm_getbitu(rtcm->buff, i, 12);
+    i += 12;
+    subtypeID = (int)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+    tow = (double)rtcm_getbitu(rtcm->buff, i, 30)*0.001;
+    i += 30;
+    gnssID = (int)rtcm_getbitu(rtcm->buff, i, 4);
+    i += 4;
+    IFB_est_state = (int)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+    for (j = 0; j < 32; j++)
+    {
+        sat_mask[j] = (int)rtcm_getbitu(rtcm->buff, i, 1);
+        i += 1;
+    }
+    for (j = 0; j < 16; j++)
+    {
+        IFB_mask[15-j] = (int)rtcm_getbitu(rtcm->buff, i, 1);
+        i += 1;
+    }
 
-	// sprintf(bufff1,"gps_epoch_time = %d  ",rtcm_999_rss.gps_epoch_time);
-	// uart_write_bytes(UART_DEBUG, (char *)bufff1, strlen(bufff1), 1);	
-	// 	char bufff2[100] = "abcdefg\r\n";
-
-	// sprintf(bufff2,"pps_status = %d\r\n",rtcm_999_rss.pps_status);
-	// uart_write_bytes(UART_DEBUG, (char *)bufff2, strlen(bufff2), 1);	
 }
+
+/* GNSS Satellites in view */
+static void decode_type999_id28(rtcm_t *rtcm, obs_t *obs)
+{
+
+
+
+}
+
+/* GNSS DOP and Active Satellites (STGSA) */
+static void decode_type999_id29(rtcm_t *rtcm, obs_t *obs)
+{
+
+
+
+}
+
+/* GNSS Pseudo-range Error Statistics (STGST)*/
+static void decode_type999_id30(rtcm_t *rtcm, obs_t *obs)
+{
+    double tow;
+    int i = 24, mesnum, subtypeID, IFB_est_state, sat_mask, IFB_mask[16], j;
+    unsigned int gnssID;
+    double code_rms, major_std, minor_std, ori, std_pos_neu[3] = { 0.0 }, std_vel_neu[3] = { 0.0 };
+    mesnum = (int)rtcm_getbitu(rtcm->buff, i, 12);
+    i += 12;
+    subtypeID = (int)rtcm_getbitu(rtcm->buff, i, 8);
+    i += 8;
+    tow = (double)rtcm_getbitu(rtcm->buff, i, 30)*0.001;
+    i += 30;
+    code_rms = (double)rtcm_getbitu(rtcm->buff, i, 20)*0.01;
+    i += 20;
+    major_std = (double)rtcm_getbitu(rtcm->buff, i, 20)*0.01;
+    i += 20;
+    minor_std = (double)rtcm_getbitu(rtcm->buff, i, 20)*0.01;
+    i += 20;
+    ori       = (double)rtcm_getbitu(rtcm->buff, i, 16)*0.1;
+    i += 16;
+
+    std_pos_neu[0] = (double)rtcm_getbitu(rtcm->buff, i, 20)*0.01;
+    i += 20;
+    std_pos_neu[1] = (double)rtcm_getbitu(rtcm->buff, i, 20)*0.01;
+    i += 20;
+    std_pos_neu[2] = (double)rtcm_getbitu(rtcm->buff, i, 20)*0.01;
+    i += 20;
+
+    std_vel_neu[0] = (double)rtcm_getbitu(rtcm->buff, i, 20)*0.001;
+    i += 20;
+    std_vel_neu[1] = (double)rtcm_getbitu(rtcm->buff, i, 20)*0.001;
+    i += 20;
+    std_vel_neu[2] = (double)rtcm_getbitu(rtcm->buff, i, 20)*0.001;
+    i += 20;
+
+    rtcm->teseo.std_neu[0] = std_pos_neu[0];
+    rtcm->teseo.std_neu[1] = std_pos_neu[1];
+    rtcm->teseo.std_neu[2] = std_pos_neu[2];
+
+#ifdef _DEBUG_STGST_ON_
+    printf("%3u,%2u,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%10.3f,%10.3f,%10.3f", mesnum, subtypeID, tow, code_rms, major_std, minor_std, ori, std_pos_neu[0], std_pos_neu[1], std_pos_neu[2]);
+    printf("%6.3f,%6.3f,%6.3f\n", std_vel_neu[0], std_vel_neu[1], std_vel_neu[2]);
+#endif
+}
+
+/* GNSS RAIM parameters (STGBS) */
+static void decode_type999_id31(rtcm_t *rtcm, obs_t *obs)
+{
+    int i = 44, gnss_id, week, ex_satid;
+    double tow, leap_sec, lla[3] = { 0.0 }, prob_mdt_fail_sat, range_res_fail_sat, std_bias;
+    tow = rtcm_getbitu(rtcm->buff, i, 30) * 0.001f;
+    i += 30;
+    lla[0] = rtcm_getbits(rtcm->buff, i, 20)*0.01;
+    i += 20;
+    lla[1] = rtcm_getbits(rtcm->buff, i, 20)*0.01;
+    i += 20;
+    lla[2] = rtcm_getbits(rtcm->buff, i, 20)*0.01;
+    i += 20;
+    ex_satid = rtcm_getbitu(rtcm->buff, i, 16);
+    i += 16;
+    prob_mdt_fail_sat = rtcm_getbitu(rtcm->buff, i, 20)*1.0e-6;
+    i += 20;
+    range_res_fail_sat = rtcm_getbits(rtcm->buff, i, 20)*0.1;
+    i += 20;
+    std_bias = rtcm_getbitu(rtcm->buff, i, 20)*0.01;
+    i += 20;
+
+#ifdef _DEBUG_STGBS_ON_
+    printf("%3u,%2u,%8.3f,%8.3f,%8.3f,%8.3f,%4u,%10.6f,%10.3f,%10.3f\n", 999, 31, tow, lla[0], lla[1], lla[2], ex_satid, prob_mdt_fail_sat, range_res_fail_sat, std_bias);
+#endif
+
+    return;
+}
+
+/* GNSS Range Residuals (STGRS) */
+static void decode_type999_id32(rtcm_t *rtcm, obs_t *obs)
+{
+    int i = 44, j, gnss_id, week, mode, band_mask[4] = { 0 }, gnss_mask[40] = { 0 }, ind, m = 0;
+    double tow, res[20] = { 0.0 };
+    tow = rtcm_getbitu(rtcm->buff, i, 30) * 0.001f;
+    i += 30;
+
+    gnss_id = rtcm_getbitu(rtcm->buff, i, 4);
+    i += 4;
+
+    mode = rtcm_getbitu(rtcm->buff, i, 1);
+    i += 1;
+
+    for (j = 0; j < 4; j++)
+    {
+        band_mask[j] = rtcm_getbitu(rtcm->buff, i, 1);
+        i += 1;
+    }
+
+    for (j = 0; j < 40; j++)
+    {
+        gnss_mask[j] = rtcm_getbitu(rtcm->buff, i, 1);
+        if (gnss_mask[j] == 1)
+        {
+            m++;
+        }
+        i += 1;
+    }
+
+    ind = rtcm_getbitu(rtcm->buff, i, 1);
+    i += 1;
+
+    for (j = 0; j < m; j++)
+    {
+        res[j] = (double)rtcm_getbits(rtcm->buff, i, 16)*0.1;
+        i += 16;
+    }
+
+
+}
+
+
+
 
 static int decode_type999(rtcm_t *rtcm, obs_t *obs)
 {
 
-    int i = 24;
-	int sbu_type_ID = 0;
-    int ret = 0;
+    int i = 24, sbu_type_ID = 0;
 
     i += 12;
     sbu_type_ID = rtcm_getbitu(rtcm->buff, i, 8);
-    //printf("ID = %d\r\n", rtcm_999_receiver_PVT.sbu_type_ID);
+    //printf("type999 subID = %d\n", sbu_type_ID);
     i += 8;
 
 	switch (sbu_type_ID)
 	{
-		case 1:  decode_type999_subtype1(rtcm, obs); break;
+        case 1:  decode_type999_id1 (rtcm, obs); break;
 		case 4:  decode_type999_id4 (rtcm, obs); break;
+        case 5:  decode_type999_id5 (rtcm, obs); break;
 		case 6:  decode_type999_id6 (rtcm, obs); break;
+        case 7:  decode_type999_id7 (rtcm, obs); break;
+		case 8:  decode_type999_id8 (rtcm, obs); break;
+		case 9:  decode_type999_id9 (rtcm, obs); break;
+        case 17: decode_type999_id17(rtcm, obs); break;
 		case 21: decode_type999_id21(rtcm, obs); break;
+        case 22: decode_type999_id22(rtcm, obs); break;
 		case 24: decode_type999_id24(rtcm, obs); break;
+        case 25: decode_type999_id25(rtcm, obs); break;
 		case 26: decode_type999_id26(rtcm, obs); break;
+        case 27: decode_type999_id27(rtcm, obs); break;
+        case 28: decode_type999_id28(rtcm, obs); break;
+        case 30: decode_type999_id30(rtcm, obs); break;
+        case 31: decode_type999_id31(rtcm, obs); break;
+        case 32: decode_type999_id32(rtcm, obs); break;
 		default: break;
 	}
 
-    return ret;
+    return 0;
 }
 /* decode type 1001-1004 message header --------------------------------------*/
 static int decode_head1001(rtcm_t *rtcm, obs_t *obs, int *sync)
@@ -2191,10 +2906,6 @@ static int decode_type1019(rtcm_t *rtcm, nav_t *nav)
         trace(2, "rtcm3 1019 satellite number error: prn=%c%02d\n", sys2char(sys), prn);
         return -1;
     }
-	if (rtcm->time.time == 0)
-	{
-		return -1;
-	}
     eph.sat = sat;
     eph.week = adjgpsweek(&rtcm->time, week);
     eph.toe = gpst2time(eph.week, eph.toes);
@@ -2209,8 +2920,16 @@ static int decode_type1019(rtcm_t *rtcm, nav_t *nav)
 #endif
     eph.A = sqrtA * sqrtA;
 
-   	if (add_eph(&eph, nav)==1)
-		++nav->n_gps;
+    if (rtcm->nav_mode == 0)
+    {
+        if (add_eph(&eph, nav) == 1)
+            ++nav->n_gps;
+    }
+    else
+    {
+        if (add_eph_all(&eph, nav) == 1)
+            ++nav->n_gps;
+    }
 
     return 2;
 }
@@ -2276,8 +2995,8 @@ static int decode_type1020(rtcm_t *rtcm, nav_t *nav)
     geph.sat = sat;
     geph.svh = bn;
     geph.iode = tb & 0x7F;
-	if (rtcm->time.time == 0)
-		return -1;
+    if (rtcm->time.time == 0)
+        rtcm->time = utc2gpst(timeget());
     tow = time2gpst(gpst2utc(rtcm->time), &week);
     tod = fmod(tow, 86400.0);
     tow -= tod;
@@ -2296,7 +3015,14 @@ static int decode_type1020(rtcm_t *rtcm, nav_t *nav)
         toe -= 86400.0;
     geph.toe = utc2gpst(gpst2time(week, tow + toe)); /* utc->gpst */
 
-    add_geph(&geph, nav);
+    if (rtcm->nav_mode == 0)
+    {
+        add_geph(&geph, nav);
+    }
+    else if(rtcm->nav_mode == 1)
+    {
+        add_geph_all(&geph, nav);
+    }
     
     return 2;
 }
@@ -2446,6 +3172,8 @@ static int decode_type1033(rtcm_t *rtcm, obs_t *obs)
     if (!test_staid(obs, staid))
         return -1;
 
+    memcpy(rtcm->antdes, des, 32*sizeof(char));
+    memcpy(rtcm->rec, rec, 32 * sizeof(char));
     trace(3, "rtcm3 1033: ant=%s:%s rec=%s:%s:%s\n", des, sno, rec, ver, rsn);
     return 5;
 }
@@ -2559,10 +3287,6 @@ static int decode_type1044(rtcm_t *rtcm, nav_t *nav)
         trace(2, "rtcm3 1044 satellite number error: prn=%c%02d\n", sys2char(sys), prn);
         return -1;
     }
-	if (rtcm->time.time == 0)
-	{
-		return -1;
-	}
     eph.sat = sat;
     eph.week = adjgpsweek(&rtcm->time, week);
     eph.toe = gpst2time(eph.week, eph.toes);
@@ -2574,8 +3298,16 @@ static int decode_type1044(rtcm_t *rtcm, nav_t *nav)
     
     /* do not use QZSS now */
 #ifdef ENAQZS
-	if (add_eph(&eph, nav) == 1)
-		++nav->n_gps;
+    if (rtcm->nav_mode == 0)
+    {
+        if (add_eph(&eph, nav) == 1)
+            ++nav->n_gps;
+    }
+    else if (rtcm->nav_mode == 1)
+    {
+        if (add_eph_all(&eph, nav) == 1)
+            ++nav->n_gps;
+    }
 #endif
 
     return 2;
@@ -2657,10 +3389,6 @@ static int decode_type1045(rtcm_t *rtcm, nav_t *nav)
         trace(2, "rtcm3 1045 satellite number error: prn=%c%02d\n", sys2char(sys), prn);
         return -1;
     }
-	if (rtcm->time.time == 0)
-	{
-		return -1;
-	}
     eph.sat = sat;
     eph.week = week + 1024; /* gal-week = gst-week + 1024 */
     set_week_number(eph.week);
@@ -2676,8 +3404,16 @@ static int decode_type1045(rtcm_t *rtcm, nav_t *nav)
     eph.svh = (e5a_hs << 4) + (e5a_dvs << 3);
     eph.code = (1 << 1) | (1 << 8); /* data source = f/nav e5a + af0-2,toc,sisa for e5a-e1 */
     
-    if (add_eph(&eph, nav) == 1)
-		++nav->n_gal;
+    if (rtcm->nav_mode == 0)
+    {
+        if (add_eph(&eph, nav) == 1)
+            ++nav->n_gal;
+    }
+    else if (rtcm->nav_mode == 1)
+    {
+        if (add_eph_all(&eph, nav) == 1)
+            ++nav->n_gal;
+    }
 
     return 2;
 }
@@ -2763,10 +3499,7 @@ static int decode_type1046(rtcm_t *rtcm, nav_t *nav)
         trace(2, "rtcm3 1046 satellite number error: prn=%c%02d\n", sys2char(sys), prn);
         return -1;
     }
-	if (rtcm->time.time == 0)
-	{
-		return -1;
-	}
+
     eph.sat = sat;
     eph.week = week + 1024; /* gal-week = gst-week + 1024 */
     set_week_number(eph.week);
@@ -2782,8 +3515,16 @@ static int decode_type1046(rtcm_t *rtcm, nav_t *nav)
     eph.svh = (e5b_hs << 7) + (e5b_dvs << 6) + (e1_hs << 1) + (e1_dvs << 0);
     eph.code = (1 << 0) | (1 << 9); /* data source = i/nav e1b + af0-2,toc,sisa for e5b-e1 */
 
-    if (add_eph(&eph, nav)==1)
-		++nav->n_gal;
+    if (rtcm->nav_mode == 0)
+    {
+        if (add_eph(&eph, nav) == 1)
+            ++nav->n_gal;
+    }
+    else if (rtcm->nav_mode == 1)
+    {
+        if (add_eph_all(&eph, nav) == 1)
+            ++nav->n_gal;
+    }
     
     return 2;
 }
@@ -2865,10 +3606,6 @@ static int decode_type1042(rtcm_t *rtcm, nav_t *nav)
         trace(2, "rtcm3 1042 satellite number error: prn=%c%02d\n", sys2char(sys), prn);
         return -1;
     }
-	if (rtcm->time.time == 0)
-	{
-		return -1;
-	}
     eph.sat = sat;
     eph.week = adjbdtweek(&rtcm->time, week); // 1356 + week; //
     set_week_number(eph.week + 1356);
@@ -2882,8 +3619,16 @@ static int decode_type1042(rtcm_t *rtcm, nav_t *nav)
 #endif // _POST_RTK_
     eph.A = sqrtA * sqrtA;
 
-    if (add_eph(&eph, nav) == 1)
-		++nav->n_bds;
+    if (rtcm->nav_mode == 0)
+    {
+        if (add_eph(&eph, nav) == 1)
+            ++nav->n_bds;
+    }
+    else if (rtcm->nav_mode == 1)
+    {
+        if (add_eph_all(&eph, nav) == 1)
+            ++nav->n_bds;
+    }
 
     return 2;
 }
@@ -3020,8 +3765,8 @@ static void save_msm_obs(rtcm_t *rtcm, obs_t *obs, int sys, msm_h_t *h, const do
             if (!h->cellmask[k + i * h->nsig])
                 continue;
 
-			if (sys == _SYS_QZS_ && k == 1)
-				continue;
+			//if (sys == _SYS_QZS_ )
+			//	continue;
 
             if (sat && ind[k] >= 0 && code[k])
             {
@@ -3067,6 +3812,14 @@ static void save_msm_obs(rtcm_t *rtcm, obs_t *obs, int sys, msm_h_t *h, const do
 					               (half[j] ? 2 : 0);
 				obsd.SNR[ind[k]] = (unsigned char)(cnr[j] * 4.0);
 				obsd.code[ind[k]] = code[k];
+				//if (obsd.qualP[ind[k]] == 4)
+				//{
+				//	obsd.P[ind[k]] = 0.0;
+				//}
+				//if (obsd.qualL[ind[k]] == 4)
+				//{
+				//	obsd.L[ind[k]] = 0.0;
+				//}
 				j++;
             }
 			else
@@ -3074,7 +3827,7 @@ static void save_msm_obs(rtcm_t *rtcm, obs_t *obs, int sys, msm_h_t *h, const do
 				j++;
 				continue;
 			}            
-		}
+        }
 		add_obs(&obsd, obs);
     }
 }
@@ -3089,9 +3842,6 @@ static int decode_msm_head(rtcm_t *rtcm, obs_t *obs, int sys, int *sync, int *io
 
     type = rtcm_getbitu(rtcm->buff, i, 12);
     i += 12;
-
-	if (rtcm->time.time == 0)
-		return -1;
 
     *h = h0;
     if (i + 157 <= (int)rtcm->len * 8)
@@ -3138,15 +3888,19 @@ static int decode_msm_head(rtcm_t *rtcm, obs_t *obs, int sys, int *sync, int *io
         {
             mask = rtcm_getbitu(rtcm->buff, i, 1);
             i += 1;
-            if (mask)
-                h->sats[h->nsat++] = (unsigned char)j;
+			if (mask)
+			{
+				h->sats[h->nsat++] = (unsigned char)j;
+			}
         }
         for (j = 1; j <= 32; j++)
         {
             mask = rtcm_getbitu(rtcm->buff, i, 1);
             i += 1;
-            if (mask)
-                h->sigs[h->nsig++] = (unsigned char)j;
+			if (mask)
+			{
+				h->sigs[h->nsig++] = (unsigned char)j;
+			}
         }
     }
     else
@@ -3155,8 +3909,10 @@ static int decode_msm_head(rtcm_t *rtcm, obs_t *obs, int sys, int *sync, int *io
         return -1;
     }
     /* test station id */
-    if (!test_staid(obs, staid))
-        return -1;
+	if (!test_staid(obs, staid))
+	{
+		return -1;
+	}
 
     if (h->nsat * h->nsig > 64)
     {
@@ -3174,8 +3930,10 @@ static int decode_msm_head(rtcm_t *rtcm, obs_t *obs, int sys, int *sync, int *io
     {
         h->cellmask[j] = (unsigned char)rtcm_getbitu(rtcm->buff, i, 1);
         i += 1;
-        if (h->cellmask[j])
-            ncell++;
+		if (h->cellmask[j])
+		{
+			ncell++;
+		}
     }
     *hsize = i;
 
@@ -3205,8 +3963,10 @@ static int decode_msm4(rtcm_t *rtcm, obs_t *obs, int sys)
     type = rtcm_getbitu(rtcm->buff, 24, 12);
 
     /* decode msm header */
-    if ((ncell = decode_msm_head(rtcm, obs, sys, &sync, &iod, &h, &i)) < 0)
-        return -1;
+	if ((ncell = decode_msm_head(rtcm, obs, sys, &sync, &iod, &h, &i)) < 0)
+	{
+		return -1;
+	}
 
     if (i + h.nsat * 18 + ncell * 48 > (int)rtcm->len * 8)
     {
@@ -3214,40 +3974,52 @@ static int decode_msm4(rtcm_t *rtcm, obs_t *obs, int sys)
               ncell, rtcm->len);
         return -1;
     }
-    for (j = 0; j < h.nsat; j++)
-        r[j] = 0.0;
-    for (j = 0; j < ncell; j++)
-        pr[j] = cp[j] = -1E16;
+	for (j = 0; j < h.nsat; j++)
+	{
+		r[j] = 0.0;
+	}
+	for (j = 0; j < ncell; j++)
+	{
+		pr[j] = cp[j] = -1E16;
+	}
 
     /* decode satellite data */
     for (j = 0; j < h.nsat; j++)
     { /* range */
         rng = rtcm_getbitu(rtcm->buff, i, 8);
         i += 8;
-        if (rng != 255)
-            r[j] = rng * RANGE_MS;
+		if (rng != 255)
+		{
+			r[j] = rng * RANGE_MS;
+		}
     }
     for (j = 0; j < h.nsat; j++)
     {
         rng_m = rtcm_getbitu(rtcm->buff, i, 10);
         i += 10;
-        if (r[j] != 0.0)
-            r[j] += rng_m * P2_10 * RANGE_MS;
+		if (r[j] != 0.0)
+		{
+			r[j] += rng_m * P2_10 * RANGE_MS;
+		}
     }
     /* decode signal data */
     for (j = 0; j < ncell; j++)
     { /* pseudorange */
         prv = rtcm_getbits(rtcm->buff, i, 15);
         i += 15;
-        if (prv != -16384)
-            pr[j] = prv * P2_24 * RANGE_MS;
+		if (prv != -16384)
+		{
+			pr[j] = prv * P2_24 * RANGE_MS;
+		}
     }
     for (j = 0; j < ncell; j++)
     { /* phaserange */
         cpv = rtcm_getbits(rtcm->buff, i, 22);
         i += 22;
-        if (cpv != -2097152)
-            cp[j] = cpv * P2_29 * RANGE_MS;
+		if (cpv != -2097152)
+		{
+			cp[j] = cpv * P2_29 * RANGE_MS;
+		}
     }
     for (j = 0; j < ncell; j++)
     { /* lock time */
@@ -3454,8 +4226,10 @@ static int decode_msm7(rtcm_t *rtcm, obs_t *obs, int sys)
     type = rtcm_getbitu(rtcm->buff, 24, 12);
 
     /* decode msm header */
-    if ((ncell = decode_msm_head(rtcm, obs, sys, &sync, &iod, &h, &i)) < 0)
-        return -1;
+	if ((ncell = decode_msm_head(rtcm, obs, sys, &sync, &iod, &h, &i)) < 0)
+	{
+		return -1;
+	}
 
     if (i + h.nsat * 36 + ncell * 80 > (int)rtcm->len * 8)
     {
@@ -3476,28 +4250,38 @@ static int decode_msm7(rtcm_t *rtcm, obs_t *obs, int sys)
     { /* range */
         rng = rtcm_getbitu(rtcm->buff, i, 8);
         i += 8;
-        if (rng != 255)
-            r[j] = rng * RANGE_MS;
+		if (rng != 255)
+		{
+			r[j] = rng * RANGE_MS;
+		}
     }
+
     for (j = 0; j < h.nsat; j++)
     { /* extended info */
         ex[j] = rtcm_getbitu(rtcm->buff, i, 4);
         i += 4;
     }
+
     for (j = 0; j < h.nsat; j++)
     {
         rng_m = rtcm_getbitu(rtcm->buff, i, 10);
         i += 10;
-        if (r[j] != 0.0)
-            r[j] += rng_m * P2_10 * RANGE_MS;
+		if (r[j] != 0.0)
+		{
+			r[j] += rng_m * P2_10 * RANGE_MS;
+		}
     }
+
     for (j = 0; j < h.nsat; j++)
     { /* phaserangerate */
         rate = rtcm_getbits(rtcm->buff, i, 14);
         i += 14;
-        if (rate != -8192)
-            rr[j] = rate * 1.0;
+		if (rate != -8192)
+		{
+			rr[j] = rate * 1.0;
+		}
     }
+
     /* decode signal data */
     for (j = 0; j < ncell; j++)
     { /* pseudorange */
@@ -3506,39 +4290,50 @@ static int decode_msm7(rtcm_t *rtcm, obs_t *obs, int sys)
         if (prv != -524288)
             pr[j] = prv * P2_29 * RANGE_MS;
     }
+
     for (j = 0; j < ncell; j++)
     { /* phaserange */
         cpv = rtcm_getbits(rtcm->buff, i, 24);
         i += 24;
-        if (cpv != -8388608)
-            cp[j] = cpv * P2_31 * RANGE_MS;
+		if (cpv != -8388608)
+		{
+			cp[j] = cpv * P2_31 * RANGE_MS;
+		}
     }
+
     for (j = 0; j < ncell; j++)
     { /* lock time */
         lock[j] = rtcm_getbitu(rtcm->buff, i, 10);
         i += 10;
     }
+
     for (j = 0; j < ncell; j++)
     { /* half-cycle amiguity */
         half[j] = rtcm_getbitu(rtcm->buff, i, 1);
         i += 1;
     }
+
     for (j = 0; j < ncell; j++)
     { /* cnr */
         cnr[j] = rtcm_getbitu(rtcm->buff, i, 10) * 0.0625;
         i += 10;
     }
+
     for (j = 0; j < ncell; j++)
     { /* phaserangerate */
         rrv = rtcm_getbits(rtcm->buff, i, 15);
         i += 15;
-        if (rrv != -16384)
-            rrf[j] = rrv * 0.0001;
+		if (rrv != -16384)
+		{
+			rrf[j] = rrv * 0.0001;
+		}
     }
+
     /* save obs data in msm message */
     save_msm_obs(rtcm, obs, sys, &h, r, pr, cp, rr, rrf, cnr, lock, ex, half);
 
     obs->obsflag = !sync;
+
     return sync ? 0 : 1;
 }
 
@@ -4539,10 +5334,6 @@ extern void set_approximate_time(int year, int doy, rtcm_t *rtcm)
     totalDay += doy;
     weekNum = totalDay / 7;
     weekSec = (totalDay - weekNum * 7) * 24 * 3600.0;
-	if (weekNum == 0)
-	{
-		return;
-	}
     rtcm->time = gpst2time(weekNum, weekSec);
     return;
 }
@@ -4552,7 +5343,7 @@ int decode_rtcm3(rtcm_t *rtcm, obs_t *obs, nav_t *nav)
 {
     int ret = 0, type = rtcm->type = rtcm_getbitu(rtcm->buff, 24, 12);
 
-    trace(3, "decode_rtcm3: len=%3d type=%d\n", rtcm->len, type);
+    //printf("decode_rtcm3: len=%3d type=%d\n", rtcm->len, type);
 
     switch (type)
     {
@@ -4655,13 +5446,9 @@ int decode_rtcm3(rtcm_t *rtcm, obs_t *obs, nav_t *nav)
     case 1039:
         ret = decode_type1039(rtcm);
         break; /* not supported */
-
-#ifdef ENAQZS
     case 1044:
         ret = decode_type1044(rtcm, nav);
         break;
-#endif // ENAQZS
-
     case 1045:
         ret = decode_type1045(rtcm, nav);
         break;
@@ -4800,7 +5587,6 @@ int decode_rtcm3(rtcm_t *rtcm, obs_t *obs, nav_t *nav)
     case 1107:
         ret = decode_msm7(rtcm, obs, _SYS_SBS_);
         break;
-#ifdef ENAQZS
     case 1111:
         ret = decode_msm0(rtcm, obs, _SYS_QZS_);
         break; /* not supported */
@@ -4822,7 +5608,6 @@ int decode_rtcm3(rtcm_t *rtcm, obs_t *obs, nav_t *nav)
     case 1117:
         ret = decode_msm7(rtcm, obs, _SYS_QZS_);
         break;
-#endif // ENAQZS
     case 1121:
         ret = decode_msm0(rtcm, obs, _SYS_BDS_);
         break; /* not supported */
@@ -5012,15 +5797,16 @@ extern int input_rtcm3_data(rtcm_t *rtcm, unsigned char data, obs_t *obs, nav_t 
     /* synchronize frame */
     int ret = 0;
     int maxSize = sizeof(rtcm->buff);
-    if ((int)rtcm->nbyte >= maxSize)
-        rtcm->nbyte = 0;
+
+	if ((int)rtcm->nbyte >= maxSize)
+	{
+		rtcm->nbyte = 0;
+	}
     rtcm->type = 0;
     if (rtcm->nbyte == 0)
     {
         /* key = 0 => RTCM, key = 1 => NMEA */
-        if (data == RTCM3PREAMB /* RTCM data format */
-                                //  || data == '$'      /* NMEA data format */
-        )
+        if (data == RTCM3PREAMB)
         {
             rtcm->key = data;
             rtcm->buff[rtcm->nbyte++] = data;
@@ -5035,13 +5821,14 @@ extern int input_rtcm3_data(rtcm_t *rtcm, unsigned char data, obs_t *obs, nav_t 
     {
         rtcm->len = rtcm_getbitu(rtcm->buff, 14, 10) + 3; /* length without parity */
     }
-    if (rtcm->nbyte < 3 || rtcm->nbyte < rtcm->len + 3)
-        return 0;
+	if (rtcm->nbyte < 3 || rtcm->nbyte < rtcm->len + 3)
+	{
+		return 0;
+	}
     rtcm->nbyte = 0;
     rtcm->type = rtcm_getbitu(rtcm->buff, 24, 12);
 
     /* check parity */
-	int crc = rtcm_getbitu(rtcm->buff, rtcm->len * 8, 24);
     if (rtk_crc24q(rtcm->buff, rtcm->len) != rtcm_getbitu(rtcm->buff, rtcm->len * 8, 24))
     {
         trace(2, "rtcm3 parity error: len=%d\n", rtcm->len);
@@ -5062,12 +5849,8 @@ extern int input_rtcm3(unsigned char data, unsigned int stnID, gnss_rtcm_t *gnss
     rtcm_t *rtcm = NULL;
     obs_t *obs = NULL;
     nav_t *nav = NULL;
-    int i;
-    int week;
-    int ret = 0;
-	double tt = 0.0;
-    double tow;
-    double time;
+    int i, week, ret = 0;
+	double tt = 0.0, tow, time;
     //static int obs_flag = 0;
 
     if (stnID < MAXSTN)
@@ -5076,16 +5859,24 @@ extern int input_rtcm3(unsigned char data, unsigned int stnID, gnss_rtcm_t *gnss
         nav = &gnss->nav;
         obs = gnss->obs + stnID;
         ret = input_rtcm3_data(rtcm, data, obs, nav);
+        if (stnID == 0)
+        {
+            memcpy(obs->fwv, rtcm->teseo.fwv, 128 * sizeof(char));
+        }
+        if (stnID == 1)
+        {        
+            memcpy(obs->antdes, rtcm->antdes, 32 * sizeof(char));
+            memcpy(obs->rcvmaker, rtcm->rec, 32 * sizeof(char));
+        }
 
 		if (ret == 1)
 		{
 			for (i = 0; i < NSYS*NFREQ; i++)
 			{
 				if (gnss->rcv[0].icode[i] > 0)
-                {
-                    gnss->rcv[1].icode[i] = gnss->rcv[0].icode[i];
-                }
+					gnss->rcv[1].icode[i] = gnss->rcv[0].icode[i];
 			}
+
 			if (obs->rtcmtype == 99)
 			{
 				if (rtcm->teseo.fix_status == 0)
@@ -5093,11 +5884,11 @@ extern int input_rtcm3(unsigned char data, unsigned int stnID, gnss_rtcm_t *gnss
 					rtcm->teseo.time = 0.0;
 					rtcm->teseo.pos[0] = rtcm->teseo.pos[1] = rtcm->teseo.pos[2] = 0.0;
 				}
-				tow = time2gpst(obs->time, &week);
+				tow  = time2gpst(obs->time, &week);
 				time = tow + week * SECONDS_IN_WEEK;
-				tt = time - rtcm->teseo.time;
-				tt = tt < 5.0 ? tt: 0.0;
-
+				tt   = time - rtcm->teseo.time;
+                obs->spp_pt = tt;
+				tt   = tt < 5.0 ? tt: 0.0;
 				if (fabs(tt) > SECONDS_IN_WEEK *0.5)
 				{
 					week = floor(rtcm->teseo.time / SECONDS_IN_WEEK);
@@ -5107,10 +5898,10 @@ extern int input_rtcm3(unsigned char data, unsigned int stnID, gnss_rtcm_t *gnss
 				for (i = 0; i < 3; i++)
 				{
 					obs->pos[i] = rtcm->teseo.pos[i] + rtcm->teseo.vel[i] * tt;
-                    obs->pos[i+3] = rtcm->teseo.vel[i];
-					obs->spp_std[i]=rtcm->teseo.std_pos[i];
+                    obs->pos[i + 3] = rtcm->teseo.vel[i];
 				}
 			}
+
 			if (fabs(timediff(gnss->rcv[0].time, gnss->rcv[1].time)) > SECONDS_IN_WEEK)
 			{
 				gnss->rcv[1].time = gnss->rcv[0].time;
@@ -5230,7 +6021,7 @@ extern int add_obs(obsd_t* obsd, obs_t* obs)
         memset(obs->data, 0, sizeof(obsd_t)*MAXOBS);
     }
 
-	if (obs->n >= MAXOBS)	return obs->n;
+	if (obs->n >= MAXOBS)	obs->n = 0;
 
 	if (obs->n == 0)
 	{
@@ -5264,7 +6055,7 @@ extern int add_obs(obsd_t* obsd, obs_t* obs)
 	return obs->n;
 }
 
-extern int add_eph(eph_t* eph, nav_t* nav)
+extern int add_eph_all(eph_t* eph, nav_t* nav)
 {
 	int i = 0, ret = 0;
 	int sat = eph->sat;
@@ -5273,19 +6064,12 @@ extern int add_eph(eph_t* eph, nav_t* nav)
 	if (sat <= 0) return 0;
 	for (i = 0; i < (int)nav->n; ++i)
 	{
-		if (nav->eph[i].sat == sat)
+		if (nav->eph[i].sat == sat && fabs(eph->toe.time - nav->eph[i].toe.time)<3600.0)
 		{
-			break;
+            return ret;
 		}
 	}
-	if (i < (int)nav->n)
-	{
-		/* replace old */
-		nav->eph[i] = *eph;
-		nav->ephsat = sat;
-	}
-	else if (i == nav->n)
-	{
+
 		if (i < MAXEPH)
 		{
 			nav->eph[nav->n] = *eph;
@@ -5312,9 +6096,116 @@ extern int add_eph(eph_t* eph, nav_t* nav)
 				ret = 0;
 			}
 		}
-	}
+
 	return ret;
 }
+
+extern int add_eph(eph_t* eph, nav_t* nav)
+{
+    int i = 0, ret = 0;
+    int sat = eph->sat;
+    int bestL = -1;
+    double bestT = 0.0;
+    if (sat <= 0) return 0;
+    for (i = 0; i < (int)nav->n; ++i)
+    {
+        if (nav->eph[i].sat == sat)
+        {
+            break;
+        }
+    }
+    if (i < (int)nav->n)
+    {
+    	/* replace old */
+    	nav->eph[i] = *eph;
+    	nav->ephsat = sat;
+    }
+    else if (i == nav->n)
+    {
+        if (i < MAXEPH)
+        {
+            nav->eph[nav->n] = *eph;
+            nav->ephsat = sat;
+            ++nav->n;
+            ret = 1;
+        }
+        else
+        {
+            /* remove the oldest one */
+            for (i = 0; i < (int)nav->n; ++i)
+            {
+                double diffT = fabs(timediff(nav->eph[i].toe, eph->toe));
+                if (bestL < 0 || bestT < diffT)
+                {
+                    bestL = i;
+                    bestT = diffT;
+                }
+            }
+            if (bestL >= 0)
+            {
+                nav->eph[bestL] = *eph;
+                nav->ephsat = sat;
+                ret = 0;
+            }
+        }
+    }
+    return ret;
+}
+
+
+extern int add_geph_all(geph_t* eph, nav_t* nav)
+{
+    int i = 0, ret = 0;
+    int sat = eph->sat;
+    int bestL = -1;
+    double bestT = 0.0;
+    int add = 1;
+    if (sat <= 0) return 0;
+
+        for (i = 0; i < (int)nav->ng; ++i)
+        {
+            if (nav->geph[i].sat == sat && fabs(eph->toe.time - nav->geph[i].toe.time) < 900.0)
+            {
+                add = 0;
+                break;
+            }
+        }
+        
+        if (add == 0)
+        {
+            return ret;
+        }
+
+        if (i < MAXEPH_R)
+        {
+            nav->geph[nav->ng] = *eph;
+            nav->ephsat = sat;
+            ++nav->ng;
+            ret = 1;
+        }
+        else
+        {
+            /* remove the oldest one */
+            for (i = 0; i < (int)nav->ng; ++i)
+            {
+                double diffT = fabs(timediff(nav->geph[i].toe, eph->toe));
+                if (bestL < 0 || bestT < diffT)
+                {
+                    bestL = i;
+                    bestT = diffT;
+                }
+            }
+            if (bestL >= 0)
+            {
+                nav->geph[bestL] = *eph;
+                nav->ephsat = sat;
+                ret = 0;
+            }
+        }
+
+    return ret;
+}
+
 
 extern int add_geph(geph_t* eph, nav_t* nav)
 {

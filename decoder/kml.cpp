@@ -11,6 +11,7 @@ Kml_Generator * Kml_Generator::m_instance = NULL;
 
 Kml_Generator::Kml_Generator()
 {
+	ins_kml_frequency = 1000;
 	kml_description = 1;
 	f_gnss_kml = NULL;
 	f_ins_kml = NULL;
@@ -42,6 +43,12 @@ void Kml_Generator::init()
 {
 	gnss_sol_list.clear();
 	ins_sol_list.clear();
+	ins_kml_frequency = 1000;
+}
+
+void Kml_Generator::set_kml_frequency(int frequency)
+{
+	ins_kml_frequency = frequency;
 }
 
 void Kml_Generator::open_files(char * file_base_name)
@@ -76,7 +83,7 @@ void Kml_Generator::append_ins(kml_ins_t & ins)
 {
 	uint32_t gps_millisecs = (uint32_t)(ins.gps_secs * 1000);
 	if (fabs(ins.latitude*ins.longitude) > 0.00000001 &&
-		(((gps_millisecs + 5) / 10) * 10) % (1000 / inskml_rate) == 0) {//1000 = 1hz;500 = 2hz;200 = 5hz;100 = 10hz;  x hz = 1000/x
+		(((gps_millisecs + 5) / 10) * 10) % ins_kml_frequency == 0) {//1000 = 1hz;500 = 2hz;200 = 5hz;100 = 10hz;10 = 100hz x hz = 1000/x
 		ins_sol_list.push_back(ins);
 	}
 }

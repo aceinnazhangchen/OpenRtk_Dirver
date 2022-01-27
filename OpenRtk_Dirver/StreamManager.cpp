@@ -216,7 +216,7 @@ void StreamManager::SetRtkAction(emRtkAction action)
 	m_RtkAction = action;
 }
 
-void StreamManager::SetReplayFileName(QString & filename)
+void StreamManager::SetReplayFileName(QString filename)
 {
 	m_ReplayFileName = filename;
 }

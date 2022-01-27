@@ -61,9 +61,11 @@ OpenRtk_Dirver::OpenRtk_Dirver(QWidget *parent)
 	m_DecodeToolsWidget = new DecodeTools(NULL);
 	m_MergeTools = new MergeTools(NULL);
 	m_AnalysisTools = new AnalysisTools(NULL);
+	m_SplitTools = new SplitTools(NULL);
 	connect(ui.actionDecoder, &QAction::triggered, this, &OpenRtk_Dirver::onDecodeWidgetOpen);
 	connect(ui.actionMerger, &QAction::triggered, this, &OpenRtk_Dirver::onMergeWidgetOpen);
 	connect(ui.actionAnalysis, &QAction::triggered, this, &OpenRtk_Dirver::onAnalysisWidgetOpen);
+	connect(ui.actionSplit, &QAction::triggered, this, &OpenRtk_Dirver::onSplitWidgetOpen);
 }
 
 OpenRtk_Dirver::~OpenRtk_Dirver()
@@ -253,4 +255,9 @@ void OpenRtk_Dirver::onMergeWidgetOpen()
 void OpenRtk_Dirver::onAnalysisWidgetOpen()
 {
 	m_AnalysisTools->show();
+}
+
+void OpenRtk_Dirver::onSplitWidgetOpen()
+{
+	m_SplitTools->show();
 }

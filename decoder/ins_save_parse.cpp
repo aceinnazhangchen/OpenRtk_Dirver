@@ -3,18 +3,14 @@
 #include <string.h>
 #include "ins401.h"
 
-using namespace Ins401;
-
 #ifndef CRC32_POLYNOMIAL
 #define CRC32_POLYNOMIAL 0xEDB88320L
 #endif // !CRC32_POLYNOMIAL
 
-
-
 uint8_t ins_save_data_head[3] = {0xaa,0x44,0x12};
 uint8_t frame_data[512];
 uint8_t crc_rev[4];
-SaveMsg* ins_save_data;
+Ins401_Tool::SaveMsg* ins_save_data;
 static char ins_save_str[512];
 uint32_t ins_save_flag;
 
@@ -49,9 +45,9 @@ static unsigned long CalculateBlockCRC32(unsigned long ulCount,   /* Number of b
 }
 
 
-int printasciisavebuf(SaveConfig* msaveconfig, char* buff)
+int64_t printasciisavebuf(Ins401_Tool::SaveConfig* msaveconfig, char* buff)
 {
-	double dms1[3], dms2[3], amag = 0.0;
+	double amag = 0.0;
 	char *p = buff, *q, sum;
 
 	//%02.0f%02.0f%05.2f,A,%02.0f%010.7f,%s,%03.0f%010.7f,%s,%4.2f,%4.2f,%02.0f%02.0f%02d,%.1f,%s,%s
@@ -75,7 +71,7 @@ int printasciisavebuf(SaveConfig* msaveconfig, char* buff)
 	return p - (char *)buff;
 }
 
-int Ins401::Ins401_decoder::input_ins_save_data(unsigned char data)
+int Ins401_Tool::Ins401_decoder::input_ins_save_data(unsigned char data)
 {
     static uint8_t frame_rev_flag = 0;
     static uint16_t frame_data_len = 0;
@@ -173,7 +169,6 @@ int Ins401::Ins401_decoder::input_ins_save_data(unsigned char data)
     return 0;
 }
 
-
 // char* parse_ins_save_data(char *buff, int length)
 // {
 //     int pos = 0;
@@ -190,17 +185,16 @@ char* get_ins_save_data_str()
     return ins_save_str;
 }
 
-
-void Ins401::Ins401_decoder::ins_save_finish()
-{	
+void Ins401_Tool::Ins401_decoder::ins_save_finish()
+{
 	create_file(f_ins_log, ".log", NULL);
 	fprintf(f_ins_log, "pack_type = %s, parse_status = %d\n", "ins save", ins_save_flag);
 	create_file(f_ins_save, ".txt", NULL);
-    if(ins_save_flag == 1)
-    {
-        char* parse_str = get_ins_save_data_str();
-        printf("%s\r\n",parse_str);
-        fwrite(parse_str,1,strlen(parse_str),f_ins_save);
-    }
+	if (ins_save_flag == 1)
+	{
+		char* parse_str = get_ins_save_data_str();
+		printf("%s\r\n", parse_str);
+		fwrite(parse_str, 1, strlen(parse_str), f_ins_save);
+	}
 	close_all_files();
 }

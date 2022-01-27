@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>578</width>
-    <height>99</height>
+    <height>127</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,7 +24,7 @@
       <widget class="QComboBox" name="fileformat_cmb">
        <item>
         <property name="text">
-         <string>OpenRTK330LI (user)</string>
+         <string>OpenRTK330LI</string>
         </property>
        </item>
        <item>
@@ -49,7 +49,17 @@
        </item>
        <item>
         <property name="text">
-         <string>RTCM_Split</string>
+         <string>E2E_Protocol</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>RTCM_SPP</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Convbin.exe</string>
         </property>
        </item>
       </widget>
@@ -88,6 +98,88 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>kml frequency</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="frequency_cmb">
+       <item>
+        <property name="text">
+         <string>1hz</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>10hz</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>100hz</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDateTimeEdit" name="dateTimeEdit">
+       <property name="displayFormat">
+        <string>yyyy/MM/dd H:mm:ss</string>
+       </property>
+       <property name="calendarPopup">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="time_checkBox">
+       <property name="toolTip">
+        <string comment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间" extracomment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;解码ins401的时候，第一列以年月日时分秒的格式显示时间。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="statusTip">
+        <string comment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间" extracomment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间"/>
+       </property>
+       <property name="whatsThis">
+        <string comment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间" extracomment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>UTC time(YYYY/MM/DD-hh:mm:ss.dd)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_4">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <spacer name="horizontalSpacer">
@@ -110,22 +202,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="time_checkBox">
-       <property name="toolTip">
-        <string comment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间" extracomment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;解码ins401的时候，第一列以年月日时分秒的格式显示时间。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="statusTip">
-        <string comment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间" extracomment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间"/>
-       </property>
-       <property name="whatsThis">
-        <string comment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间" extracomment="解码ins401的时候，第一列以年月日时分秒的时间格式显示时间">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="text">
-        <string>UTC time(YYYY/MM/DD-hh:mm:ss.dd)</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -137,6 +213,16 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QToolButton" name="toolButton_setting">
+       <property name="toolTip">
+        <string>setting</string>
+       </property>
+       <property name="text">
+        <string>s</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

@@ -1,34 +1,31 @@
 #pragma once
 
 #include <QWidget>
-#include "ui_DecodeTools.h"
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMimeData>
 #include <QTime>
-#include "DecodeThread.h"
-#include "AnalysisConfigUI.h"
+#include "ui_SplitTools.h"
+#include "SplitThread.h"
 
-class DecodeTools : public QWidget
+class SplitTools : public QWidget
 {
 	Q_OBJECT
 
 public:
-	DecodeTools(QWidget *parent = Q_NULLPTR);
-	~DecodeTools();
+	SplitTools(QWidget *parent = Q_NULLPTR);
+	~SplitTools();
 	void setOperable(bool enable);
 protected:
 	void dragEnterEvent(QDragEnterEvent * event);
 	void dropEvent(QDropEvent * event);
 private:
-	Ui::DecodeTools ui;
-	DecodeThread* m_DecodeThread;
+	Ui::SplitTools ui;
+	SplitThread* m_SplitThread;
 	QTime m_TimeShow;
-	AnalysisConfigUI* m_AnalysisConfigUI;
 public slots:
 	void onSelectFileClicked();
-	void onDecodeClicked();
+	void onSplitClicked();
 	void onProcess(int present, int msecs);
 	void onFinished();
-	void onClickedSettingButton();
 };

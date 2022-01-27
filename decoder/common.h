@@ -7,18 +7,23 @@
 #define NEAM_HEAD 0x24
 
 #define READ_CACHE_SIZE 4*1024
-#define MAX_NMEA_TYPES 14
+#define MAX_NMEA_TYPES 17
+
+#define HOUR	(3600)
+#define MINUTE  (60)
+
+#define MAX_INT 2147483648.0
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-	int getFileSize(FILE* file);
+	int64_t getFileSize(FILE* file);
 	int makeDir(char* folderPath);
 	void createDirByFilePath(const char* filename, char* dirname);
 	uint16_t calc_crc(uint8_t* buff, uint32_t nbyte);
 	const char* nmea_type(int index);
-
+	int is_nmea_char(char c);
 #ifdef __cplusplus
 }
 #endif

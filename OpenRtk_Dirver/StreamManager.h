@@ -84,7 +84,7 @@ public:
 	void StopReplayOpenRTK();
 	void ShowReadWriteSize(int index, int read, int write);
 	void SetRtkAction(emRtkAction action);
-	void SetReplayFileName(QString& filename);
+	void SetReplayFileName(QString filename);
 	void InitTimer();
 	bool SendReplayData();
 	void SendPackage(int stn);

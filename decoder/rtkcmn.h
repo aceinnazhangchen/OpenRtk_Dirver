@@ -38,6 +38,7 @@ double  time2gst(gtime_t t, int *week);
 gtime_t bdt2time(int week, double sec);
 double  time2bdt(gtime_t t, int *week);
 char    *time_str(gtime_t t, int n);
+char    *time_name(gtime_t t, int n);
 
 gtime_t timeadd(gtime_t t, double sec);
 double  timediff(gtime_t t1, gtime_t t2);

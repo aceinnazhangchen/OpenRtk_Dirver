@@ -2,9 +2,58 @@
 #include <stdint.h>
 #include "openrtk_user.h"
 
-#define MAX_INCEPTIO_PACKET_TYPES 9
+#define MAX_INCEPTIO_PACKET_TYPES 11
 
 #pragma pack(push, 1)
+namespace RTK330LA_Tool {
+
+	typedef struct {
+		/* IMU */
+		uint32_t imu_temp_status : 1; // imu temperature status
+		uint32_t imu_acce_status : 1;  // imu accelerometer status
+		uint32_t imu_gyro_status : 1; // imu gyro status
+		uint32_t imu_sensor_status1 : 1; // imu sensor (#1, #2ㄛ #3) status
+		uint32_t imu_sensor_status2 : 1; // imu sensor (#1, #2ㄛ #3) status
+		uint32_t imu_sensor_status3 : 1; // imu sensor (#1, #2ㄛ #3) status
+		uint32_t imu_overall_status : 1;
+
+		/* GNSS status */
+		uint32_t gnss_data_status : 1;
+		uint32_t gnss_signal_status : 1;
+
+		/* operation */
+		uint32_t power : 1; // for the whole device, any component has no power then 0
+		uint32_t MCU_status : 1;
+		uint32_t pps_status : 1;
+
+		uint32_t zupt_det : 1; // 1 每 zupt detected
+		uint32_t odo_used : 1; // 1 每 odometer update used
+		uint32_t odo_recv : 1; // 1 每 odometer data received
+
+		/* IMU sensor fault flags:
+		0 每 fault; 1 - normal*/
+		uint32_t imu_s1_state : 1;
+		uint32_t imu_s2_state : 1;
+		uint32_t imu_s3_state : 1;
+		/* Time valid flag: 0 每 fault; 1 - normal */
+		uint32_t time_valid : 1;
+		/* Antenna sensing status:
+		 0 每 UNINIT
+		 1 每 NORMAL
+		 2 - OPEN
+		 3 - SHORT
+		 4 每 THERMAL SHUTDOWN
+		 5 - REVERSE CURRENT
+		 6 - OVERCURRENT
+		 7 - RESERVED */
+		uint32_t antenna_sensing : 3;
+		/* GNSS chipset fault flag: 0 每 fault; 1 - normal */
+		uint32_t gnss_chipset : 1;
+		/* MCU and peripheal power up self-test: 1 - valid, 0 - invalid */
+		uint32_t pust_check : 1;
+		uint32_t rexerved : 8;
+	} status_bit_t;
+
 
 	typedef struct
 	{
@@ -114,12 +163,12 @@
 		int16_t	 north_vel_std;
 		int16_t  east_vel_std;
 		int16_t  up_vel_std;
-		float  hor_pos_pl;
-		float  ver_pos_pl;
-		float  hor_vel_pl;
-		float  ver_vel_pl;
-		uint8_t pos_integrity_status;
-		uint8_t vel_integrity_status;
+		//float  hor_pos_pl;
+		//float  ver_pos_pl;
+		//float  hor_vel_pl;
+		//float  ver_vel_pl;
+		//uint8_t pos_integrity_status;
+		//uint8_t vel_integrity_status;
 	} inceptio_d2_t;
 
 	typedef struct
@@ -132,7 +181,7 @@
 		uint8_t	 hour;
 		uint8_t  min;
 		uint8_t  sec;
-		uint32_t imu_status;
+		status_bit_t status_bit;
 		float  imu_temperature;
 		float  mcu_temperature;
 	} inceptio_sT_t;
@@ -150,6 +199,7 @@
 	typedef enum {
 		INCEPTIO_OUT_NONE = 0,
 		INCEPTIO_OUT_SCALED1,
+		INCEPTIO_OUT_SCALED2,
 		INCEPTIO_OUT_INSPVA,
 		INCEPTIO_OUT_STD1,
 		INCEPTIO_OUT_STD2,
@@ -168,3 +218,7 @@
 
 	extern int input_inceptio_raw(uint8_t data);
 
+	extern uint8_t get_current_type();
+	extern inceptio_gN_t * get_gnss_sol();
+	extern inceptio_s1_t * get_imu_raw();
+}

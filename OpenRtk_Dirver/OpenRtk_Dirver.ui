@@ -364,6 +364,7 @@
     <addaction name="actionDecoder"/>
     <addaction name="actionMerger"/>
     <addaction name="actionAnalysis"/>
+    <addaction name="actionSplit"/>
    </widget>
    <addaction name="menuTools"/>
   </widget>
@@ -389,6 +390,11 @@
   <action name="actionAnalysis">
    <property name="text">
     <string>Analysis</string>
+   </property>
+  </action>
+  <action name="actionSplit">
+   <property name="text">
+    <string>Spliter</string>
    </property>
   </action>
  </widget>
