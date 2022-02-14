@@ -41,6 +41,12 @@ struct kml_ins_t {
 };
 #pragma pack(pop)
 
+enum emStatusTypeDefine{
+	emAceinnaStatusType,
+	emNpos122StatusType,
+	emOtherStatusType
+};
+
 class Kml_Generator
 {
 private:
@@ -54,12 +60,15 @@ private:
 public:
 	void init();
 	void set_kml_frequency(int frequency);
+	void set_status_type_define(emStatusTypeDefine define);
 	void open_files(char* file_base_name);
 	void write_files();
 	void close_files();
 	void append_gnss(kml_gnss_t& gnss);
 	void append_ins(kml_ins_t& ins);
 private:
+	int get_gnss_status_color(int status);
+	int get_ins_status_color(int status);
 	void write_header(FILE *kml_file, int ntype);
 	void write_end(FILE *kml_file);
 	void write_gnss_line(kml_gnss_t* gnss, int begin_end);
@@ -75,4 +84,5 @@ private:
 	int ins_kml_frequency;
 	std::vector<kml_gnss_t> gnss_sol_list;
 	std::vector<kml_ins_t> ins_sol_list;
+	emStatusTypeDefine status_type_define;
 };

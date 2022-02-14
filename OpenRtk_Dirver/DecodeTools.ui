@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>578</width>
-    <height>127</height>
+    <height>129</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,6 +60,21 @@
        <item>
         <property name="text">
          <string>Convbin.exe</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>RTCM_2_HEX</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>BeiDou</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>NPOS112</string>
         </property>
        </item>
       </widget>

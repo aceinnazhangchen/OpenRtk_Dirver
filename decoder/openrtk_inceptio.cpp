@@ -301,7 +301,7 @@ namespace RTK330LA_Tool {
 		if (strlen(base_inceptio_file_name) == 0) return;
 		char file_name[256] = { 0 };
 		if (f_process == NULL) {
-			sprintf(file_name, "%s-process", base_inceptio_file_name);
+			sprintf(file_name, "%s_process", base_inceptio_file_name);
 			f_process = fopen(file_name, "w");
 		}
 		switch (index)
@@ -363,25 +363,25 @@ namespace RTK330LA_Tool {
 	}
 
 	void save_inceptio_s1_to_user_s1() {
-		uint8_t buffer[128] = { 0 };
-		buffer[0] = 's';
-		buffer[1] = '1';
-		user_s1_t user_s1 = { 0 };
-		user_s1.GPS_Week = inceptio_pak_s1.GPS_Week;
-		user_s1.GPS_TimeOfWeek = (uint32_t)(inceptio_pak_s1.GPS_TimeOfWeek * 1000);
-		user_s1.x_accel = inceptio_pak_s1.x_accel;
-		user_s1.y_accel = inceptio_pak_s1.y_accel;
-		user_s1.z_accel = inceptio_pak_s1.z_accel;
-		user_s1.x_gyro = inceptio_pak_s1.x_gyro;
-		user_s1.y_gyro = inceptio_pak_s1.y_gyro;
-		user_s1.z_gyro = inceptio_pak_s1.z_gyro;
-		uint8_t len = sizeof(user_s1_t);
-		buffer[2] = len;
-		memcpy(buffer + 3, &user_s1, len);
-		uint16_t packet_crc = calc_crc(buffer, 3 + len);
-		buffer[3 + len] = (packet_crc >> 8) & 0xff;
-		buffer[3 + len + 1] = packet_crc & 0xff;
-		write_inceptio_bin_file(INCEPTIO_OUT_SCALED1, buffer, len + 5);
+		//uint8_t buffer[128] = { 0 };
+		//buffer[0] = 's';
+		//buffer[1] = '1';
+		//user_s1_t user_s1 = { 0 };
+		//user_s1.GPS_Week = inceptio_pak_s1.GPS_Week;
+		//user_s1.GPS_TimeOfWeek = (uint32_t)(inceptio_pak_s1.GPS_TimeOfWeek * 1000);
+		//user_s1.x_accel = inceptio_pak_s1.x_accel;
+		//user_s1.y_accel = inceptio_pak_s1.y_accel;
+		//user_s1.z_accel = inceptio_pak_s1.z_accel;
+		//user_s1.x_gyro = inceptio_pak_s1.x_gyro;
+		//user_s1.y_gyro = inceptio_pak_s1.y_gyro;
+		//user_s1.z_gyro = inceptio_pak_s1.z_gyro;
+		//uint8_t len = sizeof(user_s1_t);
+		//buffer[2] = len;
+		//memcpy(buffer + 3, &user_s1, len);
+		//uint16_t packet_crc = calc_crc(buffer, 3 + len);
+		//buffer[3 + len] = (packet_crc >> 8) & 0xff;
+		//buffer[3 + len + 1] = packet_crc & 0xff;
+		//write_inceptio_bin_file(INCEPTIO_OUT_SCALED1, buffer, len + 5);
 	}
 
 	void output_inceptio_s1() {
@@ -748,14 +748,21 @@ namespace RTK330LA_Tool {
 		return inceptio_raw.ntype;
 	}
 
+	inceptio_s1_t * get_imu_raw()
+	{
+		return &inceptio_pak_s2;
+	}
+
 	inceptio_gN_t * get_gnss_sol()
 	{
 		return &inceptio_pak_gN;
 	}
 
-	inceptio_s1_t * get_imu_raw()
+	inceptio_iN_t * ger_ins_sol()
 	{
-		return &inceptio_pak_s2;
+		return &inceptio_pak_iN;
 	}
+
+
 
 }

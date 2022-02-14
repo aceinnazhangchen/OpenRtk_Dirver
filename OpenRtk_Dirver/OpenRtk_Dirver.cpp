@@ -62,10 +62,12 @@ OpenRtk_Dirver::OpenRtk_Dirver(QWidget *parent)
 	m_MergeTools = new MergeTools(NULL);
 	m_AnalysisTools = new AnalysisTools(NULL);
 	m_SplitTools = new SplitTools(NULL);
+	m_CsvAnalysisTools = new CsvAnalysisTools(NULL);
 	connect(ui.actionDecoder, &QAction::triggered, this, &OpenRtk_Dirver::onDecodeWidgetOpen);
 	connect(ui.actionMerger, &QAction::triggered, this, &OpenRtk_Dirver::onMergeWidgetOpen);
 	connect(ui.actionAnalysis, &QAction::triggered, this, &OpenRtk_Dirver::onAnalysisWidgetOpen);
 	connect(ui.actionSplit, &QAction::triggered, this, &OpenRtk_Dirver::onSplitWidgetOpen);
+	connect(ui.actionCsvAnalysis, &QAction::triggered, this, &OpenRtk_Dirver::onCsvAnalysisWidgetOpen);
 }
 
 OpenRtk_Dirver::~OpenRtk_Dirver()
@@ -260,4 +262,9 @@ void OpenRtk_Dirver::onAnalysisWidgetOpen()
 void OpenRtk_Dirver::onSplitWidgetOpen()
 {
 	m_SplitTools->show();
+}
+
+void OpenRtk_Dirver::onCsvAnalysisWidgetOpen()
+{
+	m_CsvAnalysisTools->show();
 }

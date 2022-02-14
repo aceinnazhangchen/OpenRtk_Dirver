@@ -21,4 +21,8 @@ USERDECODERLIB_API void decode_beidou(char* filename)
 	decode_beidou_interface(filename);
 }
 
+USERDECODERLIB_API void decode_npos122(char* filename)
+{
+	decode_npos122_interface(filename);
+}
 

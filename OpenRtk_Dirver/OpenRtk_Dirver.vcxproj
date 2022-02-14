@@ -61,13 +61,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\decoder;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>MI_OUTPUT_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MI_OUTPUT_FILE;OUTPUT_INNER_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\decoder;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>MI_OUTPUT_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MI_OUTPUT_FILE;OUTPUT_INNER_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -107,6 +107,7 @@
     <ClCompile Include="..\decoder\kml.cpp" />
     <ClCompile Include="..\decoder\mixed_raw.c" />
     <ClCompile Include="..\decoder\model.c" />
+    <ClCompile Include="..\decoder\NPOS122_decoder.cpp" />
     <ClCompile Include="..\decoder\openrtk_inceptio.cpp" />
     <ClCompile Include="..\decoder\openrtk_user.cpp" />
     <ClCompile Include="..\decoder\rtcm.c" />
@@ -115,12 +116,14 @@
     <ClCompile Include="AnalysisConfigUI.cpp" />
     <ClCompile Include="AnalysisThread.cpp" />
     <ClCompile Include="AnalysisTools.cpp" />
+    <ClCompile Include="CsvAnalysisTools.cpp" />
     <ClCompile Include="DecodeThread.cpp" />
     <ClCompile Include="DecodeTools.cpp" />
     <ClCompile Include="Ins401_Analysis.cpp" />
     <ClCompile Include="MergeThread.cpp" />
     <ClCompile Include="MergeTools.cpp" />
     <ClCompile Include="RTK330LA_Analysis.cpp" />
+    <ClCompile Include="rtk330la_decoder.cpp" />
     <ClCompile Include="SingleStream.cpp" />
     <ClCompile Include="SplitThread.cpp" />
     <ClCompile Include="SplitTools.cpp" />
@@ -129,6 +132,7 @@
     <QtRcc Include="OpenRtk_Dirver.qrc" />
     <QtUic Include="AnalysisConfigUI.ui" />
     <QtUic Include="AnalysisTools.ui" />
+    <QtUic Include="CsvAnalysisTools.ui" />
     <QtUic Include="DecodeTools.ui" />
     <QtUic Include="MergeTools.ui" />
     <QtUic Include="OpenRtk_Dirver.ui" />
@@ -159,12 +163,15 @@
     <ClInclude Include="..\decoder\kml.h" />
     <ClInclude Include="..\decoder\mixed_raw.h" />
     <ClInclude Include="..\decoder\model.h" />
+    <ClInclude Include="..\decoder\NPOS122_decoder.h" />
     <ClInclude Include="..\decoder\openrtk_inceptio.h" />
     <ClInclude Include="..\decoder\openrtk_user.h" />
     <ClInclude Include="..\decoder\rtcm.h" />
     <ClInclude Include="..\decoder\rtcm_split.h" />
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
+    <QtMoc Include="CsvAnalysisTools.h" />
+    <ClInclude Include="rtk330la_decoder.h" />
     <QtMoc Include="RTK330LA_Analysis.h" />
     <QtMoc Include="AnalysisConfigUI.h" />
     <QtMoc Include="Ins401_Analysis.h" />

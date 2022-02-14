@@ -69,6 +69,9 @@
     <ClCompile Include="..\decoder\decode_interface.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
+    <ClCompile Include="..\decoder\NPOS122_decoder.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="decoder_dll.h">
@@ -126,6 +129,9 @@
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\decode_interface.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\NPOS122_decoder.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>

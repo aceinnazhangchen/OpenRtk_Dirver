@@ -114,7 +114,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;WIN32;OUTPUT_INNER_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\decoder</AdditionalIncludeDirectories>
     </ClCompile>
@@ -129,7 +129,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;WIN32;OUTPUT_INNER_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\decoder</AdditionalIncludeDirectories>
     </ClCompile>
@@ -153,6 +153,7 @@
     <ClInclude Include="..\decoder\kml.h" />
     <ClInclude Include="..\decoder\mixed_raw.h" />
     <ClInclude Include="..\decoder\model.h" />
+    <ClInclude Include="..\decoder\NPOS122_decoder.h" />
     <ClInclude Include="..\decoder\openrtk_inceptio.h" />
     <ClInclude Include="..\decoder\openrtk_user.h" />
     <ClInclude Include="..\decoder\rtcm.h" />
@@ -172,6 +173,7 @@
     <ClCompile Include="..\decoder\kml.cpp" />
     <ClCompile Include="..\decoder\mixed_raw.c" />
     <ClCompile Include="..\decoder\model.c" />
+    <ClCompile Include="..\decoder\NPOS122_decoder.cpp" />
     <ClCompile Include="..\decoder\openrtk_inceptio.cpp" />
     <ClCompile Include="..\decoder\openrtk_user.cpp" />
     <ClCompile Include="..\decoder\rtcm.c" />

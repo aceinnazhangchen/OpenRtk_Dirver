@@ -3,8 +3,8 @@
 
 #define MAX_PACKET_TYPES 5
 
+namespace OpenRTK330LI_Tool {
 #pragma pack(push, 1)
-
 	typedef struct {
 		uint8_t nmea_flag;
 		uint8_t flag;
@@ -121,5 +121,6 @@
 	extern void close_user_all_log_file();
 
 	extern int input_user_raw(uint8_t data);
-
-	
+	extern uint8_t get_current_type();
+	user_i1_t * get_ins_sol();
+}

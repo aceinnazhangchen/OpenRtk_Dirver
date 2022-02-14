@@ -23,7 +23,8 @@ namespace Ins401_Tool {
 	{
 	}
 
-	void Ins401_Analysis::init() {
+	void Ins401_Analysis::init() 
+	{
 		m_gnss_sol_list.clear();
 		memset(&m_imu_total, 0, sizeof(m_imu_total));
 		m_raw_imu_list.clear();
@@ -34,7 +35,8 @@ namespace Ins401_Tool {
 		m_OutBaseName = basename;
 	}
 
-	void Ins401_Analysis::append_gnss_sol(gnss_sol_t* gnss) {
+	void Ins401_Analysis::append_gnss_sol(gnss_sol_t* gnss) 
+	{
 		if (append_num >= m_start_line) {
 			m_gnss_sol_list.append(*gnss);
 		}
@@ -169,12 +171,6 @@ namespace Ins401_Tool {
 			pos[1] = pos[1] * D2R;
 			double xyz[3] = { 0 };
 			double d_xyz[3] = { 0 };
-			//pos2ecef(pos, xyz);		
-			//d_xyz[0] = xyz[0] - median_xyz[0];
-			//d_xyz[1] = xyz[1] - median_xyz[1];
-			//d_xyz[2] = xyz[2] - median_xyz[2];
-			//double distance = sqrt(d_xyz[0] * d_xyz[0] + d_xyz[1] * d_xyz[1] + d_xyz[2] * d_xyz[2]);
-			//dist_list.append(distance);
 
 			pos[2] = median_pos[2];
 			double xyz_hor[3] = { 0 };

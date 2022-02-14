@@ -148,6 +148,15 @@
     <ClCompile Include="..\decoder\beidou.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
+    <ClCompile Include="rtk330la_decoder.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\NPOS122_decoder.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="CsvAnalysisTools.cpp">
+      <Filter>Source Files\Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="StreamManager.h">
@@ -192,6 +201,9 @@
     <QtMoc Include="RTK330LA_Analysis.h">
       <Filter>Header Files\Analysis</Filter>
     </QtMoc>
+    <QtMoc Include="CsvAnalysisTools.h">
+      <Filter>Header Files\Tools</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="StreamConfigUI.ui">
@@ -210,6 +222,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="AnalysisConfigUI.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="CsvAnalysisTools.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -269,6 +284,12 @@
       <Filter>Header Files\Analysis</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\beidou.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="rtk330la_decoder.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\NPOS122_decoder.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>

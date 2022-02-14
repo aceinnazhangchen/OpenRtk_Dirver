@@ -7,7 +7,9 @@
 #include "Ins401_Analysis.h"
 #include "RTK330LA_Analysis.h"
 #include "E2E_protocol.h"
+#include "NPOS122_decoder.h"
 
+//ºÍUIÖÐË³ÐòÒ»ÖÂ
 enum emDecodeFormat {
 	emDecodeFormat_OpenRTK330LI,
 	emDecodeFormat_RTK330LA,
@@ -17,6 +19,9 @@ enum emDecodeFormat {
 	emDecodeFormat_E2E_Protocol,
 	emDecodeFormat_RTCM_EPVT,
 	emDecodeFormat_Convbin,
+	emDecodeFormat_RTCM_2_HEX,
+	emDecodeFormat_Beidou,
+	emDecodeFormat_NPOS112,
 };
 
 class DecodeThread : public QThread
@@ -32,7 +37,8 @@ public:
 	void setFileName(QString file);
 	void setShowTime(bool show);
 	void setKmlFrequency(int frequency);
-	void setDateTime(QString time);
+	void setDateTimeStr(QString time);
+	void setDateTime(QDateTime time);
 	void setMIFileSwitch(bool write);
 protected:
 	void makeOutPath(QString filename);
@@ -44,6 +50,9 @@ protected:
 	void decode_e2e_protocol();
 	void decode_rtcm_epvt();
 	void decode_rtcm_convbin();
+	void decode_rtcm_2_hex();
+	void decode_beidou();
+	void decode_npos112();
 private:
 	bool m_isStop;
 	int m_FileFormat;
@@ -52,9 +61,11 @@ private:
 	QTime m_TimeCounter;
 	Ins401_Tool::Ins401_decoder* ins401_decoder;
 	E2E::E2E_protocol* e2e_deocder;
+	NPOS122_Tool::NPOS122_decoder* npos122_decoder;
 	bool m_show_time;
 	int ins_kml_frequency;
-	QString m_datatime;
+	QString m_datatime_str;
+	QDateTime m_datatime;
 public:
 	bool m_static_point_ecp;
 	Ins401_Tool::Ins401_Analysis* m_Ins401_Analysis;

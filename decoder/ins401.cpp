@@ -163,7 +163,7 @@ namespace Ins401_Tool {
 			, imu.gps_week, (double)imu.gps_millisecs / 1000.0
 			, imu.accel_x, imu.accel_y, imu.accel_z
 			, imu.gyro_x, imu.gyro_y, imu.gyro_z);
-#ifndef NOT_OUTPUT_INNER_FILE
+#ifdef OUTPUT_INNER_FILE
 		//txt
 		create_file(f_imu_txt, "imu.txt", NULL);
 		fprintf(f_imu_txt, "%d,%11.4f,    ,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n"
@@ -224,7 +224,7 @@ namespace Ins401_Tool {
 		fprintf(f_gnss_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel, gnss.east_vel, gnss.up_vel);
 		fprintf(f_gnss_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel_std, gnss.east_vel_std, gnss.up_vel_std);
 		fprintf(f_gnss_csv, "\n");
-#ifndef NOT_OUTPUT_INNER_FILE
+#ifdef OUTPUT_INNER_FILE
 		double track_over_ground = atan2(gnss.east_vel, gnss.north_vel)*R2D;
 		double horizontal_speed = sqrt(gnss.north_vel * gnss.north_vel + gnss.east_vel * gnss.east_vel);
 		//txt
@@ -322,7 +322,7 @@ namespace Ins401_Tool {
 		fprintf(f_ins_csv, "%8.3f,%8.3f,", ins.long_vel_std, ins.lat_vel_std);
 		fprintf(f_ins_csv, "%8.3f,%8.3f,%8.3f,", ins.roll_std, ins.pitch_std, ins.heading_std);
 		fprintf(f_ins_csv, "%3d\n", ins.id_contient);
-#ifndef NOT_OUTPUT_INNER_FILE
+#ifdef OUTPUT_INNER_FILE
 		if (ins.gps_millisecs % 100 < 10) {
 			//txt
 			create_file(f_ins_txt, "ins.txt", NULL);
@@ -395,7 +395,7 @@ namespace Ins401_Tool {
 			, misa.gps_week, misa.gps_millisecs, misa.flag
 			, misa.RVB[0], misa.RVB[1], misa.RVB[2]
 			, misa.CVB[0], misa.CVB[1], misa.CVB[2]);
-#ifndef NOT_OUTPUT_INNER_FILE
+#ifdef OUTPUT_INNER_FILE
 		create_file(f_misa_txt, "misa.txt", NULL);
 		fprintf(f_misa_txt
 			, "%d,%d,%d"
@@ -425,7 +425,7 @@ namespace Ins401_Tool {
 		}
 		fprintf(f_odo_csv, "%d,%11.4f,%3d,%10.4f,%3d,%16I64d\n"
 			, odo.GPS_Week, (double)odo.GPS_TimeOfWeek / 1000.0, odo.mode, odo.speed, odo.fwd, odo.wheel_tick);
-#ifndef NOT_OUTPUT_INNER_FILE
+#ifdef OUTPUT_INNER_FILE
 		create_file(f_odo_txt, "odo.txt", NULL);
 		fprintf(f_odo_txt, "%d,%11.4f,%3d,%10.4f,%3d,%16I64d\n"
 			, odo.GPS_Week, (double)odo.GPS_TimeOfWeek / 1000.0, odo.mode, odo.speed, odo.fwd, odo.wheel_tick);
@@ -565,7 +565,7 @@ namespace Ins401_Tool {
 				memcpy(&imu, payload, packet_size);
 				output_imu_raw();
 				MI_output_imu_raw();
-#ifndef NOT_OUTPUT_INNER_FILE
+#ifdef OUTPUT_INNER_FILE
 				save_imu_bin();
 #endif
 			}
@@ -670,7 +670,7 @@ namespace Ins401_Tool {
 
 	void Ins401_decoder::parse_gga() {
 		if (m_MI_file_switch == false) return;
-		if (strncmp((char*)raw.nmea, nmea_type(1), 6) == 0) {
+		if (strncmp((char*)raw.nmea, nmea_type(1), NMEA_HEADER_LEN) == 0) {
 			char *p = strtok((char*)raw.nmea, ",");
 			int pos = 0;
 			while (p) {
@@ -699,7 +699,7 @@ namespace Ins401_Tool {
 			if (raw.nmeabyte == 6) {
 				int i = 0;
 				char NMEA[8] = { 0 };
-				memcpy(NMEA, raw.nmea, 6);
+				memcpy(NMEA, raw.nmea, NMEA_HEADER_LEN);
 				for (i = 0; i < MAX_NMEA_TYPES; i++) {
 					if (strcmp(NMEA, nmea_type(i)) == 0) {
 						raw.nmea_flag = 2;
@@ -787,13 +787,12 @@ namespace Ins401_Tool {
 				}
 				else {
 					crc_error_num++;
-					create_file(f_log, ".log", NULL);
-					fprintf(f_log, "crc failed read type = %04X, len = %d, crc = %d, calc crc = %d\n", raw.packet_type, raw.length, packet_crc, crc);
+					//create_file(f_log, ".log", NULL);
+					//fprintf(f_log, "crc failed read type = %04X, len = %d, crc = %d, calc crc = %d\n", raw.packet_type, raw.length, packet_crc, crc);
 				}
 				raw.flag = 0;
 				raw.nbyte = 0;
 				raw.length = 0;
-				//raw.packet_type = 0;
 			}
 		}
 		return ret;

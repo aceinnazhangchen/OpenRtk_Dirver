@@ -1,14 +1,15 @@
 #include "DecodeThread.h"
 #include <QDir>
+#include <QProcess>
 #include <math.h>
 #include "common.h"
+#include "rtcm.h"
+#include "gnss_math.h"
 #include "openrtk_user.h"
 #include "openrtk_inceptio.h"
 #include "mixed_raw.h"
 #include "imu_raw.h"
-#include "rtcm.h"
-#include "gnss_math.h"
-#include <QProcess>
+#include "beidou.h"
 
 DecodeThread::DecodeThread(QObject *parent)
 	: QThread(parent)
@@ -22,6 +23,7 @@ DecodeThread::DecodeThread(QObject *parent)
 	m_RTK330LA_Analysis = new RTK330LA_Tool::RTK330LA_Analysis(this);
 	ins401_decoder = new Ins401_Tool::Ins401_decoder();
 	e2e_deocder = new E2E::E2E_protocol();
+	npos122_decoder = new NPOS122_Tool::NPOS122_decoder();
 }
 
 DecodeThread::~DecodeThread()
@@ -61,6 +63,15 @@ void DecodeThread::run()
 		case emDecodeFormat_Convbin:
 			decode_rtcm_convbin();
 			break;
+		case emDecodeFormat_RTCM_2_HEX:
+			decode_rtcm_2_hex();
+			break;
+		case emDecodeFormat_Beidou:
+			decode_beidou();
+			break;
+		case emDecodeFormat_NPOS112:
+			decode_npos112();
+			break;
 		default:
 			break;
 		}
@@ -94,7 +105,12 @@ void DecodeThread::setKmlFrequency(int frequency)
 	Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
 }
 
-void DecodeThread::setDateTime(QString time)
+void DecodeThread::setDateTimeStr(QString time)
+{
+	m_datatime_str = time;
+}
+
+void DecodeThread::setDateTime(QDateTime time)
 {
 	m_datatime = time;
 }
@@ -127,22 +143,22 @@ void DecodeThread::decode_openrtk_user()
 		int read_size = 0;
 		int readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
-		set_output_user_file(1);
-		set_save_bin(1);
-		set_base_user_file_name(m_OutBaseName.toLocal8Bit().data());
+		OpenRTK330LI_Tool::set_output_user_file(1);
+		OpenRTK330LI_Tool::set_save_bin(1);
+		OpenRTK330LI_Tool::set_base_user_file_name(m_OutBaseName.toLocal8Bit().data());
 		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
 		while (!feof(file)) {
 			if (m_isStop) break;
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
 			read_size += readcount;
 			for (int i = 0; i < readcount; i++) {
-				ret = input_user_raw(read_cache[i]);
+				ret = OpenRTK330LI_Tool::input_user_raw(read_cache[i]);
 			}
 			double percent = (double)read_size / (double)file_size * 10000;
 			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
 		}
-		write_kml_files();
-		close_user_all_log_file();
+		OpenRTK330LI_Tool::write_kml_files();
+		OpenRTK330LI_Tool::close_user_all_log_file();
 		fclose(file);
 	}
 }
@@ -152,9 +168,9 @@ void DecodeThread::decode_openrtk_inceptio()
 	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
 	if (file) {
 		int ret = 0;
-		int file_size = getFileSize(file);
-		int read_size = 0;
-		int readcount = 0;
+		size_t file_size = getFileSize(file);
+		size_t read_size = 0;
+		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
 		RTK330LA_Tool::set_output_inceptio_file(1);
 		RTK330LA_Tool::set_base_inceptio_file_name(m_OutBaseName.toLocal8Bit().data());
@@ -165,7 +181,7 @@ void DecodeThread::decode_openrtk_inceptio()
 			if (m_isStop) break;
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
 			read_size += readcount;
-			for (int i = 0; i < readcount; i++) {
+			for (size_t i = 0; i < readcount; i++) {
 				ret = RTK330LA_Tool::input_inceptio_raw(read_cache[i]);
 				if (m_static_point_ecp &&ret == 1) {
 					if (RTK330LA_Tool::INCEPTIO_OUT_GNSS ==  RTK330LA_Tool::get_current_type()) {
@@ -367,7 +383,7 @@ void DecodeThread::decode_rtcm_convbin()
 	QString exeFile = "convbin.exe";
 	QFileInfo outDir(m_FileName);
 	QString command_cd = QString("cd /d %1 \n").arg(outDir.absoluteDir().absolutePath());
-	QString command = QString("%1 -r rtcm3 -v 3.04 -tr %2  -od -os -oi -ot -ol -f 7 \"%3\" -p %4").arg(QDir::currentPath()+QDir::separator()+ exeFile, m_datatime, m_FileName, m_OutBaseName+"_out.csv");
+	QString command = QString("%1 -r rtcm3 -v 3.04 -tr %2  -od -os -oi -ot -ol -f 7 \"%3\" -p %4").arg(QDir::currentPath()+QDir::separator()+ exeFile, m_datatime_str, m_FileName, m_OutBaseName+"_out.csv");
 	
 	QFile bat_file("run_conbin.bat");
 	if (!bat_file.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -378,4 +394,100 @@ void DecodeThread::decode_rtcm_convbin()
 	bat_file.write(command.toLocal8Bit());
 	bat_file.close();
 	system("run_conbin.bat");
+}
+
+void DecodeThread::decode_rtcm_2_hex()
+{
+	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
+	if (file) {
+		int64_t file_size = getFileSize(file);
+		int64_t read_size = 0;
+		int readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		gnss_rtcm_t rtcm = { 0 };
+		rtcm_t* rcv0 = rtcm.rcv;
+		char file_name[256] = { 0 };
+		sprintf(file_name, "%s_byte.txt", m_OutBaseName.toLocal8Bit().data());
+		FILE* byte_file = fopen(file_name, "w");
+		rcv0->time.time =  m_datatime.toTime_t();
+		//set_approximate_time(2022, 17, rcv0);
+		while (!feof(file)) {
+			if (m_isStop) break;
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (int i = 0; i < readcount; i++) {
+				//e2e_deocder->input_data(read_cache[i]);
+				int ret = input_rtcm3(read_cache[i], 0, &rtcm);
+				if (is_complete_rtcm()) {
+					//rcv0->buff, rcv0->len + 3;
+					int size = rcv0->len + 3;
+					fprintf(byte_file,"%lld,", rcv0->time.time, size);
+					for (int i = 0; i < size; i++) {
+						fprintf(byte_file, " %d", rcv0->buff[i]);
+					}
+					fprintf(byte_file,"\n");
+				}
+			}
+			double percent = (double)read_size / (double)file_size * 10000;
+			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		fclose(byte_file);
+		fclose(file);
+	}
+}
+
+void DecodeThread::decode_beidou()
+{
+	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
+	if (file) {
+		char dirname[256] = { 0 };
+		int ret = 0;
+		size_t file_size = getFileSize(file);
+		size_t read_size = 0;
+		size_t readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		beidou_Tool::set_output_beidou_file(1);
+		beidou_Tool::set_base_beidou_file_name(m_OutBaseName.toLocal8Bit().data());
+		while (!feof(file)) {
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (size_t i = 0; i < readcount; i++) {
+				ret = beidou_Tool::input_beidou_raw(read_cache[i]);
+			}
+			double percent = (double)read_size / (double)file_size * 10000;
+			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		beidou_Tool::write_beidou_kml_files();
+		beidou_Tool::close_beidou_all_log_file();
+		fclose(file);
+	}
+}
+
+void DecodeThread::decode_npos112()
+{
+	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
+	if (file && npos122_decoder) {
+		int8_t ret = 0;
+		int8_t ret_nmea = 0;
+		int64_t file_size = getFileSize(file);
+		int64_t read_size = 0;
+		size_t readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		npos122_decoder->init();
+		npos122_decoder->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
+		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
+		while (!feof(file)) {
+			if (m_isStop) break;
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (size_t i = 0; i < readcount; i++) {
+				ret_nmea = npos122_decoder->parse_nmea(read_cache[i]);
+				ret = npos122_decoder->input_data(read_cache[i]);
+			}
+			double percent = (double)read_size / (double)file_size * 10000;
+			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		npos122_decoder->finish();
+		fclose(file);
+	}
 }

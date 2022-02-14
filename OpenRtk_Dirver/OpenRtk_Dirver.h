@@ -12,6 +12,7 @@
 #include "MergeTools.h"
 #include "AnalysisTools.h"
 #include "SplitTools.h"
+#include "CsvAnalysisTools.h"
 
 enum emStates
 {
@@ -39,6 +40,7 @@ private:
 	MergeTools* m_MergeTools;
 	AnalysisTools* m_AnalysisTools;
 	SplitTools* m_SplitTools;
+	CsvAnalysisTools* m_CsvAnalysisTools;
 public slots:
 	void onSearchComPort();
 	void onOpenClose();
@@ -51,4 +53,5 @@ public slots:
 	void onMergeWidgetOpen();
 	void onAnalysisWidgetOpen();
 	void onSplitWidgetOpen();
+	void onCsvAnalysisWidgetOpen();
 };

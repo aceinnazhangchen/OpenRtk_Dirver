@@ -1,11 +1,22 @@
 #pragma once
 #include <stdint.h>
-#include "openrtk_user.h"
+//#include "openrtk_user.h"
 
 #define MAX_INCEPTIO_PACKET_TYPES 12
 
-#pragma pack(push, 1)
 namespace RTK330LA_Tool {
+#pragma pack(push, 1)
+	typedef struct {
+		uint8_t nmea_flag;
+		uint8_t flag;
+		uint8_t header_len;
+		uint8_t header[4];
+		uint32_t nbyte;
+		uint8_t buff[256];
+		uint32_t nmeabyte;
+		uint8_t nmea[256];
+		uint8_t ntype;
+	} usrRaw;
 
 	typedef struct {
 		/* IMU */
@@ -53,7 +64,6 @@ namespace RTK330LA_Tool {
 		uint32_t pust_check : 1;
 		uint32_t rexerved : 8;
 	} status_bit_t;
-
 
 	typedef struct
 	{
@@ -219,6 +229,7 @@ namespace RTK330LA_Tool {
 	extern int input_inceptio_raw(uint8_t data);
 
 	extern uint8_t get_current_type();
-	extern inceptio_gN_t * get_gnss_sol();
 	extern inceptio_s1_t * get_imu_raw();
+	extern inceptio_gN_t * get_gnss_sol();
+	extern inceptio_iN_t * ger_ins_sol();
 }

@@ -135,7 +135,7 @@ void MergeThread::mergeRtcmImuFile() {
 		while (!feof(m_rtcmFile) && !feof(m_imuFile)) {
 			if (m_isStop) break;
 			int ret = readOneImu();
-			user_s1_t* pak = getImuPak();
+			imu_t* pak = getImuPak();
 			per10Hz = pak->GPS_TimeOfWeek / 100;
 			if (ret = 1 && per10Hz != last_per10Hz) {
 				last_per10Hz = per10Hz;
@@ -596,25 +596,25 @@ int MergeThread::readOneImu()
 		fread(&c, sizeof(char), 1, m_imuFile);
 		ret = input_imu_raw(c, out_msg);
 		if (1 == ret) {
-			user_s1_t* pak = getImuPak();
+			imu_t* pak = getImuPak();
 			if (pak->GPS_Week == 0) {
 				m_imubuff.clear();
 				continue;
 			}
 			if (pak->GPS_TimeOfWeek % 100 == 0 || (pak->GPS_TimeOfWeek / 10 > last_TimeOfWeek/10 && last_TimeOfWeek > 0)) {
 				sprintf(imu_buffer, IMU_FLAG);
-				memcpy(imu_buffer + ACEINNA_HEAD_SIZE, pak, sizeof(user_s1_t));
+				memcpy(imu_buffer + ACEINNA_HEAD_SIZE, pak, sizeof(imu_t));
 				m_imubuff.append(imu_buffer, IMU_CONST_SIZE + ACEINNA_HEAD_SIZE);
 				UpdateProcess(ACEINNA_HEAD_SIZE + IMU_CONST_SIZE+2);
-				fprintf(m_logFile, "$IMU,week:%d,sec:%d,len:%llu\n", pak->GPS_Week, pak->GPS_TimeOfWeek, sizeof(user_s1_t));
+				fprintf(m_logFile, "$IMU,week:%d,sec:%d,len:%llu\n", pak->GPS_Week, pak->GPS_TimeOfWeek, sizeof(imu_t));
 				break;
 			}
 			else {
 				sprintf(imu_buffer, IMU_FLAG);
-				memcpy(imu_buffer + ACEINNA_HEAD_SIZE, pak, sizeof(user_s1_t));
+				memcpy(imu_buffer + ACEINNA_HEAD_SIZE, pak, sizeof(imu_t));
 				fwrite(imu_buffer, 1, IMU_CONST_SIZE + ACEINNA_HEAD_SIZE, m_outFile);
 				UpdateProcess(ACEINNA_HEAD_SIZE + IMU_CONST_SIZE + 2);
-				fprintf(m_logFile, "$IMU,week:%d,sec:%d,len:%llu\n", pak->GPS_Week, pak->GPS_TimeOfWeek, sizeof(user_s1_t));
+				fprintf(m_logFile, "$IMU,week:%d,sec:%d,len:%llu\n", pak->GPS_Week, pak->GPS_TimeOfWeek, sizeof(imu_t));
 			}
 			last_TimeOfWeek = pak->GPS_TimeOfWeek;
 		}

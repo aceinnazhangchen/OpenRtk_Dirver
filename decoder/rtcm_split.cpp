@@ -29,6 +29,7 @@ void Rtcm_Split::init()
 	nav_file = NULL;
 	log_file = NULL;
 	time_split_file = NULL;
+	rtcm.time.time = time_range_start - (time_range_start % 86400);
 }
 
 void Rtcm_Split::set_base_file_name(char * file_name)

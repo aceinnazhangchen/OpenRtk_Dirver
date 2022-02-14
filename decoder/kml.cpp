@@ -11,7 +11,6 @@ Kml_Generator * Kml_Generator::m_instance = NULL;
 
 Kml_Generator::Kml_Generator()
 {
-	ins_kml_frequency = 1000;
 	kml_description = 1;
 	f_gnss_kml = NULL;
 	f_ins_kml = NULL;
@@ -43,6 +42,7 @@ void Kml_Generator::init()
 	gnss_sol_list.clear();
 	ins_sol_list.clear();
 	ins_kml_frequency = 1000;
+	status_type_define = emAceinnaStatusType;
 }
 
 void Kml_Generator::set_kml_frequency(int frequency)
@@ -50,13 +50,22 @@ void Kml_Generator::set_kml_frequency(int frequency)
 	ins_kml_frequency = frequency;
 }
 
+void Kml_Generator::set_status_type_define(emStatusTypeDefine define)
+{
+	status_type_define = define;
+}
+
 void Kml_Generator::open_files(char * file_base_name)
 {
 	char file_name[256] = { 0 };
-	sprintf(file_name, "%s_%s", file_base_name, "gnss.kml");
-	f_gnss_kml = fopen(file_name, "wb");
-	sprintf(file_name, "%s_%s", file_base_name, "ins.kml");
-	f_ins_kml = fopen(file_name, "wb");
+	if (gnss_sol_list.size() > 0) {
+		sprintf(file_name, "%s_%s", file_base_name, "gnss.kml");
+		f_gnss_kml = fopen(file_name, "wb");
+	}
+	if (ins_sol_list.size() > 0) {
+		sprintf(file_name, "%s_%s", file_base_name, "ins.kml");
+		f_ins_kml = fopen(file_name, "wb");
+	}
 }
 
 void Kml_Generator::write_files()
@@ -85,6 +94,47 @@ void Kml_Generator::append_ins(kml_ins_t & ins)
 		(((gps_millisecs + 5) / 10) * 10) % ins_kml_frequency == 0) {//1000 = 1hz;500 = 2hz;200 = 5hz;100 = 10hz;10 = 100hz x hz = 1000/x
 		ins_sol_list.push_back(ins);
 	}
+}
+
+int Kml_Generator::get_gnss_status_color(int status)
+{
+	int color = 0;
+	switch (status_type_define) {
+	case emAceinnaStatusType:
+	{
+		color = status;
+	}break;
+	default:
+		break;
+	}
+	return color;
+}
+
+int Kml_Generator::get_ins_status_color(int status)
+{
+	int color = 0;
+	switch (status_type_define) {
+	case emAceinnaStatusType:
+	{
+		color = status;
+	}break;
+	case emNpos122StatusType:
+	{
+		//maybe same as novatel status type
+		if (status == 16 || status == 53) {
+			color = 1;
+		}else if (status == 17 || status == 54) {
+			color = 2;
+		}else if (status == 50 || status == 56) {
+			color = 4;
+		}else if (status == 34 || status == 55) {
+			color = 5;
+		}
+	}break;
+	default:
+		break;
+	}
+	return color;
 }
 
 void Kml_Generator::write_header(FILE * kml_file, int ntype)
@@ -185,13 +235,19 @@ void Kml_Generator::write_gnss_point(kml_gnss_t * gnss, int begin_end)
 					gnss->north_vel, gnss->east_vel, -gnss->up_vel);
 				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Att(r,p,h):</TD><TD>%d</TD><TD>%d</TD><TD>%f</TD><TD>(deg,approx)</TD></TR>\n",
 					0, 0, track_ground);
-				fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Mode:</TD><TD>%d</TD><TD>%s</TD></TR>\n",
-					0, gnss_postype[gnss->position_type]);
+				if (status_type_define == emAceinnaStatusType) {
+					fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Mode:</TD><TD>%d</TD><TD>%s</TD></TR>\n",
+						0, gnss_postype[gnss->position_type]);
+				}
+				else {
+					fprintf(f_gnss_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Mode:</TD><TD>%d</TD><TD>%d</TD></TR>\n",
+						0, gnss->position_type);
+				}
 				fprintf(f_gnss_kml, "</TABLE>\n");
 				fprintf(f_gnss_kml, "]]></description>\n");
 			}
 			//=== description end ===
-			fprintf(f_gnss_kml, "<styleUrl>#P%d</styleUrl>\n", gnss->position_type);
+			fprintf(f_gnss_kml, "<styleUrl>#P%d</styleUrl>\n", get_gnss_status_color(gnss->position_type));
 			fprintf(f_gnss_kml, "<Style>\n");
 			fprintf(f_gnss_kml, "<IconStyle>\n");
 			fprintf(f_gnss_kml, "<heading>%f</heading>\n", track_ground);
@@ -264,13 +320,19 @@ void Kml_Generator::write_ins_point(kml_ins_t * ins, int begin_end)
 					ins->north_velocity, ins->east_velocity, -ins->up_velocity);
 				fprintf(f_ins_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Att(r,p,h):</TD><TD>%f</TD><TD>%f</TD><TD>%f</TD><TD>(deg,approx)</TD></TR>\n",
 					ins->roll, ins->pitch, ins->heading);
-				fprintf(f_ins_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Mode:</TD><TD>%s</TD><TD>%s</TD></TR>\n",
-					ins_status[ins->ins_status], ins_postype[ins->ins_position_type]);
+				if (status_type_define == emAceinnaStatusType) {
+					fprintf(f_ins_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Mode:</TD><TD>%s</TD><TD>%s</TD></TR>\n",
+						ins_status[ins->ins_status], ins_postype[ins->ins_position_type]);
+				}
+				else {
+					fprintf(f_ins_kml, "<TR ALIGN=RIGHT><TD ALIGN=LEFT>Mode:</TD><TD>%d</TD><TD>%d</TD></TR>\n",
+						ins->ins_status, ins->ins_position_type);
+				}
 				fprintf(f_ins_kml, "</TABLE>\n");
 				fprintf(f_ins_kml, "]]></description>\n");
 			}
 			//=== description end ===
-			fprintf(f_ins_kml, "<styleUrl>#P%d</styleUrl>\n", ins->ins_position_type);
+			fprintf(f_ins_kml, "<styleUrl>#P%d</styleUrl>\n", get_ins_status_color(ins->ins_position_type));
 			fprintf(f_ins_kml, "<Style>\n");
 			fprintf(f_ins_kml, "<IconStyle>\n");
 			fprintf(f_ins_kml, "<heading>%f</heading>\n", ins->heading);

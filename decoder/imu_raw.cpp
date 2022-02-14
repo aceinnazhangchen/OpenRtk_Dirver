@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "common.h"
 #include "imu_raw.h"
-#include "rtcm.h"
 
 typedef struct {
 	uint32_t nbyte;
@@ -10,7 +8,7 @@ typedef struct {
 }imu_raw_t;
 
 static imu_raw_t imu_raw = { 0 };
-static user_s1_t pak = { 0 };
+static imu_t pak = { 0 };
 FILE* imu_out = NULL;
 
 char base_imu_file_name[256] = { 0 };
@@ -39,7 +37,7 @@ void parse_imu_packet_payload(uint8_t* buff, uint32_t nbyte, char* out_msg) {
 
 	uint8_t payload_lenth = buff[2];
 	uint8_t* payload = buff + 3;
-	size_t packet_size = sizeof(user_s1_t);
+	size_t packet_size = sizeof(imu_t);
 	if (out_msg == NULL) return;
 	if (payload_lenth == packet_size) {
 		memcpy(&pak, payload, packet_size);
@@ -77,7 +75,7 @@ extern int input_imu_raw(uint8_t c, char* out_msg) {
 	return ret;
 }
 
-extern user_s1_t * getImuPak()
+extern imu_t * getImuPak()
 {
 	return &pak;
 }

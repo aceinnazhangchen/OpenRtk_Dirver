@@ -6,6 +6,7 @@
 #include "ins401.h"
 #include "ins_save_parse.h"
 #include "beidou.h"
+#include "NPOS122_decoder.h"
 
 #ifndef  WIN32
 #include<ctype.h>
@@ -30,20 +31,20 @@ void decode_openrtk330li_interface(char* filename)
 		size_t read_size = 0;
 		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
-		set_output_user_file(1);
+		OpenRTK330LI_Tool::set_output_user_file(1);
 		createDirByFilePath(filename, dirname);
-		set_base_user_file_name(dirname);
+		OpenRTK330LI_Tool::set_base_user_file_name(dirname);
 		while (!feof(file)) {
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
 			read_size += readcount;
 			for (size_t i = 0; i < readcount; i++) {
-				ret = input_user_raw(read_cache[i]);
+				ret = OpenRTK330LI_Tool::input_user_raw(read_cache[i]);
 			}
 			double percent = (double)read_size / (double)file_size * 100;
 			printf("Process : %4.1f %%\r", percent);
 		}
-		write_kml_files();
-		close_user_all_log_file();
+		OpenRTK330LI_Tool::write_kml_files();
+		OpenRTK330LI_Tool::close_user_all_log_file();
 		fclose(file);
 		printf("\nfinished\r\n");
 	}
@@ -143,6 +144,36 @@ void decode_beidou_interface(char* filename)
 		}
 		beidou_Tool::write_beidou_kml_files();
 		beidou_Tool::close_beidou_all_log_file();
+		fclose(file);
+		printf("\nfinished\r\n");
+	}
+}
+
+void decode_npos122_interface(char* filename) {
+	FILE* file = fopen(filename, "rb");
+	NPOS122_Tool::NPOS122_decoder* npos122_decoder = new NPOS122_Tool::NPOS122_decoder();
+	if (file && npos122_decoder) {
+		int8_t ret = 0;
+		int8_t ret_nmea = 0;
+		int64_t file_size = getFileSize(file);
+		int64_t read_size = 0;
+		size_t readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		char dirname[256] = { 0 };
+		createDirByFilePath(filename, dirname);
+		npos122_decoder->init();
+		npos122_decoder->set_base_file_name(dirname);
+		while (!feof(file)) {
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (size_t i = 0; i < readcount; i++) {
+				ret_nmea = npos122_decoder->parse_nmea(read_cache[i]);
+				ret = npos122_decoder->input_data(read_cache[i]);
+			}
+			double percent = (double)read_size / (double)file_size * 100;
+			printf("Process : %4.1f %%\r", percent);
+		}
+		npos122_decoder->finish();
 		fclose(file);
 		printf("\nfinished\r\n");
 	}

@@ -8,7 +8,7 @@
 #include <QTimer>
 #include <QTime>
 #include "rtcm.h"
-#include "openrtk_user.h"
+#include "common.h"
 
 #define MAX_STREAM_NUM 3
 enum emPort {
@@ -122,7 +122,7 @@ private:
 
 	uint32_t send_imu_time;
 
-	user_s1_t m_last_imu;
+	imu_t m_last_imu;
 	gnss_rtcm_t gnss;
 signals:
 	void sgnShowReadWriteSize(int index, int read, int write);

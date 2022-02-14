@@ -1,7 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "openrtk_user.h"
-
+#include "common.h"
 #ifdef __cplusplus
 extern "C"
 {
@@ -11,7 +10,7 @@ extern "C"
 
 	extern int input_imu_raw(uint8_t c, char* out_msg);
 
-	extern user_s1_t* getImuPak();
+	extern imu_t* getImuPak();
 
 #ifdef __cplusplus
 }

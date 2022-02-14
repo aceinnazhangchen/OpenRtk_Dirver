@@ -11,7 +11,7 @@ namespace Ins401_Tool {
 #pragma pack(push, 1)
 	typedef struct {
 		uint8_t nmea_flag;
-		uint8_t flag;
+		uint8_t flag;			//headerÊÇ·ñÂú×ã°üµÄÌõ¼ş 0:Î´Âú×ã, 1:Âú×ã
 		uint8_t header_len;
 		uint8_t header[4];
 		uint32_t nbyte;
@@ -284,7 +284,6 @@ namespace Ins401_Tool {
 		uint16_t	rtk_heading_al;
 		gnss_sol_integ_bit	status_bit;
 	}gnss_integ_t;
-
 
 #pragma pack(pop)
 

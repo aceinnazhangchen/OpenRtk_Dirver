@@ -105,8 +105,11 @@ void DecodeTools::onDecodeClicked()
 	}	
 	m_DecodeThread->m_static_point_ecp = m_AnalysisConfigUI->isStaticTotalChecked();
 	m_DecodeThread->setMIFileSwitch(m_AnalysisConfigUI->isMITableChecked());
-	QString time = ui.dateTimeEdit->dateTime().toString("yyyy/MM/dd HH:mm:ss");
+	//QString time = ui.dateTimeEdit->dateTime().toString("yyyy/MM/dd HH:mm:ss");
+	QDateTime time = ui.dateTimeEdit->dateTime();
 	m_DecodeThread->setDateTime(time);
+	QString time_str = time.toString("yyyy/MM/dd HH:mm:ss");
+	m_DecodeThread->setDateTimeStr(time_str);	
 	m_DecodeThread->start();
 	setOperable(false);
 }
