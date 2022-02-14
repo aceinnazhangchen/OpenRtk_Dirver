@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>qrc;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Translation Files">
+      <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
+      <Extensions>ts</Extensions>
+    </Filter>
+    <Filter Include="decoder">
+      <UniqueIdentifier>{16f97e0d-077b-411d-b940-39726d9f3b92}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="MountAngleCalculation.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+    <QtUic Include="MountAngleCalculation.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtMoc Include="MountAngleCalculation.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClCompile Include="MountAngleCalculation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfigFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\common.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\E2E_protocol.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\gnss_math.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\imu_raw.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\ins_save_parse.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\ins401.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\kml.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\mixed_raw.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\model.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\openrtk_inceptio.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\openrtk_user.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\rtcm.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\rtcm_split.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\rtkcmn.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="MountAngle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleDecodeThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DriveStatus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CalculationCall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LoadInsTextFileThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ConfigFile.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="MountAngle.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="SimpleDecodeThread.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="CalculationCall.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="LoadInsTextFileThread.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\decoder\common.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\E2E_protocol.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\gnss_datatype.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\gnss_math.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\imu_raw.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\ins_save_parse.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\ins401.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\kml.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\mixed_raw.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\model.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\openrtk_inceptio.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\openrtk_user.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\rtcm.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\rtcm_split.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\rtkcmn.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\rtklib_core.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="DriveStatus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

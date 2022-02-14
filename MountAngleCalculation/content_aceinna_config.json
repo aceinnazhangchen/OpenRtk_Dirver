@@ -1,0 +1,96 @@
+{
+    "CarrierMode": 0,
+    "GNSSinterrupt": [
+    ],
+    "IsUseMisAlignment": 1,
+    "MisAlignment": [
+        0,
+        0,
+        0
+    ],
+    "MisAlignmentAiax": [
+        1,
+        2,
+        3
+    ],
+    "accBias": [
+        0,
+        0,
+        0
+    ],
+    "accScale": [
+        1,
+        1,
+        1
+    ],
+    "attitueRPH": [
+        0,
+        0,
+        0
+    ],
+    "fileOutputType": 2,
+    "gnssDataRate": 1,
+    "gnssDataType": 3,
+    "gnssOutputDataRate": 1,
+    "gnssSensorType": 0,
+    "gnssfileNme": "",
+    "gyroBias": [
+        0,
+        0,
+        0
+    ],
+    "gyroScale": [
+        1,
+        1,
+        1
+    ],
+    "imuDataRate": 100,
+    "imuSensorType": 1,
+    "initialAttitudeMode": 0,
+    "insOutputDataRate": 10,
+    "insfileName": "",
+    "isKmlOutput": 0,
+    "isOnlineMisAlignmentEst": 0,
+    "isTiltCalibrationRIGHT": 0,
+    "isUseDuaAnt": 0,
+    "isUseGNSSVel": 0,
+    "isUseNHC": 0,
+    "isUseOdo": 1,
+    "isUseTiltCalibration": 0,
+    "isUseZUPT": 1,
+    "isUseZUPTLOCK": 1,
+    "isUserOutPut": 1,
+    "kmlOutputDateRate": 1,
+    "odoDataRate": 10,
+    "odoLeverarm": [
+        1.27,
+        -0.08,
+        -0.72
+    ],
+    "odoScale": 1,
+    "odofileName": "",
+    "priLeverArm": [
+        1.27,
+        -0.08,
+        -0.72
+    ],
+    "procType": 0,
+    "procfileNme": "F:/data/2022/42/openrtk_log_20220211_131516/user_2022_02_11_13_15_16_d\\user_2022_02_11_13_15_16_process",
+    "profiletype": 512,
+    "rotationRBV": [
+        0,
+        0,
+        0
+    ],
+    "secLeverArm": [
+        0,
+        0,
+        0
+    ],
+    "useGNSSRate": 1,
+    "userLeverArm": [
+        1.27,
+        -0.08,
+        -0.72
+    ]
+}
