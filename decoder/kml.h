@@ -49,6 +49,7 @@ private:
 public:
 	static Kml_Generator* Instance();
 	static void createInstance();
+	uint32_t inskml_rate ;
 private:
 	static Kml_Generator* m_instance;
 public:

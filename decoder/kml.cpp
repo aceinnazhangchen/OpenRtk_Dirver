@@ -15,6 +15,7 @@ Kml_Generator::Kml_Generator()
 	kml_description = 1;
 	f_gnss_kml = NULL;
 	f_ins_kml = NULL;
+	inskml_rate = 10;
 	init();
 }
 
