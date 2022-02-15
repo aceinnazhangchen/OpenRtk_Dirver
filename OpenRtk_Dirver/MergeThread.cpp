@@ -136,7 +136,7 @@ void MergeThread::mergeRtcmImuFile() {
 			if (m_isStop) break;
 			int ret = readOneImu();
 			imu_t* pak = getImuPak();
-			per10Hz = pak->GPS_TimeOfWeek / 100;
+			per10Hz = pak->gps_millisecs / 100;
 			if (ret = 1 && per10Hz != last_per10Hz) {
 				last_per10Hz = per10Hz;
 				while (!feof(m_rtcmFile)) {
@@ -152,13 +152,13 @@ void MergeThread::mergeRtcmImuFile() {
 						double second = time2gpst(m_gnss.obs[0].time, &week);
 						uint32_t nsec = second * 1000;
 						if (week == pak->GPS_Week) {
-							if (last_TimeOfWeek <= nsec && nsec <= pak->GPS_TimeOfWeek) {
+							if (last_TimeOfWeek <= nsec && nsec <= pak->gps_millisecs) {
 								fwrite(m_roverbuff.data(), 1, m_roverbuff.size(), m_outFile);
 								fprintf(m_logFile, "rover,week:%d,sec:%d,size:%d\n", week, nsec, m_roverbuff.size());
 								m_roverbuff.clear();
 								//break;
 							}
-							else if (nsec > pak->GPS_TimeOfWeek) {
+							else if (nsec > pak->gps_millisecs) {
 								//fprintf(m_logFile, "later rover,week:%d,sec:%d,size:%d\n", week, nsec, m_roverbuff.size());
 								break;
 							}
@@ -601,12 +601,12 @@ int MergeThread::readOneImu()
 				m_imubuff.clear();
 				continue;
 			}
-			if (pak->GPS_TimeOfWeek % 100 == 0 || (pak->GPS_TimeOfWeek / 10 > last_TimeOfWeek/10 && last_TimeOfWeek > 0)) {
+			if (pak->gps_millisecs % 100 == 0 || (pak->gps_millisecs / 10 > last_TimeOfWeek/10 && last_TimeOfWeek > 0)) {
 				sprintf(imu_buffer, IMU_FLAG);
 				memcpy(imu_buffer + ACEINNA_HEAD_SIZE, pak, sizeof(imu_t));
 				m_imubuff.append(imu_buffer, IMU_CONST_SIZE + ACEINNA_HEAD_SIZE);
 				UpdateProcess(ACEINNA_HEAD_SIZE + IMU_CONST_SIZE+2);
-				fprintf(m_logFile, "$IMU,week:%d,sec:%d,len:%llu\n", pak->GPS_Week, pak->GPS_TimeOfWeek, sizeof(imu_t));
+				fprintf(m_logFile, "$IMU,week:%d,sec:%d,len:%llu\n", pak->GPS_Week, pak->gps_millisecs, sizeof(imu_t));
 				break;
 			}
 			else {
@@ -614,9 +614,9 @@ int MergeThread::readOneImu()
 				memcpy(imu_buffer + ACEINNA_HEAD_SIZE, pak, sizeof(imu_t));
 				fwrite(imu_buffer, 1, IMU_CONST_SIZE + ACEINNA_HEAD_SIZE, m_outFile);
 				UpdateProcess(ACEINNA_HEAD_SIZE + IMU_CONST_SIZE + 2);
-				fprintf(m_logFile, "$IMU,week:%d,sec:%d,len:%llu\n", pak->GPS_Week, pak->GPS_TimeOfWeek, sizeof(imu_t));
+				fprintf(m_logFile, "$IMU,week:%d,sec:%d,len:%llu\n", pak->GPS_Week, pak->gps_millisecs, sizeof(imu_t));
 			}
-			last_TimeOfWeek = pak->GPS_TimeOfWeek;
+			last_TimeOfWeek = pak->gps_millisecs;
 		}
 	}
 	return ret;

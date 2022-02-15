@@ -9,6 +9,9 @@ CsvAnalysisTools::CsvAnalysisTools(QWidget *parent)
 {
 	ui.setupUi(this);
 	setAcceptDrops(true);
+
+	connect(ui.select_btn, SIGNAL(clicked()), this, SLOT(onSelectFileClicked()));
+	connect(ui.analysis_btn, SIGNAL(clicked()), this, SLOT(onAnalysisClicked()));
 }
 
 CsvAnalysisTools::~CsvAnalysisTools()

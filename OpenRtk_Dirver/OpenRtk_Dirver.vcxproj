@@ -116,6 +116,7 @@
     <ClCompile Include="AnalysisConfigUI.cpp" />
     <ClCompile Include="AnalysisThread.cpp" />
     <ClCompile Include="AnalysisTools.cpp" />
+    <ClCompile Include="CsvAnalysisThread.cpp" />
     <ClCompile Include="CsvAnalysisTools.cpp" />
     <ClCompile Include="DecodeThread.cpp" />
     <ClCompile Include="DecodeTools.cpp" />
@@ -127,6 +128,7 @@
     <ClCompile Include="SingleStream.cpp" />
     <ClCompile Include="SplitThread.cpp" />
     <ClCompile Include="SplitTools.cpp" />
+    <ClCompile Include="StaticAnalysis.cpp" />
     <ClCompile Include="StreamConfigUI.cpp" />
     <ClCompile Include="StreamManager.cpp" />
     <QtRcc Include="OpenRtk_Dirver.qrc" />
@@ -170,7 +172,9 @@
     <ClInclude Include="..\decoder\rtcm_split.h" />
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
+    <QtMoc Include="StaticAnalysis.h" />
     <QtMoc Include="CsvAnalysisTools.h" />
+    <QtMoc Include="CsvAnalysisThread.h" />
     <ClInclude Include="rtk330la_decoder.h" />
     <QtMoc Include="RTK330LA_Analysis.h" />
     <QtMoc Include="AnalysisConfigUI.h" />

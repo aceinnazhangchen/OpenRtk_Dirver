@@ -1,0 +1,38 @@
+#pragma once
+
+#include <QObject>
+#include "common.h"
+#include "Analysis_Define.h"
+
+class StaticAnalysis : public QObject
+{
+	Q_OBJECT
+
+public:
+	StaticAnalysis(QObject *parent);
+	~StaticAnalysis();
+	void init();
+	void set_out_base_name(QString basename);
+	void append_gnss_sol(static_gnss_t * gnss);
+	void append_imu_raw(imu_t * imu);
+	void set_thres(double cep_level, double hor_dist_cep, double ver_dist_cep, double hor_vel_cep, double ver_vel_cep, int32_t start_line);
+	void summary();
+protected:
+	void create_file(FILE * &file, const char * suffix, const char * title);
+	void static_point_cep();
+	void imu_summary();
+private:
+	QList<static_gnss_t> m_gnss_sol_list;
+	QString m_OutBaseName;
+	double cep_level_thres;
+	double hor_dist_cep_thres;
+	double ver_dist_cep_thres;
+	double hor_vel_cep_thres;
+	double ver_vel_cep_thres;
+	int32_t append_num;
+	int32_t m_start_line;
+	QList<imu_t> m_raw_imu_list;
+	imu_total_t m_imu_total;
+	FILE* imu_1hz_file;
+	FILE* imu_g_1hz_file;
+};

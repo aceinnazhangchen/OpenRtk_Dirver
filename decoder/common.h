@@ -25,7 +25,7 @@ extern "C" {
 	typedef struct
 	{
 		uint16_t GPS_Week;
-		uint32_t GPS_TimeOfWeek;
+		uint32_t gps_millisecs;
 		float x_accel;
 		float y_accel;
 		float z_accel;

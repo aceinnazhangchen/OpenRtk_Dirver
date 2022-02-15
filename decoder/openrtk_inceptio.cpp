@@ -188,10 +188,22 @@ namespace RTK330LA_Tool {
 				sprintf(file_name, "%s_gN.csv", base_inceptio_file_name);
 				fgN = fopen(file_name, "w");
 				if (VERSION_EARLY == data_version) {
-					if (fgN) fprintf(fgN, "GPS_Week(),GPS_TimeofWeek(s),positionMode(),latitude(deg),longitude(deg),height(m),numberOfSVs(),hdop(),diffage(),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),latitude_std(m),longitude_std(m),height_std(m)\n");
+					if (fgN) fprintf(fgN, 
+						"GPS_Week(),GPS_TimeofWeek(s),positionMode()"
+						",latitude(deg),longitude(deg),height(m)"
+						",numberOfSVs(),hdop(),diffage()"
+						",velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s)"
+						",latitude_std(m),longitude_std(m),height_std(m)\n");
 				}
 				else if (VERSION_24_01_21 == data_version) {
-					if (fgN) fprintf(fgN, "GPS_Week(),GPS_TimeofWeek(s),positionMode(),latitude(deg),longitude(deg),height(m),numberOfSVs(),hdop(),vdop(),tdop(),diffage(),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),latitude_std(m),longitude_std(m),height_std(m),pos_hor_pl(m),pos_ver_pl(m),pos_status(),vel_hor_pl(m/s),vel_ver_pl(m/s),vel_status()\n");
+					if (fgN) fprintf(fgN, 
+						"GPS_Week(),GPS_TimeofWeek(s),positionMode()"
+						",latitude(deg),longitude(deg),height(m)"
+						",numberOfSVs(),hdop(),vdop(),tdop(),diffage()"
+						",velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s)"
+						",latitude_std(m),longitude_std(m),height_std(m)"
+						",pos_hor_pl(m),pos_ver_pl(m),pos_status()"
+						",vel_hor_pl(m/s),vel_ver_pl(m/s),vel_status()\n");
 				}
 			}
 			if (fgN) fprintf(fgN, log);

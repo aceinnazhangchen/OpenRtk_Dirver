@@ -42,7 +42,7 @@ void parse_imu_packet_payload(uint8_t* buff, uint32_t nbyte, char* out_msg) {
 	if (payload_lenth == packet_size) {
 		memcpy(&pak, payload, packet_size);
 		//gtime_t gtime = gpst2time(pak.GPS_Week, (double)pak.GPS_TimeOfWeek / 1000.0);
-		sprintf(out_msg, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", pak.GPS_Week, (double)pak.GPS_TimeOfWeek / 1000.0,
+		sprintf(out_msg, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", pak.GPS_Week, (double)pak.gps_millisecs / 1000.0,
 			pak.x_accel, pak.y_accel, pak.z_accel, pak.x_gyro, pak.y_gyro, pak.z_gyro);
 		write_imu_log_file(out_msg);
 	}

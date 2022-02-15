@@ -254,10 +254,10 @@ bool StreamManager::SendReplayData()
 			if (send_imu_time) {
 				send_imu_time += 10;
 			}
-			if (send_imu_time == 0 || send_imu_time >= m_last_imu.GPS_TimeOfWeek + 10) {
+			if (send_imu_time == 0 || send_imu_time >= m_last_imu.gps_millisecs + 10) {
 				ReadReplayFileByTime();
 			}
-			else if (send_imu_time >= m_last_imu.GPS_TimeOfWeek) {
+			else if (send_imu_time >= m_last_imu.gps_millisecs) {
 				SendPackage(TYPE_IMU);
 			}
 		}
@@ -320,7 +320,7 @@ void StreamManager::ReadReplayFileByTime()
 			SendPackage(stn);
 		}
 		else if (TYPE_IMU == stn) {
-			if (send_imu_time >= m_last_imu.GPS_TimeOfWeek) {
+			if (send_imu_time >= m_last_imu.gps_millisecs) {
 				SendPackage(stn);
 			}
 			break;
@@ -349,10 +349,10 @@ int StreamManager::ReadOnePackage()
 		else if (TYPE_IMU == stn) {
 			//log
 			memcpy(&m_last_imu, outbuff + ACEINNA_HEAD_SIZE, outlen - ACEINNA_HEAD_SIZE);
-			if (m_logFile) fprintf(m_logFile, "$IMU,len:%d,%d,%d\n", outlen, m_last_imu.GPS_Week, m_last_imu.GPS_TimeOfWeek);
+			if (m_logFile) fprintf(m_logFile, "$IMU,len:%d,%d,%d\n", outlen, m_last_imu.GPS_Week, m_last_imu.gps_millisecs);
 			//send data;
 			if (send_imu_time == 0) {
-				send_imu_time = m_last_imu.GPS_TimeOfWeek;
+				send_imu_time = m_last_imu.gps_millisecs;
 			}
 			m_imubuff.append((char*)outbuff, outlen);
 			break;

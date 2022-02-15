@@ -157,6 +157,12 @@
     <ClCompile Include="CsvAnalysisTools.cpp">
       <Filter>Source Files\Tools</Filter>
     </ClCompile>
+    <ClCompile Include="CsvAnalysisThread.cpp">
+      <Filter>Source Files\Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticAnalysis.cpp">
+      <Filter>Source Files\Analysis</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="StreamManager.h">
@@ -203,6 +209,12 @@
     </QtMoc>
     <QtMoc Include="CsvAnalysisTools.h">
       <Filter>Header Files\Tools</Filter>
+    </QtMoc>
+    <QtMoc Include="CsvAnalysisThread.h">
+      <Filter>Header Files\Thread</Filter>
+    </QtMoc>
+    <QtMoc Include="StaticAnalysis.h">
+      <Filter>Header Files\Analysis</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>

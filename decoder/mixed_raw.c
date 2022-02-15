@@ -98,7 +98,7 @@ void decode_aceinna_imu(uint8_t* buff) {
 	if (output_aceinna_file == 0)return;
 	imu_t pak = { 0 };
 	memcpy(&pak, buff, IMU_CONST_SIZE);
-	if (aceinna_imu_file) fprintf(aceinna_imu_file, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", pak.GPS_Week, (double)pak.GPS_TimeOfWeek / 1000.0,
+	if (aceinna_imu_file) fprintf(aceinna_imu_file, "%d,%11.4f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", pak.GPS_Week, (double)pak.gps_millisecs / 1000.0,
 		pak.x_accel, pak.y_accel, pak.z_accel, pak.x_gyro, pak.y_gyro, pak.z_gyro);
 }
 
