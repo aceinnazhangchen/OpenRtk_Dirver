@@ -446,7 +446,7 @@ namespace beidou_Tool {
 
 	void output_beidou_hG()
 	{
-		sprintf(beidou_output_msg, "%d,%11.4f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f\n",beidou_pak_hG.gps_week, (double)beidou_pak_hG.gps_millisecs ,
+		sprintf(beidou_output_msg, "%d,%11.4f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f\n",beidou_pak_hG.gps_week, (double)beidou_pak_hG.gps_millisecs / 1000,
 			beidou_pak_hG.length, beidou_pak_hG.heading, beidou_pak_hG.pitch, beidou_pak_hG.hdgstddev, beidou_pak_hG.ptchstddev);
 		write_beidou_log_file(beidou_raw.ntype, beidou_output_msg);
 		//txt
