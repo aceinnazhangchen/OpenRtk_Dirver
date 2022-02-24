@@ -4,10 +4,9 @@
 #include <QTime>
 #include <QList>
 #include "ins401.h"
-#include "Ins401_Analysis.h"
-#include "RTK330LA_Analysis.h"
 #include "E2E_protocol.h"
 #include "NPOS122_decoder.h"
+#include "StaticAnalysis.h"
 
 //ºÍUIÖÐË³ÐòÒ»ÖÂ
 enum emDecodeFormat {
@@ -68,8 +67,7 @@ private:
 	QDateTime m_datatime;
 public:
 	bool m_static_point_ecp;
-	Ins401_Tool::Ins401_Analysis* m_Ins401_Analysis;
-	RTK330LA_Tool::RTK330LA_Analysis* m_RTK330LA_Analysis;
+	StaticAnalysis* m_StaticAnalysis;
 signals:
 	void sgnProgress(int present, int msecs);
 	void sgnFinished();

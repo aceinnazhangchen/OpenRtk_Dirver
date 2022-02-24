@@ -6,6 +6,8 @@
 #include <QDropEvent>
 #include <QMimeData>
 #include <QTime>
+#include "CsvAnalysisThread.h"
+
 class CsvAnalysisTools : public QWidget
 {
 	Q_OBJECT
@@ -20,6 +22,7 @@ protected:
 private:
 	Ui::CsvAnalysisTools ui;
 	QTime m_TimeShow;
+	CsvAnalysisThread* m_CsvAnalysisThread;
 public slots:
 	void onSelectFileClicked();
 	void onAnalysisClicked();

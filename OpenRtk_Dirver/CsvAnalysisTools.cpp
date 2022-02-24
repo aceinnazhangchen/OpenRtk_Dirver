@@ -9,9 +9,12 @@ CsvAnalysisTools::CsvAnalysisTools(QWidget *parent)
 {
 	ui.setupUi(this);
 	setAcceptDrops(true);
-
+	m_CsvAnalysisThread = new CsvAnalysisThread(this);
 	connect(ui.select_btn, SIGNAL(clicked()), this, SLOT(onSelectFileClicked()));
 	connect(ui.analysis_btn, SIGNAL(clicked()), this, SLOT(onAnalysisClicked()));
+
+	connect(m_CsvAnalysisThread, SIGNAL(sgnProgress(int, int)), this, SLOT(onProcess(int, int)));
+	connect(m_CsvAnalysisThread, SIGNAL(sgnFinished()), this, SLOT(onFinished()));
 }
 
 CsvAnalysisTools::~CsvAnalysisTools()
@@ -58,6 +61,9 @@ void CsvAnalysisTools::onAnalysisClicked()
 	if (filename.isEmpty()) {
 		return;
 	}
+	m_CsvAnalysisThread->setFileName(filename);
+	m_CsvAnalysisThread->start();
+	setOperable(false);
 }
 
 void CsvAnalysisTools::onProcess(int present, int msecs)

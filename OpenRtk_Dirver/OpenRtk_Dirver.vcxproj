@@ -120,10 +120,8 @@
     <ClCompile Include="CsvAnalysisTools.cpp" />
     <ClCompile Include="DecodeThread.cpp" />
     <ClCompile Include="DecodeTools.cpp" />
-    <ClCompile Include="Ins401_Analysis.cpp" />
     <ClCompile Include="MergeThread.cpp" />
     <ClCompile Include="MergeTools.cpp" />
-    <ClCompile Include="RTK330LA_Analysis.cpp" />
     <ClCompile Include="rtk330la_decoder.cpp" />
     <ClCompile Include="SingleStream.cpp" />
     <ClCompile Include="SplitThread.cpp" />
@@ -176,9 +174,7 @@
     <QtMoc Include="CsvAnalysisTools.h" />
     <QtMoc Include="CsvAnalysisThread.h" />
     <ClInclude Include="rtk330la_decoder.h" />
-    <QtMoc Include="RTK330LA_Analysis.h" />
     <QtMoc Include="AnalysisConfigUI.h" />
-    <QtMoc Include="Ins401_Analysis.h" />
     <ClInclude Include="Analysis_Define.h" />
     <ClInclude Include="resource.h" />
     <QtMoc Include="SplitThread.h" />

@@ -19,11 +19,10 @@ DecodeThread::DecodeThread(QObject *parent)
 	, ins_kml_frequency(1000)
 {
 	m_static_point_ecp = true;
-	m_Ins401_Analysis = new Ins401_Tool::Ins401_Analysis(this);
-	m_RTK330LA_Analysis = new RTK330LA_Tool::RTK330LA_Analysis(this);
 	ins401_decoder = new Ins401_Tool::Ins401_decoder();
 	e2e_deocder = new E2E::E2E_protocol();
 	npos122_decoder = new NPOS122_Tool::NPOS122_decoder();
+	m_StaticAnalysis = new StaticAnalysis(this);
 }
 
 DecodeThread::~DecodeThread()
@@ -175,8 +174,8 @@ void DecodeThread::decode_openrtk_inceptio()
 		RTK330LA_Tool::set_output_inceptio_file(1);
 		RTK330LA_Tool::set_base_inceptio_file_name(m_OutBaseName.toLocal8Bit().data());
 		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
-		m_RTK330LA_Analysis->init();
-		m_RTK330LA_Analysis->set_out_base_name(m_OutBaseName);
+		m_StaticAnalysis->init();
+		m_StaticAnalysis->set_out_base_name(m_OutBaseName);
 		while (!feof(file)) {
 			if (m_isStop) break;
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
@@ -185,10 +184,10 @@ void DecodeThread::decode_openrtk_inceptio()
 				ret = RTK330LA_Tool::input_inceptio_raw(read_cache[i]);
 				if (m_static_point_ecp &&ret == 1) {
 					if (RTK330LA_Tool::INCEPTIO_OUT_GNSS ==  RTK330LA_Tool::get_current_type()) {
-						m_RTK330LA_Analysis->append_gnss_sol(RTK330LA_Tool::get_gnss_sol());
+						m_StaticAnalysis->append_gnss_sol_rtk330la(RTK330LA_Tool::get_gnss_sol());
 					}
 					else if (RTK330LA_Tool::INCEPTIO_OUT_SCALED2 == RTK330LA_Tool::get_current_type()) {
-						m_RTK330LA_Analysis->append_imu_raw(RTK330LA_Tool::get_imu_raw());
+						m_StaticAnalysis->append_imu_rtk330la(RTK330LA_Tool::get_imu_raw());
 					}
 				}
 			}
@@ -198,7 +197,7 @@ void DecodeThread::decode_openrtk_inceptio()
 		RTK330LA_Tool::write_inceptio_kml_files();
 		RTK330LA_Tool::close_inceptio_all_log_file();
 		if (m_static_point_ecp) {
-			m_RTK330LA_Analysis->summary();
+			m_StaticAnalysis->summary();
 		}		
 		fclose(file);
 	}
@@ -272,8 +271,8 @@ void DecodeThread::decode_ins401()
 		ins401_decoder->set_show_format_time(m_show_time);
 		ins401_decoder->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
 		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
-		m_Ins401_Analysis->init();
-		m_Ins401_Analysis->set_out_base_name(m_OutBaseName);
+		m_StaticAnalysis->init();
+		m_StaticAnalysis->set_out_base_name(m_OutBaseName);
 		while (!feof(file)) {
 			if (m_isStop) break;
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
@@ -282,13 +281,10 @@ void DecodeThread::decode_ins401()
 				ret = ins401_decoder->input_data(read_cache[i]);
 				if (m_static_point_ecp && ret == 1) {
 					if (Ins401_Tool::em_GNSS_SOL == ins401_decoder->get_current_type()) {
-						m_Ins401_Analysis->append_gnss_sol(ins401_decoder->get_gnss_sol());
+						m_StaticAnalysis->append_gnss_sol_ins401(ins401_decoder->get_gnss_sol());
 					}
 					else if (Ins401_Tool::em_RAW_IMU == ins401_decoder->get_current_type()) {
-						m_Ins401_Analysis->append_imu_raw(ins401_decoder->get_imu_raw());
-					}
-					else if (Ins401_Tool::em_INS_SOL == ins401_decoder->get_current_type()) {
-
+						m_StaticAnalysis->append_imu_ins401(ins401_decoder->get_imu_raw());
 					}
 				}
 			}
@@ -297,7 +293,8 @@ void DecodeThread::decode_ins401()
 		}
 		ins401_decoder->finish();
 		if (m_static_point_ecp) {
-			m_Ins401_Analysis->summary();
+			//m_Ins401_Analysis->summary();
+			m_StaticAnalysis->summary();
 		}
 		fclose(file);
 	}

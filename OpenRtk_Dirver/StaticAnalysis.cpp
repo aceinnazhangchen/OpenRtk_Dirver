@@ -7,7 +7,7 @@ StaticAnalysis::StaticAnalysis(QObject *parent)
 	imu_1hz_file = NULL;
 	imu_g_1hz_file = NULL;
 	append_num = 0;
-	m_start_line = 30;
+	m_start_line = 0;
 	cep_level_thres = 99.7;
 	hor_dist_cep_thres = 0.2;
 	ver_dist_cep_thres = 0.2;
@@ -22,6 +22,7 @@ StaticAnalysis::~StaticAnalysis()
 
 void StaticAnalysis::init()
 {
+	append_num = 0;
 	m_gnss_sol_list.clear();
 	memset(&m_imu_total, 0, sizeof(m_imu_total));
 	m_raw_imu_list.clear();
@@ -32,12 +33,49 @@ void StaticAnalysis::set_out_base_name(QString basename)
 	m_OutBaseName = basename;
 }
 
+char * StaticAnalysis::week_2_time_str(int week, uint32_t millisecs)
+{
+	gtime_t gpstime = gpst2time(week, (double)millisecs / 1000.0);
+	gtime_t utctime = gpst2utc(gpstime);
+	return time_str(utctime, 2);
+}
+
 void StaticAnalysis::append_gnss_sol(static_gnss_t* gnss)
 {
 	if (append_num >= m_start_line) {
 		m_gnss_sol_list.append(*gnss);
 	}
 	append_num++;
+}
+
+void StaticAnalysis::append_gnss_sol_ins401(Ins401_Tool::gnss_sol_t * gnss)
+{
+	static_gnss_t static_gnss = { 0 };
+	static_gnss.gps_week = gnss->gps_week;
+	static_gnss.gps_millisecs = gnss->gps_millisecs;
+	static_gnss.position_type = gnss->position_type;
+	static_gnss.latitude = gnss->latitude;
+	static_gnss.longitude = gnss->longitude;
+	static_gnss.height = gnss->height;
+	static_gnss.north_vel = gnss->north_vel;
+	static_gnss.east_vel = gnss->east_vel;
+	static_gnss.up_vel = gnss->up_vel;
+	append_gnss_sol(&static_gnss);
+}
+
+void StaticAnalysis::append_gnss_sol_rtk330la(RTK330LA_Tool::inceptio_gN_t * gnss)
+{
+	static_gnss_t static_gnss = { 0 };
+	static_gnss.gps_week = gnss->GPS_Week;
+	static_gnss.gps_millisecs = uint32_t(gnss->GPS_TimeOfWeek*1000);
+	static_gnss.position_type = gnss->positionMode;
+	static_gnss.latitude = (double)gnss->latitude*180.0 / MAX_INT;
+	static_gnss.longitude = (double)gnss->longitude*180.0 / MAX_INT;
+	static_gnss.height = gnss->height;
+	static_gnss.north_vel = gnss->velocityNorth / 100.0f;
+	static_gnss.east_vel = gnss->velocityEast / 100.0f;
+	static_gnss.up_vel = gnss->velocityUp / 100.0f;
+	append_gnss_sol(&static_gnss);
 }
 
 void StaticAnalysis::append_imu_raw(imu_t * imu)
@@ -106,7 +144,28 @@ void StaticAnalysis::append_imu_raw(imu_t * imu)
 	}
 }
 
-void StaticAnalysis::static_point_cep()
+void StaticAnalysis::append_imu_ins401(Ins401_Tool::raw_imu_t * imu)
+{
+	imu_t static_imu = { 0 };
+	memcpy(&static_imu, imu,sizeof(imu_t));
+	append_imu_raw(&static_imu);
+}
+
+void StaticAnalysis::append_imu_rtk330la(RTK330LA_Tool::inceptio_s1_t * imu)
+{
+	imu_t static_imu = { 0 };
+	static_imu.GPS_Week = imu->GPS_Week;
+	static_imu.gps_millisecs = uint32_t(imu->GPS_TimeOfWeek*1000);
+	static_imu.x_accel = imu->x_accel;
+	static_imu.y_accel = imu->y_accel;
+	static_imu.z_accel = imu->z_accel;
+	static_imu.x_gyro = imu->x_gyro;
+	static_imu.y_gyro = imu->y_gyro;
+	static_imu.z_gyro = imu->z_gyro;
+	append_imu_raw(&static_imu);
+}
+
+void StaticAnalysis::gnss_summary()
 {
 	if (m_gnss_sol_list.size() == 0) {
 		return;
@@ -157,12 +216,21 @@ void StaticAnalysis::static_point_cep()
 	QList<double> ver_dist_list;
 	QList<double> hor_vel_list;
 	QList<double> ver_vel_list;
+	FILE* diff_file = NULL;
+	std::string title =
+		"DateTime(),GPS_Week(),GPS_TimeOfWeek(s),position_type()"
+		",latitude(deg),longitude(deg),height(m)"
+		",hor_error(m),ver_error(m)"
+		",north_vel(m/s),east_vel(m/s),up_vel(m/s)"
+		",hor_vel(m/s),ver_vel(m/s)\n";
+	create_file(diff_file, "gnss_diff.csv", title.c_str());
 	for (int i = 0; i < m_gnss_sol_list.size(); i++) {
 		double pos[3] = { 0 };
 		pos[0] = m_gnss_sol_list[i].latitude;
 		pos[1] = m_gnss_sol_list[i].longitude;
 		pos[2] = m_gnss_sol_list[i].height;
-		ver_dist_list.append(fabs(pos[2] - median_pos[2]));
+		double ver_dist = fabs(pos[2] - median_pos[2]);
+		ver_dist_list.append(ver_dist);
 
 		pos[0] = pos[0] * D2R;
 		pos[1] = pos[1] * D2R;
@@ -175,13 +243,22 @@ void StaticAnalysis::static_point_cep()
 		d_xyz[0] = xyz_hor[0] - median_xyz[0];
 		d_xyz[1] = xyz_hor[1] - median_xyz[1];
 		d_xyz[2] = xyz_hor[2] - median_xyz[2];
-		double distance = sqrt(d_xyz[0] * d_xyz[0] + d_xyz[1] * d_xyz[1] + d_xyz[2] * d_xyz[2]);
-		hor_dist_list.append(distance);
+		double hor_dist = sqrt(d_xyz[0] * d_xyz[0] + d_xyz[1] * d_xyz[1] + d_xyz[2] * d_xyz[2]);
+		hor_dist_list.append(hor_dist);
 
 		double hor_vel = sqrt(m_gnss_sol_list[i].north_vel*m_gnss_sol_list[i].north_vel + m_gnss_sol_list[i].east_vel*m_gnss_sol_list[i].east_vel);
 		hor_vel_list.append(hor_vel);
 		ver_vel_list.append(fabs(m_gnss_sol_list[i].up_vel));
+
+		static_gnss_t gnss = m_gnss_sol_list[i];
+		fprintf(diff_file, "%s,", week_2_time_str(gnss.gps_week, gnss.gps_millisecs));
+		fprintf(diff_file, "%d,%11.4f,%3d", gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, gnss.position_type);
+		fprintf(diff_file, ",%14.9f,%14.9f,%10.4f", gnss.latitude, gnss.longitude, gnss.height);
+		fprintf(diff_file, ",%9.4f,%9.4f", hor_dist, ver_dist);
+		fprintf(diff_file, ",%10.4f,%10.4f,%10.4f", gnss.north_vel, gnss.east_vel, gnss.up_vel);
+		fprintf(diff_file, ",%10.4f,%10.4f\n", hor_vel, fabs(m_gnss_sol_list[i].up_vel));
 	}
+	fclose(diff_file);
 	//qSort(dist_list);
 	qSort(hor_dist_list);
 	qSort(ver_dist_list);
@@ -220,7 +297,6 @@ void StaticAnalysis::static_point_cep()
 
 void StaticAnalysis::set_thres(double cep_level, double hor_dist_cep, double ver_dist_cep, double hor_vel_cep, double ver_vel_cep, int32_t start_line)
 {
-	append_num = 0;
 	cep_level_thres = cep_level;
 	hor_dist_cep_thres = hor_dist_cep;
 	ver_dist_cep_thres = ver_dist_cep;
@@ -241,7 +317,7 @@ void StaticAnalysis::create_file(FILE *& file, const char * suffix, const char *
 
 void StaticAnalysis::summary()
 {
-	static_point_cep();
+	gnss_summary();
 	imu_summary();
 }
 

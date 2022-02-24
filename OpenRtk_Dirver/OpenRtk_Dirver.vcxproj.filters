@@ -130,9 +130,6 @@
     <ClCompile Include="SplitThread.cpp">
       <Filter>Source Files\Thread</Filter>
     </ClCompile>
-    <ClCompile Include="Ins401_Analysis.cpp">
-      <Filter>Source Files\Analysis</Filter>
-    </ClCompile>
     <ClCompile Include="AnalysisConfigUI.cpp">
       <Filter>Source Files\Analysis</Filter>
     </ClCompile>
@@ -141,9 +138,6 @@
     </ClCompile>
     <ClCompile Include="..\decoder\model.c">
       <Filter>decoder</Filter>
-    </ClCompile>
-    <ClCompile Include="RTK330LA_Analysis.cpp">
-      <Filter>Source Files\Analysis</Filter>
     </ClCompile>
     <ClCompile Include="..\decoder\beidou.cpp">
       <Filter>decoder</Filter>
@@ -198,13 +192,7 @@
     <QtMoc Include="SplitThread.h">
       <Filter>Header Files\Thread</Filter>
     </QtMoc>
-    <QtMoc Include="Ins401_Analysis.h">
-      <Filter>Header Files\Analysis</Filter>
-    </QtMoc>
     <QtMoc Include="AnalysisConfigUI.h">
-      <Filter>Header Files\Analysis</Filter>
-    </QtMoc>
-    <QtMoc Include="RTK330LA_Analysis.h">
       <Filter>Header Files\Analysis</Filter>
     </QtMoc>
     <QtMoc Include="CsvAnalysisTools.h">
