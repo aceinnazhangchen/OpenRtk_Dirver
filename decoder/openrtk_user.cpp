@@ -11,6 +11,19 @@
 namespace OpenRTK330LI_Tool {
 
 	const char* userPacketsTypeList[MAX_PACKET_TYPES] = { "s1", "g1", "i1", "o1", "y1" };
+	static FILE* fnmea = NULL;
+	static FILE* fs1 = NULL;
+	static FILE* fg1 = NULL;
+	static FILE* fi1 = NULL;
+	static FILE* fo1 = NULL;
+	static FILE* fy1 = NULL;
+	static FILE* f_process = NULL;
+	static FILE* f_gnssposvel = NULL;
+	static FILE* f_imu = NULL;
+	static FILE* f_ins = NULL;
+	static FILE* f_odo = NULL;
+	static FILE* fs1_b = NULL;
+
 	static usrRaw user_raw = { 0 };
 	static char user_output_msg[1024] = { 0 };
 	static int output_user_file = 0;
@@ -23,19 +36,7 @@ namespace OpenRTK330LI_Tool {
 	static kml_gnss_t gnss_kml = { 0 };
 	static kml_ins_t ins_kml = { 0 };
 
-	static FILE* fnmea = NULL;
-	static FILE* fs1 = NULL;
-	static FILE* fg1 = NULL;
-	static FILE* fi1 = NULL;
-	static FILE* fo1 = NULL;
-	static FILE* fy1 = NULL;
-	static FILE* f_process = NULL;
-	static FILE* f_gnssposvel = NULL;
-	static FILE* f_imu = NULL;
-	static FILE* f_ins = NULL;
-	static FILE* f_odo = NULL;
 	static int save_bin = 0;
-	static FILE* fs1_b = NULL;
 	static char base_user_file_name[256] = { 0 };
 
 	extern void init_user_data() {
@@ -173,6 +174,7 @@ namespace OpenRTK330LI_Tool {
 			if (f_ins == NULL) {
 				sprintf(file_name, "%s-ins.txt", base_user_file_name);
 				f_ins = fopen(file_name, "w");
+				printf("0x%p\n", f_ins);
 			}
 			if (f_ins) fprintf(f_ins, log);
 		}
@@ -304,10 +306,10 @@ namespace OpenRTK330LI_Tool {
 			pak_g1.position_type, pak_g1.north_vel, pak_g1.east_vel, pak_g1.up_vel, track_over_ground);
 		write_user_ex_file(USR_OUT_BESTGNSS, user_output_msg);
 		//process $GPGNSS
-		sprintf(user_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d\n",
+		sprintf(user_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f\n",
 			pak_g1.GPS_Week, (double)pak_g1.GPS_TimeOfWeek / 1000.0, pak_g1.latitude, pak_g1.longitude, pak_g1.height,
 			pak_g1.latitude_standard_deviation, pak_g1.longitude_standard_deviation, pak_g1.height_standard_deviation,
-			pak_g1.position_type);
+			pak_g1.position_type, pak_g1.diffage);
 		write_user_process_file(USR_OUT_BESTGNSS, 0, user_output_msg);
 		//process $GPVEL
 		sprintf(user_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n",
@@ -381,6 +383,7 @@ namespace OpenRTK330LI_Tool {
 			size_t packet_size = sizeof(user_i1_t);
 			if (payload_lenth == packet_size) {
 				memcpy(&pak_i1, payload, packet_size);
+				printf("0x%p\n", f_ins);
 				if (output_user_file) {
 					output_user_i1();
 				}

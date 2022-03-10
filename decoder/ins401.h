@@ -285,6 +285,19 @@ namespace Ins401_Tool {
 		gnss_sol_integ_bit	status_bit;
 	}gnss_integ_t;
 
+	typedef struct {
+		uint16_t gps_week;
+		uint32_t gps_millisecs;
+		uint8_t ins_aid;
+	} binary_rtk_debug1_t;
+
+	typedef struct {
+		uint8_t gnss_err_out_pin;
+		uint8_t gnss_rf_err_pin;
+		uint8_t gnss_ant_err_pin;
+		uint8_t gnss_handshake_flag; // 1 ok ,0 failure
+	} system_fault_detection_t;
+
 #pragma pack(pop)
 
 	enum emPackageType {
@@ -298,6 +311,8 @@ namespace Ins401_Tool {
 		PowerUpDR_MES = 0x0a09,
 		em_CHECK = 0x4D44,
 		em_GNSS_SOL_INTEGEITY = 0x6749,
+		em_RTK_DEBUG1 = 0xd101,
+		em_PACKAGE_FD = 0x6664,
 	};
 
 	typedef std::map<std::string, FILE*> FilesMap;
@@ -316,6 +331,8 @@ namespace Ins401_Tool {
 		SaveMsg powerup_dr;
 		stPacketCheck packetcheck;
 		gnss_integ_t gnss_integ;
+		binary_rtk_debug1_t rtk_debug1;
+		system_fault_detection_t system_fault_detection;
 		kml_gnss_t gnss_kml;
 		kml_ins_t ins_kml;
 		char base_file_name[256];
@@ -366,6 +383,8 @@ namespace Ins401_Tool {
 		void output_gnss_integ();
 		void output_gnss_sol_and_integ();
 		void output_check();
+		void output_rtk_debug1();
+		void output_system_fault_detection();
 		void parse_packet_payload();
 		void save_imu_bin();
 		void parse_gga();

@@ -12,7 +12,7 @@
 #define VERSION_EARLY		0
 #define VERSION_24_01_21	1
 namespace RTK330LA_Tool {
-	const char* inceptioPacketsTypeList[MAX_INCEPTIO_PACKET_TYPES] = { "s1","s2","gN","iN","d1","d2","sT","o1","fM","rt","sP","gI" };
+	const char* inceptioPacketsTypeList[MAX_INCEPTIO_PACKET_TYPES] = { "s1","s2","gN","iN","d1","d2","sT","o1","fM","rt","sP","gI","r1" };
 
 	static int data_version = 0;
 	static usrRaw inceptio_raw = { 0 };
@@ -26,6 +26,7 @@ namespace RTK330LA_Tool {
 	static inceptio_d2_t inceptio_pak_d2 = { 0 };
 	static inceptio_sT_t inceptio_pak_sT = { 0 };
 	static inceptio_o1_t inceptio_pak_o1 = { 0 };
+	static rtk_debug1_t rtk_debug1 = { 0 };
 
 	static kml_gnss_t gnss_kml = { 0 };
 	static kml_ins_t ins_kml = { 0 };
@@ -41,6 +42,7 @@ namespace RTK330LA_Tool {
 	static FILE* fd2 = NULL;
 	static FILE* fsT = NULL;
 	static FILE* fo1 = NULL;
+	static FILE* fr1 = NULL;
 	static FILE* f_process = NULL;
 	static FILE* f_gnssposvel = NULL;
 	static FILE* f_imu = NULL;
@@ -95,7 +97,7 @@ namespace RTK330LA_Tool {
 		if (fd2)fclose(fd2); fd2 = NULL;
 		if (fsT)fclose(fsT); fsT = NULL;
 		if (fo1)fclose(fo1); fo1 = NULL;
-
+		if (fr1)fclose(fr1); fr1 = NULL;
 		if (f_process)fclose(f_process); f_process = NULL;
 		if (f_gnssposvel)fclose(f_gnssposvel); f_gnssposvel = NULL;
 		if (f_imu)fclose(f_imu); f_imu = NULL;
@@ -259,6 +261,16 @@ namespace RTK330LA_Tool {
 				if (fo1) fprintf(fo1, "GPS_Week(),GPS_TimeOfWeek(s),mode(),speed(m/s),fwd(),wheel_tick()\n");
 			}
 			if (fo1) fprintf(fo1, log);
+		}
+		break;
+		case INCEPTIO_OUT_RTK_DEBUG1:
+		{
+			if (fr1 == NULL) {
+				sprintf(file_name, "%s_r1.csv", base_inceptio_file_name);
+				fr1 = fopen(file_name, "w");
+				if (fr1) fprintf(fr1, "GPS_Week(),GPS_TimeOfWeek(s),INS_AID()\n");
+			}
+			if (fr1) fprintf(fr1, log);
 		}
 		break;
 		}
@@ -433,7 +445,7 @@ namespace RTK330LA_Tool {
 		double horizontal_speed = sqrt(north_vel * north_vel + east_vel * east_vel);
 		double track_over_ground = atan2(east_vel, north_vel) * R2D;
 		//csv
-		sprintf(inceptio_output_msg, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%3d,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n",
+		sprintf(inceptio_output_msg, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%3d,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%3d\n",
 			inceptio_pak_gN_early.GPS_Week, inceptio_pak_gN_early.GPS_TimeOfWeek,
 			inceptio_pak_gN_early.positionMode, (double)inceptio_pak_gN_early.latitude * 180.0 / MAX_INT, (double)inceptio_pak_gN_early.longitude * 180.0 / MAX_INT, inceptio_pak_gN_early.height,
 			inceptio_pak_gN_early.numberOfSVs, inceptio_pak_gN_early.hdop, (float)inceptio_pak_gN_early.diffage,
@@ -445,8 +457,11 @@ namespace RTK330LA_Tool {
 			latitude_std, longitude_std, height_std, inceptio_pak_gN_early.positionMode, north_vel, east_vel, up_vel, track_over_ground);
 		write_inceptio_ex_file(inceptio_raw.ntype, inceptio_output_msg);
 		//process $GPGNSS
-		sprintf(inceptio_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d\n", inceptio_pak_gN_early.GPS_Week, inceptio_pak_gN_early.GPS_TimeOfWeek,
-			(double)inceptio_pak_gN_early.latitude * 180.0 / MAX_INT, (double)inceptio_pak_gN_early.longitude * 180.0 / MAX_INT, inceptio_pak_gN_early.height, latitude_std, longitude_std, height_std, inceptio_pak_gN_early.positionMode);
+		sprintf(inceptio_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%3d\n"
+			, inceptio_pak_gN_early.GPS_Week, inceptio_pak_gN_early.GPS_TimeOfWeek
+			,(double)inceptio_pak_gN_early.latitude * 180.0 / MAX_INT, (double)inceptio_pak_gN_early.longitude * 180.0 / MAX_INT
+			, inceptio_pak_gN_early.height, latitude_std, longitude_std, height_std
+			, inceptio_pak_gN_early.positionMode,inceptio_pak_gN_early.diffage);
 		write_inceptio_process_file(inceptio_raw.ntype, 0, inceptio_output_msg);
 		//process $GPVEL
 		sprintf(inceptio_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n", inceptio_pak_gN_early.GPS_Week, inceptio_pak_gN_early.GPS_TimeOfWeek, horizontal_speed, track_over_ground, up_vel);
@@ -498,8 +513,11 @@ namespace RTK330LA_Tool {
 			latitude_std, longitude_std, height_std, inceptio_pak_gN.positionMode, north_vel, east_vel, up_vel, track_over_ground);
 		write_inceptio_ex_file(INCEPTIO_OUT_GNSS, inceptio_output_msg);
 		//process $GPGNSS
-		sprintf(inceptio_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d\n", inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek,
-			(double)inceptio_pak_gN.latitude*180.0 / MAX_INT, (double)inceptio_pak_gN.longitude*180.0 / MAX_INT, inceptio_pak_gN.height, latitude_std, longitude_std, height_std, inceptio_pak_gN.positionMode);
+		sprintf(inceptio_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f\n"
+			, inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek
+			,(double)inceptio_pak_gN.latitude*180.0 / MAX_INT, (double)inceptio_pak_gN.longitude*180.0 / MAX_INT
+			, inceptio_pak_gN.height, latitude_std, longitude_std, height_std
+			, inceptio_pak_gN.positionMode, inceptio_pak_gN_early.diffage);
 		write_inceptio_process_file(INCEPTIO_OUT_GNSS, 0, inceptio_output_msg);
 		//process $GPVEL
 		sprintf(inceptio_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n", inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek, horizontal_speed, track_over_ground, up_vel);
@@ -589,6 +607,11 @@ namespace RTK330LA_Tool {
 		write_inceptio_process_file(inceptio_raw.ntype, 0, inceptio_output_msg);
 	}
 
+	void output_rtk_debug1() {
+		sprintf(inceptio_output_msg, "%d,%11.4f,%d\n", rtk_debug1.gps_week, rtk_debug1.gps_millisecs, rtk_debug1.ins_aid);
+		write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
+	}
+
 	void parse_inceptio_packet_payload(uint8_t* buff, uint32_t nbyte) {
 		uint8_t payload_lenth = buff[2];
 		char packet_type[4] = { 0 };
@@ -660,6 +683,14 @@ namespace RTK330LA_Tool {
 			if (payload_lenth == sizeof(inceptio_o1_t)) {
 				memcpy(&inceptio_pak_o1, payload, sizeof(inceptio_o1_t));
 				output_inceptio_o1();
+			}
+		}
+		else if (strcmp(packet_type, "r1") == 0) {
+			inceptio_raw.ntype = INCEPTIO_OUT_RTK_DEBUG1;
+			size_t psize = sizeof(rtk_debug1_t);
+			if (payload_lenth == sizeof(rtk_debug1_t)) {
+				memcpy(&rtk_debug1, payload, sizeof(rtk_debug1_t));
+				output_rtk_debug1();
 			}
 		}
 	}

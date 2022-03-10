@@ -10,6 +10,7 @@
 #define MAX_NMEA_TYPES 17
 #define NMEA_HEADER_LEN 6
 
+#define DAY		(86400)
 #define HOUR	(3600)
 #define MINUTE  (60)
 

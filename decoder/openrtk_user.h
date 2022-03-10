@@ -11,9 +11,9 @@ namespace OpenRTK330LI_Tool {
 		uint8_t header_len;
 		uint8_t header[4];
 		uint32_t nbyte;
-		uint8_t buff[256];
+		uint8_t buff[10240];
 		uint32_t nmeabyte;
-		uint8_t nmea[256];
+		uint8_t nmea[10240];
 		uint8_t ntype;
 	} usrRaw;
 

@@ -20,7 +20,7 @@
       <widget class="QComboBox" name="fileformat_cmb">
        <item>
         <property name="text">
-         <string>Gnss Process Result</string>
+         <string>Gnss Post Result</string>
         </property>
        </item>
       </widget>

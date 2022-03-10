@@ -71,6 +71,9 @@ void DecodeThread::run()
 		case emDecodeFormat_NPOS112:
 			decode_npos112();
 			break;
+		case emDecodeFormat_ST_RTCM:
+			decode_st_rtcm();
+			break;
 		default:
 			break;
 		}
@@ -486,5 +489,38 @@ void DecodeThread::decode_npos112()
 		}
 		npos122_decoder->finish();
 		fclose(file);
+	}
+}
+
+void DecodeThread::decode_st_rtcm()
+{
+	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
+	FILE* newfile = fopen((m_FileName + "_new.bin").toLocal8Bit().data(), "wb");
+	if (file && newfile) {
+		int8_t ret = 0;
+		int8_t ret_nmea = 0;
+		int64_t file_size = getFileSize(file);
+		int64_t read_size = 0;
+		size_t readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		rtcm_t rtcm = { 0 };
+		obs_t obs = { 0 };
+		nav_t nav = { 0 };
+		while (!feof(file)) {
+			if (m_isStop) break;
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (size_t i = 0; i < readcount; i++) {
+				ret = input_rtcm3_data(&rtcm, read_cache[i], &obs, &nav);
+				if (is_complete_rtcm()) {
+					int size = rtcm.len + 3;
+					fwrite(rtcm.buff, 1, size, newfile);
+				}
+			}
+			double percent = (double)read_size / (double)file_size * 10000;
+			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		fclose(file);
+		fclose(newfile);
 	}
 }

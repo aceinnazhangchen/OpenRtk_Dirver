@@ -21,6 +21,7 @@ enum emDecodeFormat {
 	emDecodeFormat_RTCM_2_HEX,
 	emDecodeFormat_Beidou,
 	emDecodeFormat_NPOS112,
+	emDecodeFormat_ST_RTCM,
 };
 
 class DecodeThread : public QThread
@@ -52,6 +53,7 @@ protected:
 	void decode_rtcm_2_hex();
 	void decode_beidou();
 	void decode_npos112();
+	void decode_st_rtcm();
 private:
 	bool m_isStop;
 	int m_FileFormat;

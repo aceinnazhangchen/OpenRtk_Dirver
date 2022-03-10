@@ -77,6 +77,11 @@
          <string>NPOS112</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>STRTCM</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item>

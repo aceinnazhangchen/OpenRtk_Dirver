@@ -173,10 +173,17 @@ void StaticAnalysis::gnss_summary()
 	int fixed_num = 0;
 	int float_num = 0;
 	int spp_num = 0;
+	int start_line = 0;
 	QList<double> latitude_list;
 	QList<double> longitude_list;
 	QList<double> height_list;
 	for (int i = 0; i < m_gnss_sol_list.size(); i++) {
+		if (m_gnss_sol_list[i].position_type == 4) {
+			break;
+		}
+		start_line ++;
+	}
+	for (int i = start_line; i < m_gnss_sol_list.size(); i++) {
 		if (m_gnss_sol_list[i].position_type == 4) {
 			latitude_list.append(m_gnss_sol_list[i].latitude);
 			longitude_list.append(m_gnss_sol_list[i].longitude);
@@ -224,11 +231,17 @@ void StaticAnalysis::gnss_summary()
 		",north_vel(m/s),east_vel(m/s),up_vel(m/s)"
 		",hor_vel(m/s),ver_vel(m/s)\n";
 	create_file(diff_file, "gnss_diff.csv", title.c_str());
-	for (int i = 0; i < m_gnss_sol_list.size(); i++) {
+	int hor_dist_pass = 0;
+	int ver_dist_pass = 0;
+	int hor_vel_pass = 0;
+	int ver_vel_pass = 0;	
+	for (int i = start_line; i < m_gnss_sol_list.size(); i++) {
+		//if (m_gnss_sol_list[i].position_type != 4) continue;
+		static_gnss_t gnss = m_gnss_sol_list[i];
 		double pos[3] = { 0 };
-		pos[0] = m_gnss_sol_list[i].latitude;
-		pos[1] = m_gnss_sol_list[i].longitude;
-		pos[2] = m_gnss_sol_list[i].height;
+		pos[0] = gnss.latitude;
+		pos[1] = gnss.longitude;
+		pos[2] = gnss.height;
 		double ver_dist = fabs(pos[2] - median_pos[2]);
 		ver_dist_list.append(ver_dist);
 
@@ -246,30 +259,51 @@ void StaticAnalysis::gnss_summary()
 		double hor_dist = sqrt(d_xyz[0] * d_xyz[0] + d_xyz[1] * d_xyz[1] + d_xyz[2] * d_xyz[2]);
 		hor_dist_list.append(hor_dist);
 
-		double hor_vel = sqrt(m_gnss_sol_list[i].north_vel*m_gnss_sol_list[i].north_vel + m_gnss_sol_list[i].east_vel*m_gnss_sol_list[i].east_vel);
+		double hor_vel = sqrt(gnss.north_vel*gnss.north_vel + gnss.east_vel*gnss.east_vel);
 		hor_vel_list.append(hor_vel);
-		ver_vel_list.append(fabs(m_gnss_sol_list[i].up_vel));
+		double ver_vel = fabs(gnss.up_vel);
+		ver_vel_list.append(ver_vel);
 
-		static_gnss_t gnss = m_gnss_sol_list[i];
-		fprintf(diff_file, "%s,", week_2_time_str(gnss.gps_week, gnss.gps_millisecs));
-		fprintf(diff_file, "%d,%11.4f,%3d", gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, gnss.position_type);
-		fprintf(diff_file, ",%14.9f,%14.9f,%10.4f", gnss.latitude, gnss.longitude, gnss.height);
-		fprintf(diff_file, ",%9.4f,%9.4f", hor_dist, ver_dist);
-		fprintf(diff_file, ",%10.4f,%10.4f,%10.4f", gnss.north_vel, gnss.east_vel, gnss.up_vel);
-		fprintf(diff_file, ",%10.4f,%10.4f\n", hor_vel, fabs(m_gnss_sol_list[i].up_vel));
+		if (diff_file)
+		{
+			fprintf(diff_file, "%s,", week_2_time_str(gnss.gps_week, gnss.gps_millisecs));
+			fprintf(diff_file, "%d,%11.4f,%3d", gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, gnss.position_type);
+			fprintf(diff_file, ",%14.9f,%14.9f,%10.4f", gnss.latitude, gnss.longitude, gnss.height);
+			fprintf(diff_file, ",%9.4f,%9.4f", hor_dist, ver_dist);
+			fprintf(diff_file, ",%10.4f,%10.4f,%10.4f", gnss.north_vel, gnss.east_vel, gnss.up_vel);
+			fprintf(diff_file, ",%10.4f,%10.4f\n", hor_vel, ver_vel);
+		}
+
+
+		if (hor_dist < hor_dist_cep_thres) {
+			hor_dist_pass++;
+		}
+		if (ver_dist < ver_dist_cep_thres) {
+			ver_dist_pass++;
+		}
+		if (hor_vel < hor_vel_cep_thres) {
+			hor_vel_pass++;
+		}
+		if (ver_vel < ver_vel_cep_thres) {
+			ver_vel_pass++;
+		}
 	}
-	fclose(diff_file);
+	if(diff_file) fclose(diff_file);
 	//qSort(dist_list);
 	qSort(hor_dist_list);
 	qSort(ver_dist_list);
 	qSort(hor_vel_list);
 	qSort(ver_vel_list);
 	double cep_level = cep_level_thres / 100;
-	int cep_index = m_gnss_sol_list.size()*cep_level - 1;
+	int cep_index = hor_dist_list.size() * cep_level - 1;
 	double hor_dist_cep = hor_dist_list[cep_index];
 	double ver_dist_cep = ver_dist_list[cep_index];
 	double hor_vel_cep = hor_vel_list[cep_index];
 	double ver_vel_cep = ver_vel_list[cep_index];
+	double hor_dist_pass_percent = (double)hor_dist_pass / (double)hor_dist_list.size() * 100.0;
+	double ver_dist_pass_percent = (double)ver_dist_pass / (double)ver_dist_list.size() * 100.0;
+	double hor_vel_pass_percent = (double)hor_vel_pass / (double)hor_vel_list.size() * 100.0;
+	double ver_vel_pass_percent = (double)ver_vel_pass / (double)ver_vel_list.size() * 100.0;
 	FILE* total_file = NULL;
 	create_file(total_file, "gnss_total.csv", NULL);
 	if (total_file) {
@@ -278,11 +312,13 @@ void StaticAnalysis::gnss_summary()
 		fprintf(total_file, "ver_pos_err_thres(m): %4.1f\n", ver_dist_cep_thres);
 		fprintf(total_file, "hor_vel_err_thres(m/s): %4.1f\n", hor_vel_cep_thres);
 		fprintf(total_file, "ver_vel_err_thres(m/s): %4.1f\n", ver_vel_cep_thres);
-		fprintf(total_file, "start line: %d\n", m_start_line);
+		fprintf(total_file, "start line: %d\n", start_line);
 		fprintf(total_file, "median pos(m): %14.10f,%14.10f,%14.10f\n", median_pos[0] * R2D, median_pos[1] * R2D, median_pos[2]);
 		fprintf(total_file, "\n");
 		fprintf(total_file, "%16s,%16s,%16s,%16s,%16s,%16s,%16s\n", "hor_pos_err(m)", "ver_pos_err(m)", "hor_vel_err(m/s)", "ver_vel_err(m/s)", "fixed num", "float num", "spp num");
 		fprintf(total_file, "%16.3f,%16.3f,%16.3f,%16.3f,%16d,%16d,%16d\n", hor_dist_cep, ver_dist_cep, hor_vel_cep, ver_vel_cep, fixed_num, float_num, spp_num);
+		fprintf(total_file, "%15.2f%%,%15.2f%%,%15.2f%%,%15.2f%%\n", hor_dist_pass_percent, ver_dist_pass_percent, hor_vel_pass_percent, ver_vel_pass_percent);
+		fprintf(total_file, "%16d,%16d,%16d,%16d\n", hor_dist_pass, ver_dist_pass, hor_vel_pass, ver_vel_pass);
 		fprintf(total_file, "\n");
 		if (hor_dist_cep <= hor_dist_cep_thres && ver_dist_cep <= ver_dist_cep_thres &&
 			hor_vel_cep <= hor_vel_cep_thres && ver_vel_cep <= ver_vel_cep_thres) {

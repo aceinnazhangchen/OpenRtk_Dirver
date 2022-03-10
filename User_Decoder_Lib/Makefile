@@ -14,7 +14,7 @@ OBJ = $(patsubst %.cpp, %.o, $(OBJ_C))
 TARGET = UserDecoderLib.so
 
 OPTION = -DNOT_OUTPUT_INNER_FILE
-CFLAGS = -shared -fPIC -fvisibility=hidden $(OPTION)
+CFLAGS = -fpermissive -shared -fPIC -fvisibility=hidden $(OPTION)
 
 #links
 all:$(OBJ)

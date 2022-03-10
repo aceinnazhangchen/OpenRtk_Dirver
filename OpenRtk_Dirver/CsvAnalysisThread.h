@@ -18,6 +18,7 @@ public:
 	QString getBasePath();
 protected:
 	void AnalysisGnssCsv();
+	void AnalysisPostGnssCsv();
 private:
 	bool m_isStop;
 	int m_FileFormat;

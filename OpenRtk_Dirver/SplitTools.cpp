@@ -79,7 +79,8 @@ void SplitTools::onSplitClicked()
 	m_SplitThread->setFileName(filename);
 	m_SplitThread->set_time_range(ui.dateTimeEdit_start->dateTime().toTime_t(), ui.dateTimeEdit_end->dateTime().toTime_t());
 	QTime time = ui.timeEdit->time();
-	uint32_t time_silce = time.hour()*HOUR + time.minute()*MINUTE + time.second();
+	int day = ui.spinBox_day->value();
+	uint32_t time_silce = day * DAY + time.hour()*HOUR + time.minute()*MINUTE + time.second();
 	m_SplitThread->set_time_silce(time_silce);
 	m_SplitThread->start();
 	setOperable(false);

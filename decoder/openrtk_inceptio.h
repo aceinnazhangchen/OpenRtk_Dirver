@@ -2,7 +2,7 @@
 #include <stdint.h>
 //#include "openrtk_user.h"
 
-#define MAX_INCEPTIO_PACKET_TYPES 12
+#define MAX_INCEPTIO_PACKET_TYPES 13
 
 namespace RTK330LA_Tool {
 #pragma pack(push, 1)
@@ -206,6 +206,12 @@ namespace RTK330LA_Tool {
 		uint64_t wheel_tick;
 	} inceptio_o1_t;
 
+	typedef struct {
+		uint32_t gps_week;
+		double gps_millisecs;
+		uint8_t ins_aid;
+	} rtk_debug1_t;
+
 	typedef enum {
 		INCEPTIO_OUT_NONE = 0,
 		INCEPTIO_OUT_SCALED1,
@@ -215,7 +221,8 @@ namespace RTK330LA_Tool {
 		INCEPTIO_OUT_STD2,
 		INCEPTIO_OUT_GNSS,
 		INCEPTIO_OUT_STATUS,
-		INCEPTIO_OUT_ODO
+		INCEPTIO_OUT_ODO,
+		INCEPTIO_OUT_RTK_DEBUG1,
 	} InceptioOutPacketType;
 
 #pragma pack(pop)

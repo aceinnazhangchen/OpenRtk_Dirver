@@ -53,6 +53,8 @@ namespace Ins401_Tool {
 		memset(&dm, 0, sizeof(dm));
 		memset(&powerup_dr, 0, sizeof(powerup_dr));
 		memset(&gnss_integ, 0, sizeof(gnss_integ));
+		memset(&rtk_debug1, 0, sizeof(rtk_debug1));
+		memset(&system_fault_detection, 0, sizeof(system_fault_detection));		
 		memset(&gnss_kml, 0, sizeof(gnss_kml));
 		memset(&ins_kml, 0, sizeof(ins_kml));
 		memset(base_file_name, 0, 256);
@@ -67,6 +69,8 @@ namespace Ins401_Tool {
 		all_type_pack_num[PowerUpDR_MES] = 0;
 		all_type_pack_num[em_CHECK] = 0;
 		all_type_pack_num[em_GNSS_SOL_INTEGEITY] = 0;
+		all_type_pack_num[em_RTK_DEBUG1] = 0;
+		all_type_pack_num[em_PACKAGE_FD] = 0;
 		Kml_Generator::Instance()->init();
 	}
 
@@ -236,10 +240,10 @@ namespace Ins401_Tool {
 		//process
 		create_file(f_process, "process", NULL);
 		//process $GPGNSS
-		fprintf(f_process, "$GPGNSS,%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d\n",
+		fprintf(f_process, "$GPGNSS,%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f\n",
 			gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, gnss.latitude, gnss.longitude, gnss.height,
 			gnss.latitude_std, gnss.longitude_std, gnss.height_std,
-			gnss.position_type);
+			gnss.position_type, gnss.diffage);
 		//process $GPVEL
 		fprintf(f_process, "$GPVEL,%d,%11.4f,%10.4f,%10.4f,%10.4f\n",
 			gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, horizontal_speed, track_over_ground, gnss.up_vel);
@@ -548,6 +552,42 @@ namespace Ins401_Tool {
 		}
 	}
 
+	void Ins401_decoder::output_rtk_debug1()
+	{
+		FILE* f_rtk_debug1_csv = NULL;
+		std::string rtk_debug1_name = "rtk_debug1.csv";
+		FilesMap::iterator it = output_file_map.find(rtk_debug1_name);
+		if (it == output_file_map.end()) {
+			std::string check_title = "";
+			create_file(f_rtk_debug1_csv, rtk_debug1_name.c_str(), check_title.c_str());
+			output_file_map[rtk_debug1_name] = f_rtk_debug1_csv;
+		}
+		f_rtk_debug1_csv = output_file_map[rtk_debug1_name];
+		if (f_rtk_debug1_csv) {
+			fprintf(f_rtk_debug1_csv, "%d,%11.4f,%d\n", rtk_debug1.gps_week, (double)rtk_debug1.gps_millisecs / 1000.0, rtk_debug1.ins_aid);
+		}
+	}
+
+	void Ins401_decoder::output_system_fault_detection()
+	{
+		FILE* f_fd = NULL;
+		std::string fd_name = "fd.csv";
+		FilesMap::iterator it = output_file_map.find(fd_name);
+		if (it == output_file_map.end()) {
+			std::string check_title = "";
+			create_file(f_fd, fd_name.c_str(), check_title.c_str());
+			output_file_map[fd_name] = f_fd;
+		}
+		f_fd = output_file_map[fd_name];
+		if (f_fd) {
+			fprintf(f_fd, "%d,%d,%d,%d\n",
+				system_fault_detection.gnss_err_out_pin,
+				system_fault_detection.gnss_rf_err_pin,
+				system_fault_detection.gnss_ant_err_pin,
+				system_fault_detection.gnss_handshake_flag);
+		}
+	}
+
 	void Ins401_decoder::output_rover_rtcm()
 	{
 		create_file(f_rover_rtcm, "_rover.rtcm", NULL);
@@ -645,6 +685,26 @@ namespace Ins401_Tool {
 				output_gnss_integ();
 				output_gnss_sol_and_integ();
 				last_gnss_integ_millisecs = (uint32_t)gnss_integ.gps_millisecs;
+			}
+		}
+		break;
+		case em_RTK_DEBUG1:
+		{
+#ifdef OUTPUT_INNER_FILE
+			size_t packet_size = sizeof(binary_rtk_debug1_t);
+			if (raw.length == packet_size) {
+				memcpy(&rtk_debug1, payload, packet_size);		
+				output_rtk_debug1();
+			}
+#endif
+		}
+		break;
+		case em_PACKAGE_FD:
+		{
+			size_t packet_size = sizeof(system_fault_detection_t);
+			if (raw.length == packet_size) {
+				memcpy(&system_fault_detection, payload, packet_size);
+				output_system_fault_detection();
 			}
 		}
 		break;
