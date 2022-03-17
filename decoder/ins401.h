@@ -362,7 +362,7 @@ namespace Ins401_Tool {
 		std::map<uint16_t, int> all_type_pack_num;
 		FilesMap output_file_map;			//现在输出文件不断增加，把文件指针都保存到map中
 		bool m_MI_file_switch;				//输出小米文件开关
-		float height_msl;					//海平面高
+		double height_msl;					//海平面高
 		uint32_t last_gnss_integ_millisecs;	//上次gnss完好性包的周内秒，因为在没有gnss的情况下会不断输出同一个包
 	private:
 		void close_all_files();

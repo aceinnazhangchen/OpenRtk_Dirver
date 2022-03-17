@@ -448,6 +448,7 @@ void DecodeThread::decode_beidou()
 		char read_cache[READ_CACHE_SIZE] = { 0 };
 		beidou_Tool::set_output_beidou_file(1);
 		beidou_Tool::set_base_beidou_file_name(m_OutBaseName.toLocal8Bit().data());
+		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
 		while (!feof(file)) {
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
 			read_size += readcount;

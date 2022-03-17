@@ -59,12 +59,12 @@ int makeDir(char* folderPath)
 void createDirByFilePath(const char* filename, char* dirname) {
 	char basename[64] = { 0 };
 	char* p_dot = NULL;
-	p_dot = strrchr(filename, '.');
+	p_dot = (char *)strrchr(filename, '.');
 	char* p_separator = NULL;
 #ifdef WIN32
-	p_separator = strrchr(filename, '\\');
+	p_separator = (char *)strrchr(filename, '\\');
 #else
-	p_separator = strrchr(filename, '/');
+	p_separator = (char *)strrchr(filename, '/');
 #endif
 	if (!p_separator) return;
 	size_t ext_len = 0;

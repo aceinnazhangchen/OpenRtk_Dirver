@@ -77,12 +77,12 @@ namespace NPOS122_Tool {
 		ins_kml.latitude = pva.latitude;
 		ins_kml.longitude = pva.longitude;
 		ins_kml.height = pva.height;
-		ins_kml.north_velocity = pva.vel_x;
-		ins_kml.east_velocity = pva.vel_y;
-		ins_kml.up_velocity = pva.vel_z;
-		ins_kml.roll = pva.roll;
-		ins_kml.pitch = pva.pitch;
-		ins_kml.heading = pva.azimuth;
+		ins_kml.north_velocity = (float)pva.vel_x;
+		ins_kml.east_velocity = (float)pva.vel_y;
+		ins_kml.up_velocity = (float)pva.vel_z;
+		ins_kml.roll = (float)pva.roll;
+		ins_kml.pitch = (float)pva.pitch;
+		ins_kml.heading = (float)pva.azimuth;
 		Kml_Generator::Instance()->append_ins(ins_kml);
 	}
 

@@ -64,7 +64,6 @@ namespace beidou_Tool {
 		memset(&beidou_pak_o1, 0, sizeof(beidou_o1_t));
 		memset(&beidou_pak_hG, 0, sizeof(beidou_hG_t));
 		Kml_Generator::Instance()->init();
-		Kml_Generator::Instance()->set_kml_frequency(100);
 	}
 
 	extern void set_output_beidou_file(int output) {
@@ -446,7 +445,7 @@ namespace beidou_Tool {
 
 	void output_beidou_hG()
 	{
-		sprintf(beidou_output_msg, "%d,%11.4f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f\n",beidou_pak_hG.gps_week, (double)beidou_pak_hG.gps_millisecs / 1000,
+		sprintf(beidou_output_msg, "%d,%11.4f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f\n",beidou_pak_hG.gps_week, (double)beidou_pak_hG.gps_millisecs / 1000.0,
 			beidou_pak_hG.length, beidou_pak_hG.heading, beidou_pak_hG.pitch, beidou_pak_hG.hdgstddev, beidou_pak_hG.ptchstddev);
 		write_beidou_log_file(beidou_raw.ntype, beidou_output_msg);
 		//txt

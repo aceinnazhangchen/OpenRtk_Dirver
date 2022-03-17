@@ -445,7 +445,7 @@ namespace RTK330LA_Tool {
 		double horizontal_speed = sqrt(north_vel * north_vel + east_vel * east_vel);
 		double track_over_ground = atan2(east_vel, north_vel) * R2D;
 		//csv
-		sprintf(inceptio_output_msg, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%3d,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%3d\n",
+		sprintf(inceptio_output_msg, "%d,%11.4f,%3d,%14.9f,%14.9f,%10.4f,%3d,%5.1f,%5.1f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n",
 			inceptio_pak_gN_early.GPS_Week, inceptio_pak_gN_early.GPS_TimeOfWeek,
 			inceptio_pak_gN_early.positionMode, (double)inceptio_pak_gN_early.latitude * 180.0 / MAX_INT, (double)inceptio_pak_gN_early.longitude * 180.0 / MAX_INT, inceptio_pak_gN_early.height,
 			inceptio_pak_gN_early.numberOfSVs, inceptio_pak_gN_early.hdop, (float)inceptio_pak_gN_early.diffage,
@@ -513,7 +513,7 @@ namespace RTK330LA_Tool {
 			latitude_std, longitude_std, height_std, inceptio_pak_gN.positionMode, north_vel, east_vel, up_vel, track_over_ground);
 		write_inceptio_ex_file(INCEPTIO_OUT_GNSS, inceptio_output_msg);
 		//process $GPGNSS
-		sprintf(inceptio_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f\n"
+		sprintf(inceptio_output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%3d\n"
 			, inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek
 			,(double)inceptio_pak_gN.latitude*180.0 / MAX_INT, (double)inceptio_pak_gN.longitude*180.0 / MAX_INT
 			, inceptio_pak_gN.height, latitude_std, longitude_std, height_std

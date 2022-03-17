@@ -27,7 +27,7 @@ void decode_openrtk330li_interface(char* filename)
 	if (file) {
 		char dirname[256] = { 0 };
 		int ret = 0;
-		int file_size = getFileSize(file);
+		int64_t file_size = getFileSize(file);
 		size_t read_size = 0;
 		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
@@ -56,7 +56,7 @@ void decode_rtk330la_interface(char* filename)
 	if (file) {
 		char dirname[256] = { 0 };
 		int ret = 0;
-		int file_size = getFileSize(file);
+		int64_t file_size = getFileSize(file);
 		size_t read_size = 0;
 		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
@@ -89,7 +89,7 @@ void decode_ins401_interface(char* filename, char* is_parse_dr)
 	}
 	if (file && ins401_decoder) {
 		int ret = 0;
-		int file_size = getFileSize(file);
+		int64_t file_size = getFileSize(file);
 		size_t read_size = 0;
 		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
@@ -126,7 +126,7 @@ void decode_beidou_interface(char* filename)
 	if (file) {
 		char dirname[256] = { 0 };
 		int ret = 0;
-		int file_size = getFileSize(file);
+		int64_t file_size = getFileSize(file);
 		size_t read_size = 0;
 		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
