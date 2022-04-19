@@ -26,3 +26,7 @@ USERDECODERLIB_API void decode_npos122(char* filename)
 	decode_npos122_interface(filename);
 }
 
+USERDECODERLIB_API void decode_ins401c(char* filename)
+{
+	decode_ins401c_interface(filename);
+}

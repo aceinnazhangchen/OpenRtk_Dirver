@@ -7,6 +7,7 @@
 #include "ins_save_parse.h"
 #include "beidou.h"
 #include "NPOS122_decoder.h"
+#include "ins401c.h"
 
 #ifndef  WIN32
 #include<ctype.h>
@@ -177,4 +178,30 @@ void decode_npos122_interface(char* filename) {
 		fclose(file);
 		printf("\nfinished\r\n");
 	}
+}
+
+void decode_ins401c_interface(char* filename){
+	printf("file name = %s\r\n", filename);
+	FILE* file = fopen(filename, "r");
+	if (file) {
+		int ret = 0;
+		char dirname[256] = { 0 };
+		int64_t file_size = getFileSize(file);
+		size_t read_size = 0;
+		size_t readcount = 0;
+		uint8_t read_cache[1024] = { 0 };
+		createDirByFilePath(filename, dirname);
+		ins401c_Tool::set_base_ins401c_file_name(dirname);
+
+        while(fgets((char* )read_cache, 1024, file)) {
+			readcount = strlen((char*)read_cache);
+			read_size += readcount;
+            ret = ins401c_Tool::input_inc401c_line(read_cache);
+			double percent = (double)read_size / (double)file_size * 100;
+			printf("Process : %4.1f %%\r", percent);
+		}
+
+		fclose(file);
+		printf("\nfinished\r\n");
+    }
 }

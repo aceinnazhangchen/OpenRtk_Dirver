@@ -17,3 +17,5 @@ extern "C" USERDECODERLIB_API void decode_openrtk_inceptio(char* filename);
 extern "C" USERDECODERLIB_API void decode_ins401(char* filename, char* is_parse_dr);
 
 extern "C" USERDECODERLIB_API void decode_beidou(char* filename);
+
+extern "C" USERDECODERLIB_API void decode_ins401c(char* filename);
