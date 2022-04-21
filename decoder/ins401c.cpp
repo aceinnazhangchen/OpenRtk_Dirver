@@ -11,9 +11,13 @@
 
 
 namespace ins401c_Tool {
-	static FILE* fs1 = NULL;
+	static FILE* fs_canfd = NULL;
+    static FILE* fs_imu = NULL;
+    static FILE* fs_ins = NULL;
 	static FILE* f_log = NULL;
 	static char ins401c_output_msg[1024] = { 0 };
+    static char ins401c_output_msg_imu[1024] = { 0 };
+    static char ins401c_output_msg_ins[1024] = { 0 };
     static const dbc_msg_hdr_t list_dbc_msgs[] = {
         {0x180, 53,           dbc_decode_INSPVAX},
     };
@@ -77,7 +81,7 @@ namespace ins401c_Tool {
         raw |= ((uint32_t)((bytes[23]))) << 16;    //< 8 bit(s) from B143
         raw |= ((uint32_t)((bytes[24]))) << 8;    //< 8 bit(s) from B151
         raw |= ((uint32_t)((bytes[25])));    //< 8 bit(s) from B159
-        to->INS_Time = ((raw));
+        to->IMU_Status = ((raw));
         raw  = ((uint32_t)((bytes[26]))) << 24;    //< 8 bit(s) from B167
         raw |= ((uint32_t)((bytes[27]))) << 16;    //< 8 bit(s) from B175
         raw |= ((uint32_t)((bytes[28]))) << 8;    //< 8 bit(s) from B183
@@ -109,19 +113,30 @@ namespace ins401c_Tool {
         to->INS_Car_Status = ((raw));
         raw  = ((uint32_t)((bytes[45])));    //< 8 bit(s) from B391
         to->INS_Status = ((raw * 0.001));
-        raw = ((uint32_t)((bytes[46])));    //< 8 bit(s) from B399
+        raw = ((uint32_t)((bytes[46]))) << 8;;    //< 8 bit(s) from B399
         raw |= ((uint32_t)((bytes[47])));    //< 8 bit(s) from B399
         to->INS_Std_Lat = ((raw * 0.001));
-        raw = ((uint32_t)((bytes[48])));    //< 8 bit(s) from B399
+        raw = ((uint32_t)((bytes[48]))) << 8;;    //< 8 bit(s) from B399
         raw |= ((uint32_t)((bytes[49])));    //< 8 bit(s) from B399
         to->INS_Std_Lon = ((raw * 0.001));
-        raw = ((uint32_t)((bytes[50])));    //< 8 bit(s) from B399
+        raw = ((uint32_t)((bytes[50]))) << 8;;    //< 8 bit(s) from B399
         raw |= ((uint32_t)((bytes[51])));    //< 8 bit(s) from B399
         to->INS_Std_LocatHeight = ((raw * 0.001));
-        raw = ((uint32_t)((bytes[52])));    //< 8 bit(s) from B399
+        raw = ((uint32_t)((bytes[52]))) << 8;;    //< 8 bit(s) from B399
         raw |= ((uint32_t)((bytes[53])));    //< 8 bit(s) from B399
         to->INS_Std_Heading = ((raw * 0.001));
 
+        raw = ((uint16_t)((bytes[54]))) << 8;    //< 8 bit(s) from B399
+        raw |= ((uint16_t)((bytes[55]))) ;    //< 8 bit(s) from B399
+        to->Week = (raw);
+
+        raw  = ((uint32_t)((bytes[56]))) << 24;    //< 8 bit(s) from B87
+        raw |= ((uint32_t)((bytes[57]))) << 16;    //< 8 bit(s) from B95
+        raw |= ((uint32_t)((bytes[58]))) << 8;    //< 8 bit(s) from B103
+        raw |= ((uint32_t)((bytes[59])));    //< 8 bit(s) from B111
+
+        to->TimeOfWeek = (raw);
+        // printf("timeofweek = %d, %f\r\n", to->TimeOfWeek, (double)(to->TimeOfWeek)/1000);
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
 #if 0
         printf("ACC_X:%11.4f\n", to->ACC_X);
@@ -151,18 +166,38 @@ namespace ins401c_Tool {
         printf("INS_Std_LocatHeight:%0.2f\n", to->INS_Std_LocatHeight);
         printf("INS_Std_Heading:%0.2f\n", to->INS_Std_Heading);
 #endif
-		sprintf(ins401c_output_msg, "%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%d,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%d,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.4f\n",to->ACC_X, to->ACC_Y, to->ACC_Z,\
+		sprintf(ins401c_output_msg, "%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%d,%d,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%d,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.4f\n",to->ACC_X, to->ACC_Y, to->ACC_Z,\
         to->GYRO_X, to->GYRO_Y, to->GYRO_Z,\
         to->INS_PitchAngle, to->INS_RollAngle, to->INS_HeadingAngle,\
-        to->INS_LocatHeight, to->INS_Time,\
+        to->INS_LocatHeight, to->IMU_Status,\
         to->INS_Latitude, to->INS_Longitude,\
         to->INS_NorthSpd, to->INS_EastSpd, to->INS_ToGroundSpd,\
         to->INS_GpsFlag_Pos, to->INS_NumSV, to->INS_GpsFlag_Heading, to->INS_Gps_Age, to->INS_Car_Status, to->INS_Status,\
-        to->INS_Std_Lat, to->INS_Std_Lon, to->INS_Std_LocatHeight, to->INS_Std_Heading \
+        to->INS_Std_Lat, to->INS_Std_Lon, to->INS_Std_LocatHeight, to->INS_Std_Heading, \
+        to->Week, (double)(to->TimeOfWeek) / 1000\
         );
-        write_in401c_log_file(ins401c_output_msg);
+        sprintf(ins401c_output_msg_imu, "%d,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f\n",to->Week,\
+        (double)(to->TimeOfWeek)/1000,\
+        to->ACC_X, to->ACC_Y, to->ACC_Z,\
+        to->GYRO_X, to->GYRO_Y, to->GYRO_Z,\
+        to->IMU_Status\
+        );
+
+        sprintf(ins401c_output_msg_ins, "%d,%11.4f,%d,%d,%11.7f,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f\n",
+        to->Week, (double)(to->TimeOfWeek)/1000,\
+        to->INS_Car_Status, to->INS_Status,\
+        to->INS_Latitude, to->INS_Longitude, to->INS_LocatHeight,\
+        to->INS_NorthSpd, to->INS_EastSpd, to->INS_ToGroundSpd,\
+        to->INS_RollAngle, to->INS_PitchAngle, to->INS_HeadingAngle,\
+        to->INS_Std_Lat, to->INS_Std_Lon, to->INS_Std_LocatHeight\
+        );
+
+        write_ins401c_log_file(ins401c_output_msg);
+        write_ins401c_imu_file(ins401c_output_msg_imu);
+        write_ins401c_ins_file(ins401c_output_msg_ins);
         return success;
     }
+
     bool dbc_msg_decode(uint32_t mid, uint8_t *from, uint8_t *to)
     {
         if (NULL == from || NULL == to)
@@ -176,7 +211,7 @@ namespace ins401c_Tool {
         return true;
     }
 
-    int input_inc401c_line(uint8_t* data)
+    int input_ins401c_line(uint8_t* data)
     {
         uint32_t mid = 0;
         uint8_t valid_data[1024];
@@ -191,7 +226,7 @@ namespace ins401c_Tool {
             {
                 mid = strtol(str, &endptr, 16);
             }
-            if( (count >= 10) && (count <= 70) )
+            if( (count >= 10) && (count <= 76) )
             {
                 valid_data[count-10] = strtol(str, &endptr, 16);
                 // printf("valid_data = %d\r\n", valid_data[count-10]);
@@ -203,14 +238,34 @@ namespace ins401c_Tool {
         count = 0;
         return 0;
     }
-	void write_in401c_log_file(char* log) {
+	void write_ins401c_log_file(char* log) {
 		if (strlen(base_ins401c_file_name) == 0) return;
 		char file_name[256] = { 0 };
-        if (fs1 == NULL) {
+        if (fs_canfd == NULL) {
             sprintf(file_name, "%s_INSPVA.csv", base_ins401c_file_name);
-            fs1 = fopen(file_name, "w");
-            if (fs1) fprintf(fs1, "ACC_X(s),ACC_Y(s),ACC_Z(s),GYRO_X(s),GYRO_Y(s),GYRO_Z(s),INS_PitchAngle(s),INS_RollAngle(s),INS_HeadingAngle(s),INS_LocatHeight(s),INS_Time(s),INS_Latitude(s),INS_Longitude(s),INS_NorthSpd(s),INS_EastSpd(s),INS_ToGroundSpd(s),INS_GpsFlag_Pos(s),INS_NumSV(s),INS_GpsFlag_Heading(s),INS_Gps_Age(s),INS_Car_Status(s),INS_Status(s),INS_Std_Lat(s),INS_Std_Lon(s),INS_Std_LocatHeight(s),INS_Std_Heading(s)\n");
+            fs_canfd = fopen(file_name, "w");
+            if (fs_canfd) fprintf(fs_canfd, "ACC_X(s),ACC_Y(s),ACC_Z(s),GYRO_X(s),GYRO_Y(s),GYRO_Z(s),INS_PitchAngle(s),INS_RollAngle(s),INS_HeadingAngle(s),INS_LocatHeight(s),INS_Time(s),INS_Latitude(s),INS_Longitude(s),INS_NorthSpd(s),INS_EastSpd(s),INS_ToGroundSpd(s),INS_GpsFlag_Pos(s),INS_NumSV(s),INS_GpsFlag_Heading(s),INS_Gps_Age(s),INS_Car_Status(s),INS_Status(s),INS_Std_Lat(s),INS_Std_Lon(s),INS_Std_LocatHeight(s),INS_Std_Heading(s),Week(s),TimeOfWeek(s)\n");
         }
-        if (fs1) fprintf(fs1, log);
+        if (fs_canfd) fprintf(fs_canfd, log);
+	}
+	void write_ins401c_imu_file(char* log) {
+		if (strlen(base_ins401c_file_name) == 0) return;
+		char file_name[256] = { 0 };
+        if (fs_imu == NULL) {
+            sprintf(file_name, "%s_imu.csv", base_ins401c_file_name);
+            fs_imu = fopen(file_name, "w");
+            if (fs_imu) fprintf(fs_imu, "GPS_Week(),GPS_TimeofWeek(s),x_accel(m/s^2),y_accel(m/s^2),z_accel(m/s^2),x_rate(deg/s),y_rate(deg/s),z_rate(deg/s)\n");
+        }
+        if (fs_imu) fprintf(fs_imu, log);
+	}
+	void write_ins401c_ins_file(char* log) {
+		if (strlen(base_ins401c_file_name) == 0) return;
+		char file_name[256] = { 0 };
+        if (fs_ins == NULL) {
+            sprintf(file_name, "%s_ins.csv", base_ins401c_file_name);
+            fs_ins = fopen(file_name, "w");
+            if (fs_ins) fprintf(fs_ins, "GPS_Week(),GPS_TimeofWeek(s),insCarStatus(),insPositionType(),latitude(deg),longitude(deg),height(m),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),roll(deg),pitch(deg),heading(deg),latitude_std(m),longitude_std(m),height_std(m)\n");
+        }
+        if (fs_ins) fprintf(fs_ins, log);
 	}
 }

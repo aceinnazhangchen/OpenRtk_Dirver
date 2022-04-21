@@ -30,11 +30,13 @@ namespace ins401c_Tool {
     //Comment:comment//< B120:16  Min: -360 Max: 360   Unit: deg   Destination: Vector__XXX
         float INS_RollAngle;                     
     //Comment:comment//< B136:16  Min: -360 Max: 360   Unit: deg   Destination: Vector__XXX
-        float INS_HeadingAngle;                  
+        float INS_LocatHeight;          
     //Comment:comment//< B168:32  Min: -10000 Max: 10000   Unit: m   Destination: Vector__XXX
-        float INS_LocatHeight;                   
-    //Comment:comment//< B200:32  Min: 0 Max: 4.29497e9   Unit: ms   Destination: Vector__XXX
-        uint32_t INS_Time;                       
+        uint32_t IMU_Status;
+
+        float INS_HeadingAngle;                  
+
+    //Comment:comment//< B200:32  Min: 0 Max: 4.29497e9   Unit: ms   Destination:       
     //Comment:comment//< B232:32  Min: -180 Max: 180   Unit: deg   Destination: 
         double INS_Latitude;                     
     //Comment:comment//< B264:32  Min: -180 Max: 180   Unit: deg   Destination: Vector__XXX
@@ -64,8 +66,10 @@ namespace ins401c_Tool {
     //Comment:comment//< B408:16  Min: 0 Max: 655.35   Unit:    Destination: Vector__XXX
         float INS_Std_LocatHeight;               
     //Comment:comment//< B424:16  Min: 0 Max: 655.35   Unit:    Destination: Vector__XXX
-        float INS_Std_Heading;                   
+        float INS_Std_Heading;                 
 
+        uint16_t Week;                   
+        uint32_t TimeOfWeek;        
         dbc_mia_info_t mia_info;
     } INSPVAX_t;
     #define MAX_CANFD_MESSAGE_COUNT  1
@@ -82,6 +86,9 @@ namespace ins401c_Tool {
     bool dbc_decode_INSPVAX(uint8_t *pstu, const uint8_t *bytes);
 
     void set_base_ins401c_file_name(char* file_name);
-    int input_inc401c_line(uint8_t* data);
-    void write_in401c_log_file(char* log);
+    int input_ins401c_line(uint8_t* data);
+    void write_ins401c_log_file(char* log);
+    void write_ins401c_imu_file(char* log);
+    void write_ins401c_ins_file(char* log);
+
 }

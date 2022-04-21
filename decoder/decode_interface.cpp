@@ -196,7 +196,7 @@ void decode_ins401c_interface(char* filename){
         while(fgets((char* )read_cache, 1024, file)) {
 			readcount = strlen((char*)read_cache);
 			read_size += readcount;
-            ret = ins401c_Tool::input_inc401c_line(read_cache);
+            ret = ins401c_Tool::input_ins401c_line(read_cache);
 			double percent = (double)read_size / (double)file_size * 100;
 			printf("Process : %4.1f %%\r", percent);
 		}
