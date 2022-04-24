@@ -162,7 +162,7 @@ namespace ins401c_Tool {
         printf("INS_RollAngle:%0.7f\n", to->INS_RollAngle);
         printf("INS_HeadingAngle:%0.7f\n", to->INS_HeadingAngle);
         printf("INS_LocatHeight:%0.7f\n", to->INS_LocatHeight);
-        printf("INS_Time:%d\n", to->INS_Time);
+        printf("IMU_Status:%d\n", to->IMU_Status);
         printf("INS_Latitude:%0.7f\n", to->INS_Latitude);
         printf("INS_Longitude:%0.7f\n", to->INS_Longitude);
         printf("INS_NorthSpd:%0.3f\n", to->INS_NorthSpd);
@@ -178,8 +178,11 @@ namespace ins401c_Tool {
         printf("INS_Std_Lon:%0.2f\n", to->INS_Std_Lon);
         printf("INS_Std_LocatHeight:%0.2f\n", to->INS_Std_LocatHeight);
         printf("INS_Std_Heading:%0.2f\n", to->INS_Std_Heading);
+        char test[10];
+        scanf(test);
 #endif
-		sprintf(ins401c_output_msg, "%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%d,%d,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%d,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.4f\n",to->ACC_X, to->ACC_Y, to->ACC_Z,\
+		sprintf(ins401c_output_msg, "%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.7f,%u,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%d,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.4f\n",\
+        to->ACC_X, to->ACC_Y, to->ACC_Z,\
         to->GYRO_X, to->GYRO_Y, to->GYRO_Z,\
         to->INS_PitchAngle, to->INS_RollAngle, to->INS_HeadingAngle,\
         to->INS_LocatHeight, to->IMU_Status,\
@@ -633,6 +636,8 @@ namespace ins401c_Tool {
         uint32_t data_len = strlen((const char*)data);
         char* str = strtok((char*)data, " ");
         char* endptr = NULL;
+        static uint8_t data_frame_start_flag = 0;
+        uint16_t data_index = 0;
         while (str != NULL)
         {
             count++; 
@@ -642,9 +647,13 @@ namespace ins401c_Tool {
                 {
                     mid = strtol(str, &endptr, 16);
                 }
-                if( (count >= 10) && (count <= 76) )
+                if( (count >= 10) && (count <= 76) && (data_frame_start_flag == 1))
                 {
-                    valid_data[count-10] = strtol(str, &endptr, 16);
+                    valid_data[data_index++] = strtol(str, &endptr, 16);
+                }
+                if(strcmp(str, "64") == 0)
+                {
+                    data_frame_start_flag = 1;
                 }
             }
             else
@@ -667,9 +676,10 @@ namespace ins401c_Tool {
         }
         else
         {
-            can_dbc_msg_decode(mid, valid_data, result);            
+            can_dbc_msg_decode(mid, valid_data, result);
         }
         count = 0;
+        data_frame_start_flag = 0;
         return 0;
     }
 	void write_ins401c_log_file(char* log) {
@@ -678,7 +688,7 @@ namespace ins401c_Tool {
         if (fs_canfd == NULL) {
             sprintf(file_name, "%s_INSPVA.csv", base_ins401c_file_name);
             fs_canfd = fopen(file_name, "w");
-            if (fs_canfd) fprintf(fs_canfd, "ACC_X(s),ACC_Y(s),ACC_Z(s),GYRO_X(s),GYRO_Y(s),GYRO_Z(s),INS_PitchAngle(s),INS_RollAngle(s),INS_HeadingAngle(s),INS_LocatHeight(s),INS_Time(s),INS_Latitude(s),INS_Longitude(s),INS_NorthSpd(s),INS_EastSpd(s),INS_ToGroundSpd(s),INS_GpsFlag_Pos(s),INS_NumSV(s),INS_GpsFlag_Heading(s),INS_Gps_Age(s),INS_Car_Status(s),INS_Status(s),INS_Std_Lat(s),INS_Std_Lon(s),INS_Std_LocatHeight(s),INS_Std_Heading(s),Week(s),TimeOfWeek(s)\n");
+            if (fs_canfd) fprintf(fs_canfd, "ACC_X(s),ACC_Y(s),ACC_Z(s),GYRO_X(s),GYRO_Y(s),GYRO_Z(s),INS_PitchAngle(s),INS_RollAngle(s),INS_HeadingAngle(s),INS_LocatHeight(s),IMU_Status(s),INS_Latitude(s),INS_Longitude(s),INS_NorthSpd(s),INS_EastSpd(s),INS_ToGroundSpd(s),INS_GpsFlag_Pos(s),INS_NumSV(s),INS_GpsFlag_Heading(s),INS_Gps_Age(s),INS_Car_Status(s),INS_Status(s),INS_Std_Lat(s),INS_Std_Lon(s),INS_Std_LocatHeight(s),INS_Std_Heading(s),Week(s),TimeOfWeek(s)\n");
         }
         if (fs_canfd) fprintf(fs_canfd, log);
 	}
