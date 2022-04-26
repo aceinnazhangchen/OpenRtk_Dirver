@@ -261,4 +261,5 @@ namespace ins401c_Tool {
     bool dbc_decode_INS_DataInfo(uint8_t *pstu, const uint8_t *bytes);
     bool dbc_decode_INS_Std(uint8_t *pstu, const uint8_t *bytes);
     bool dbc_decode_INS_Time(uint8_t *pstu, const uint8_t *bytes);    
+    void write_ins401c_kml_files();
 }

@@ -21,6 +21,8 @@ namespace ins401c_Tool {
     static char ins401c_output_msg_ins[1024] = { 0 };
     static can_imu_t imu_mess = {0};
     static can_ins_t ins_mess = {0};
+    kml_ins_t ins_kml;
+
     static const dbc_msg_hdr_t list_canfd_dbc_msgs[] = {
         {0x180, 53,           dbc_decode_INSPVAX},
     };
@@ -36,8 +38,33 @@ namespace ins401c_Tool {
         { 0x188, 4,          dbc_decode_INS_Time},
     };
 	static char base_ins401c_file_name[256] = { 0 };
+
+	extern void init_ins401c_data() {
+		memset(&imu_mess, 0, sizeof(imu_mess));
+		memset(&ins_mess, 0, sizeof(ins_mess));
+		Kml_Generator::Instance()->init();
+	}
+	void append_ins_kml()
+	{
+		ins_kml.gps_week = ins_mess.week;
+		ins_kml.gps_secs = (double)ins_mess.time_of_week / 1000 ;
+		ins_kml.ins_status = ins_mess.ins_position_status;
+		ins_kml.ins_position_type = ins_mess.ins_position_status;
+		ins_kml.latitude = ins_mess.latitude;
+		ins_kml.longitude = ins_mess.longitude;
+		ins_kml.height = ins_mess.height;
+		ins_kml.north_velocity = ins_mess.north_vel;
+		ins_kml.east_velocity = ins_mess.east_vel;
+		ins_kml.up_velocity = ins_mess.up_vel;
+		ins_kml.roll = ins_mess.roll;
+		ins_kml.pitch = ins_mess.pitch;
+		ins_kml.heading = ins_mess.heading;
+		Kml_Generator::Instance()->append_ins(ins_kml);
+	}
+
 	void set_base_ins401c_file_name(char* file_name)
 	{
+        init_ins401c_data();
 		strcpy(base_ins401c_file_name, file_name);
 		if (strlen(base_ins401c_file_name) == 0) return;
 		char log_file_name[256] = { 0 };
@@ -126,7 +153,7 @@ namespace ins401c_Tool {
         raw  = ((uint32_t)((bytes[44])));    //< 8 bit(s) from B335
         to->INS_Car_Status = ((raw));
         raw  = ((uint32_t)((bytes[45])));    //< 8 bit(s) from B391
-        to->INS_Status = ((raw * 0.001));
+        to->INS_Status = ((raw));
         raw = ((uint32_t)((bytes[46]))) << 8;;    //< 8 bit(s) from B399
         raw |= ((uint32_t)((bytes[47])));    //< 8 bit(s) from B399
         to->INS_Std_Lat = ((raw * 0.001));
@@ -207,10 +234,27 @@ namespace ins401c_Tool {
         to->INS_RollAngle, to->INS_PitchAngle, to->INS_HeadingAngle,\
         to->INS_Std_Lat, to->INS_Std_Lon, to->INS_Std_LocatHeight\
         );
+        ins_mess.week = to->Week;
+        ins_mess.time_of_week = to->TimeOfWeek;
+        ins_mess.ins_car_status = to->INS_Car_Status;
+        ins_mess.ins_position_status = to->INS_GpsFlag_Pos;
+        ins_mess.latitude = to->INS_Latitude;
+        ins_mess.longitude = to->INS_Longitude;
+        ins_mess.height = to->INS_LocatHeight;
+        ins_mess.north_vel = to->INS_NorthSpd;
+        ins_mess.east_vel = to->INS_EastSpd;
+        ins_mess.up_vel = to->INS_ToGroundSpd;
+        ins_mess.roll = to->INS_RollAngle;
+        ins_mess.pitch = to->INS_PitchAngle;
+        ins_mess.heading = to->INS_HeadingAngle;
+        ins_mess.latitude_std = to->INS_Std_Lat;
+        ins_mess.longitude_std = to->INS_Std_Lon;
+        ins_mess.height_std = to->INS_Std_LocatHeight;
 
         write_ins401c_log_file(ins401c_output_msg);
         write_ins401c_imu_file(ins401c_output_msg_imu);
         write_ins401c_ins_file(ins401c_output_msg_ins);
+        append_ins_kml();
         return success;
     }
 
@@ -595,6 +639,7 @@ namespace ins401c_Tool {
             );
             write_ins401c_imu_file(ins401c_output_msg_imu);
             write_ins401c_ins_file(ins401c_output_msg_ins);
+    		append_ins_kml();
             can_mess_flag = 0;
         }
         return success;
@@ -712,5 +757,9 @@ namespace ins401c_Tool {
         }
         if (fs_ins) fprintf(fs_ins, log);
 	}
-
+	void write_ins401c_kml_files() {
+		Kml_Generator::Instance()->open_files(base_ins401c_file_name);
+		Kml_Generator::Instance()->write_files();
+		Kml_Generator::Instance()->close_files();
+	}
 }
