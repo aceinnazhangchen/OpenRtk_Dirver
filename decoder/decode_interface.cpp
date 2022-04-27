@@ -200,7 +200,8 @@ void decode_ins401c_interface(char* filename){
 			double percent = (double)read_size / (double)file_size * 100;
 			printf("Process : %4.1f %%\r", percent);
 		}
-
+        printf("Process : %4.1f %%\r", 100.0);
+		ins401c_Tool::write_ins401c_kml_files();
 		fclose(file);
 		printf("\nfinished\r\n");
     }

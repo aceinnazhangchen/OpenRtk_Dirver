@@ -21,6 +21,7 @@ namespace ins401c_Tool {
     static char ins401c_output_msg_ins[1024] = { 0 };
     static can_imu_t imu_mess = {0};
     static can_ins_t ins_mess = {0};
+    FILE* f_ins_txt = NULL;
     kml_ins_t ins_kml;
 
     static const dbc_msg_hdr_t list_canfd_dbc_msgs[] = {
@@ -44,6 +45,21 @@ namespace ins401c_Tool {
 		memset(&ins_mess, 0, sizeof(ins_mess));
 		Kml_Generator::Instance()->init();
 	}
+
+	void create_file(FILE* &file, const char* suffix, const char* title, bool format_time = false) {
+		if (strlen(base_ins401c_file_name) == 0) return;
+		if (file == NULL) {
+			char file_name[256] = { 0 };
+			sprintf(file_name, "%s_%s", base_ins401c_file_name, suffix);
+			file = fopen(file_name, "wb");
+			if (file && title) {
+				if(format_time)
+					fprintf(file, "DateTime(),");
+				fprintf(file, title);
+			}
+		}
+	}
+
 	void append_ins_kml()
 	{
 		ins_kml.gps_week = ins_mess.week;
@@ -254,6 +270,16 @@ namespace ins401c_Tool {
         write_ins401c_log_file(ins401c_output_msg);
         write_ins401c_imu_file(ins401c_output_msg_imu);
         write_ins401c_ins_file(ins401c_output_msg_ins);
+#if 1
+		if ((uint32_t)(ins_mess.time_of_week) % 100 < 10) {
+			create_file(f_ins_txt, "ins.txt", NULL);
+			fprintf(f_ins_txt, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n",
+				ins_mess.week, (double)ins_mess.time_of_week / 1000.0, ins_mess.latitude, ins_mess.longitude, ins_mess.height,
+				ins_mess.north_vel, ins_mess.east_vel, ins_mess.up_vel,
+				ins_mess.roll, ins_mess.pitch, ins_mess.heading, ins_mess.ins_car_status, ins_mess.ins_position_status);
+		}
+#endif
+
         append_ins_kml();
         return success;
     }
@@ -637,8 +663,18 @@ namespace ins401c_Tool {
             ins_mess.roll, ins_mess.pitch, ins_mess.heading,\
             ins_mess.latitude_std, ins_mess.longitude_std, ins_mess.longitude_std\
             );
+
             write_ins401c_imu_file(ins401c_output_msg_imu);
             write_ins401c_ins_file(ins401c_output_msg_ins);
+#if 1
+		if ((uint32_t)(ins_mess.time_of_week) % 100 < 10) {
+			create_file(f_ins_txt, "ins.txt", NULL);
+			fprintf(f_ins_txt, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n",
+				ins_mess.week, (double)ins_mess.time_of_week / 1000.0, ins_mess.latitude, ins_mess.longitude, ins_mess.height,
+				ins_mess.north_vel, ins_mess.east_vel, ins_mess.up_vel,
+				ins_mess.roll, ins_mess.pitch, ins_mess.heading, ins_mess.ins_car_status, ins_mess.ins_position_status);
+		}
+#endif
     		append_ins_kml();
             can_mess_flag = 0;
         }
@@ -757,6 +793,8 @@ namespace ins401c_Tool {
         }
         if (fs_ins) fprintf(fs_ins, log);
 	}
+
+
 	void write_ins401c_kml_files() {
 		Kml_Generator::Instance()->open_files(base_ins401c_file_name);
 		Kml_Generator::Instance()->write_files();
