@@ -21,6 +21,9 @@ namespace ins401c_Tool {
     static char ins401c_output_msg_ins[1024] = { 0 };
     static can_imu_t imu_mess = {0};
     static can_ins_t ins_mess = {0};
+    FILE* f_ins_txt = NULL;
+    kml_ins_t ins_kml;
+
     static const dbc_msg_hdr_t list_canfd_dbc_msgs[] = {
         {0x180, 53,           dbc_decode_INSPVAX},
     };
@@ -36,8 +39,48 @@ namespace ins401c_Tool {
         { 0x188, 4,          dbc_decode_INS_Time},
     };
 	static char base_ins401c_file_name[256] = { 0 };
+
+	extern void init_ins401c_data() {
+		memset(&imu_mess, 0, sizeof(imu_mess));
+		memset(&ins_mess, 0, sizeof(ins_mess));
+		Kml_Generator::Instance()->init();
+	}
+
+	void create_file(FILE* &file, const char* suffix, const char* title, bool format_time = false) {
+		if (strlen(base_ins401c_file_name) == 0) return;
+		if (file == NULL) {
+			char file_name[256] = { 0 };
+			sprintf(file_name, "%s_%s", base_ins401c_file_name, suffix);
+			file = fopen(file_name, "wb");
+			if (file && title) {
+				if(format_time)
+					fprintf(file, "DateTime(),");
+				fprintf(file, title);
+			}
+		}
+	}
+
+	void append_ins_kml()
+	{
+		ins_kml.gps_week = ins_mess.week;
+		ins_kml.gps_secs = (double)ins_mess.time_of_week / 1000 ;
+		ins_kml.ins_status = ins_mess.ins_position_status;
+		ins_kml.ins_position_type = ins_mess.ins_position_status;
+		ins_kml.latitude = ins_mess.latitude;
+		ins_kml.longitude = ins_mess.longitude;
+		ins_kml.height = ins_mess.height;
+		ins_kml.north_velocity = ins_mess.north_vel;
+		ins_kml.east_velocity = ins_mess.east_vel;
+		ins_kml.up_velocity = ins_mess.up_vel;
+		ins_kml.roll = ins_mess.roll;
+		ins_kml.pitch = ins_mess.pitch;
+		ins_kml.heading = ins_mess.heading;
+		Kml_Generator::Instance()->append_ins(ins_kml);
+	}
+
 	void set_base_ins401c_file_name(char* file_name)
 	{
+        init_ins401c_data();
 		strcpy(base_ins401c_file_name, file_name);
 		if (strlen(base_ins401c_file_name) == 0) return;
 		char log_file_name[256] = { 0 };
@@ -126,7 +169,7 @@ namespace ins401c_Tool {
         raw  = ((uint32_t)((bytes[44])));    //< 8 bit(s) from B335
         to->INS_Car_Status = ((raw));
         raw  = ((uint32_t)((bytes[45])));    //< 8 bit(s) from B391
-        to->INS_Status = ((raw * 0.001));
+        to->INS_Status = ((raw));
         raw = ((uint32_t)((bytes[46]))) << 8;;    //< 8 bit(s) from B399
         raw |= ((uint32_t)((bytes[47])));    //< 8 bit(s) from B399
         to->INS_Std_Lat = ((raw * 0.001));
@@ -162,7 +205,7 @@ namespace ins401c_Tool {
         printf("INS_RollAngle:%0.7f\n", to->INS_RollAngle);
         printf("INS_HeadingAngle:%0.7f\n", to->INS_HeadingAngle);
         printf("INS_LocatHeight:%0.7f\n", to->INS_LocatHeight);
-        printf("INS_Time:%d\n", to->INS_Time);
+        printf("IMU_Status:%d\n", to->IMU_Status);
         printf("INS_Latitude:%0.7f\n", to->INS_Latitude);
         printf("INS_Longitude:%0.7f\n", to->INS_Longitude);
         printf("INS_NorthSpd:%0.3f\n", to->INS_NorthSpd);
@@ -178,8 +221,11 @@ namespace ins401c_Tool {
         printf("INS_Std_Lon:%0.2f\n", to->INS_Std_Lon);
         printf("INS_Std_LocatHeight:%0.2f\n", to->INS_Std_LocatHeight);
         printf("INS_Std_Heading:%0.2f\n", to->INS_Std_Heading);
+        char test[10];
+        scanf(test);
 #endif
-		sprintf(ins401c_output_msg, "%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%d,%d,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%d,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.4f\n",to->ACC_X, to->ACC_Y, to->ACC_Z,\
+		sprintf(ins401c_output_msg, "%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.7f,%u,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%d,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.4f\n",\
+        to->ACC_X, to->ACC_Y, to->ACC_Z,\
         to->GYRO_X, to->GYRO_Y, to->GYRO_Z,\
         to->INS_PitchAngle, to->INS_RollAngle, to->INS_HeadingAngle,\
         to->INS_LocatHeight, to->IMU_Status,\
@@ -204,10 +250,37 @@ namespace ins401c_Tool {
         to->INS_RollAngle, to->INS_PitchAngle, to->INS_HeadingAngle,\
         to->INS_Std_Lat, to->INS_Std_Lon, to->INS_Std_LocatHeight\
         );
+        ins_mess.week = to->Week;
+        ins_mess.time_of_week = to->TimeOfWeek;
+        ins_mess.ins_car_status = to->INS_Car_Status;
+        ins_mess.ins_position_status = to->INS_GpsFlag_Pos;
+        ins_mess.latitude = to->INS_Latitude;
+        ins_mess.longitude = to->INS_Longitude;
+        ins_mess.height = to->INS_LocatHeight;
+        ins_mess.north_vel = to->INS_NorthSpd;
+        ins_mess.east_vel = to->INS_EastSpd;
+        ins_mess.up_vel = to->INS_ToGroundSpd;
+        ins_mess.roll = to->INS_RollAngle;
+        ins_mess.pitch = to->INS_PitchAngle;
+        ins_mess.heading = to->INS_HeadingAngle;
+        ins_mess.latitude_std = to->INS_Std_Lat;
+        ins_mess.longitude_std = to->INS_Std_Lon;
+        ins_mess.height_std = to->INS_Std_LocatHeight;
 
         write_ins401c_log_file(ins401c_output_msg);
         write_ins401c_imu_file(ins401c_output_msg_imu);
         write_ins401c_ins_file(ins401c_output_msg_ins);
+#if 1
+		if ((uint32_t)(ins_mess.time_of_week) % 100 < 10) {
+			create_file(f_ins_txt, "ins.txt", NULL);
+			fprintf(f_ins_txt, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n",
+				ins_mess.week, (double)ins_mess.time_of_week / 1000.0, ins_mess.latitude, ins_mess.longitude, ins_mess.height,
+				ins_mess.north_vel, ins_mess.east_vel, ins_mess.up_vel,
+				ins_mess.roll, ins_mess.pitch, ins_mess.heading, ins_mess.ins_car_status, ins_mess.ins_position_status);
+		}
+#endif
+
+        append_ins_kml();
         return success;
     }
 
@@ -590,8 +663,19 @@ namespace ins401c_Tool {
             ins_mess.roll, ins_mess.pitch, ins_mess.heading,\
             ins_mess.latitude_std, ins_mess.longitude_std, ins_mess.longitude_std\
             );
+
             write_ins401c_imu_file(ins401c_output_msg_imu);
             write_ins401c_ins_file(ins401c_output_msg_ins);
+#if 1
+		if ((uint32_t)(ins_mess.time_of_week) % 100 < 10) {
+			create_file(f_ins_txt, "ins.txt", NULL);
+			fprintf(f_ins_txt, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n",
+				ins_mess.week, (double)ins_mess.time_of_week / 1000.0, ins_mess.latitude, ins_mess.longitude, ins_mess.height,
+				ins_mess.north_vel, ins_mess.east_vel, ins_mess.up_vel,
+				ins_mess.roll, ins_mess.pitch, ins_mess.heading, ins_mess.ins_car_status, ins_mess.ins_position_status);
+		}
+#endif
+    		append_ins_kml();
             can_mess_flag = 0;
         }
         return success;
@@ -633,6 +717,8 @@ namespace ins401c_Tool {
         uint32_t data_len = strlen((const char*)data);
         char* str = strtok((char*)data, " ");
         char* endptr = NULL;
+        static uint8_t data_frame_start_flag = 0;
+        uint16_t data_index = 0;
         while (str != NULL)
         {
             count++; 
@@ -642,9 +728,13 @@ namespace ins401c_Tool {
                 {
                     mid = strtol(str, &endptr, 16);
                 }
-                if( (count >= 10) && (count <= 76) )
+                if( (count >= 10) && (count <= 76) && (data_frame_start_flag == 1))
                 {
-                    valid_data[count-10] = strtol(str, &endptr, 16);
+                    valid_data[data_index++] = strtol(str, &endptr, 16);
+                }
+                if(strcmp(str, "64") == 0)
+                {
+                    data_frame_start_flag = 1;
                 }
             }
             else
@@ -667,9 +757,10 @@ namespace ins401c_Tool {
         }
         else
         {
-            can_dbc_msg_decode(mid, valid_data, result);            
+            can_dbc_msg_decode(mid, valid_data, result);
         }
         count = 0;
+        data_frame_start_flag = 0;
         return 0;
     }
 	void write_ins401c_log_file(char* log) {
@@ -678,7 +769,7 @@ namespace ins401c_Tool {
         if (fs_canfd == NULL) {
             sprintf(file_name, "%s_INSPVA.csv", base_ins401c_file_name);
             fs_canfd = fopen(file_name, "w");
-            if (fs_canfd) fprintf(fs_canfd, "ACC_X(s),ACC_Y(s),ACC_Z(s),GYRO_X(s),GYRO_Y(s),GYRO_Z(s),INS_PitchAngle(s),INS_RollAngle(s),INS_HeadingAngle(s),INS_LocatHeight(s),INS_Time(s),INS_Latitude(s),INS_Longitude(s),INS_NorthSpd(s),INS_EastSpd(s),INS_ToGroundSpd(s),INS_GpsFlag_Pos(s),INS_NumSV(s),INS_GpsFlag_Heading(s),INS_Gps_Age(s),INS_Car_Status(s),INS_Status(s),INS_Std_Lat(s),INS_Std_Lon(s),INS_Std_LocatHeight(s),INS_Std_Heading(s),Week(s),TimeOfWeek(s)\n");
+            if (fs_canfd) fprintf(fs_canfd, "ACC_X(s),ACC_Y(s),ACC_Z(s),GYRO_X(s),GYRO_Y(s),GYRO_Z(s),INS_PitchAngle(s),INS_RollAngle(s),INS_HeadingAngle(s),INS_LocatHeight(s),IMU_Status(s),INS_Latitude(s),INS_Longitude(s),INS_NorthSpd(s),INS_EastSpd(s),INS_ToGroundSpd(s),INS_GpsFlag_Pos(s),INS_NumSV(s),INS_GpsFlag_Heading(s),INS_Gps_Age(s),INS_Car_Status(s),INS_Status(s),INS_Std_Lat(s),INS_Std_Lon(s),INS_Std_LocatHeight(s),INS_Std_Heading(s),Week(s),TimeOfWeek(s)\n");
         }
         if (fs_canfd) fprintf(fs_canfd, log);
 	}
@@ -703,4 +794,10 @@ namespace ins401c_Tool {
         if (fs_ins) fprintf(fs_ins, log);
 	}
 
+
+	void write_ins401c_kml_files() {
+		Kml_Generator::Instance()->open_files(base_ins401c_file_name);
+		Kml_Generator::Instance()->write_files();
+		Kml_Generator::Instance()->close_files();
+	}
 }
