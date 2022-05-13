@@ -72,6 +72,9 @@
     <ClCompile Include="..\decoder\NPOS122_decoder.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
+    <ClCompile Include="..\decoder\ins401c.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="decoder_dll.h">
@@ -133,6 +136,9 @@
     </ClInclude>
     <ClInclude Include="..\decoder\NPOS122_decoder.h">
       <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\ins401c.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

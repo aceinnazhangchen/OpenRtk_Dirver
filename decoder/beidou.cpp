@@ -357,6 +357,9 @@ namespace beidou_Tool {
 	}
 
 	void output_beidou_gN() {
+		if (beidou_pak_gN.positionMode == 0) {
+			return;
+		}
 		double span_time = 0;
 		if (last_GPS_TimeOfWeek != 0.0) {
 			span_time = beidou_pak_gN.timeOfWeek - last_GPS_TimeOfWeek;

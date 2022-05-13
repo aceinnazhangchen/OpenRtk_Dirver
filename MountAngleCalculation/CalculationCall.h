@@ -13,8 +13,8 @@ class CalculationCall : public QObject
 public:
 	CalculationCall(QObject *parent);
 	~CalculationCall();
-	static void call_ins_start(const char*, int);
-	static void call_dr_mountangle_start(const char*, const char*, const char*);
+	static void call_ins_start(const char*);
+	static void call_dr_mountangle_start(const char * file_name, const char * week, const char * start_time, const char * end_time);
 private:
 	static HMODULE INS_DLL;
 	static HMODULE DR_DLL;

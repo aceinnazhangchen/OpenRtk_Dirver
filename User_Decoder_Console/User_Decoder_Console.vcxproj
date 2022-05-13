@@ -149,6 +149,7 @@
     <ClInclude Include="..\decoder\gnss_math.h" />
     <ClInclude Include="..\decoder\imu_raw.h" />
     <ClInclude Include="..\decoder\ins401.h" />
+    <ClInclude Include="..\decoder\ins401c.h" />
     <ClInclude Include="..\decoder\ins_save_parse.h" />
     <ClInclude Include="..\decoder\kml.h" />
     <ClInclude Include="..\decoder\mixed_raw.h" />
@@ -169,6 +170,7 @@
     <ClCompile Include="..\decoder\gnss_math.c" />
     <ClCompile Include="..\decoder\imu_raw.cpp" />
     <ClCompile Include="..\decoder\ins401.cpp" />
+    <ClCompile Include="..\decoder\ins401c.cpp" />
     <ClCompile Include="..\decoder\ins_save_parse.cpp" />
     <ClCompile Include="..\decoder\kml.cpp" />
     <ClCompile Include="..\decoder\mixed_raw.c" />

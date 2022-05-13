@@ -2,8 +2,6 @@
 #include <stdint.h>
 //#include "openrtk_user.h"
 
-#define MAX_INCEPTIO_PACKET_TYPES 13
-
 namespace RTK330LA_Tool {
 #pragma pack(push, 1)
 	typedef struct {
@@ -212,6 +210,70 @@ namespace RTK330LA_Tool {
 		uint8_t ins_aid;
 	} rtk_debug1_t;
 
+	typedef struct {
+		//bit: 1 is valid, 0 is invalid.
+		uint16_t spp_hor_pos_s : 1;//bit1: spp horizontal position status
+		uint16_t spp_ver_pos_s : 1;//bit2: spp vertical position status
+		uint16_t spp_hor_vel_s : 1;//bit3: spp horizontal velocity status
+		uint16_t spp_ver_vel_s : 1;//bit4: spp vertical velocity status
+		uint16_t rtk_hor_pos_s : 1;//bit5: rtk horizontal position status
+		uint16_t rtk_ver_pos_s : 1;//bit6: rtk vertical position status
+		uint16_t rtk_hor_vel_s : 1;//bit7: rtk horizontal velocity status
+		uint16_t rtk_ver_vel_s : 1;//bit8: rtk vertical velocity status
+		uint16_t rtk_heading_s : 1;//bit9: rtk heading status
+		uint16_t reserved : 7;//bit10~bit16: reserved
+	}gnss_integ_bit;
+
+	typedef struct {
+		uint16_t gps_week;      // GPS Week number
+		uint32_t gps_millisecs; // Milliseconds into week
+		uint32_t spp_fail_rate;    //m, scaled: *1.0e-10
+		uint32_t rtk_fail_rate;    //m, scaled: *1.0e-10
+
+		uint16_t spp_hor_pos_pl;   //m/s, scaled: *100, 0-30m available, 0xFFFF invalid
+		uint16_t spp_ver_pos_pl;   //m/s, scaled: *100, 0-30m available, 0xFFFF invalid
+		uint16_t spp_hor_vel_pl;   //m/s, scaled: *100, 0-30m/s available, 0xFFFF invalid
+		uint16_t spp_ver_vel_pl;   //m/s, scaled: *100, 0-30m/s available, 0xFFFF invalid
+
+		uint16_t rtk_hor_pos_pl;   //m, scaled: *100, 0-30m available, 0xFFFF invalid
+		uint16_t rtk_ver_pos_pl;   //m, scaled: *100, 0-30m available, 0xFFFF invalid
+		uint16_t rtk_hor_vel_pl;   //m/s, scaled: *100, 0-30m/s available, 0xFFFF invalid
+		uint16_t rtk_ver_vel_pl;   //m/s, scaled: *100, 0-30m/s available, 0xFFFF invalid
+		uint16_t rtk_heading_pl;   //deg, scaled: *100, 0-30 deg available, 0xFFFF invalid
+
+		uint16_t spp_hor_pos_al;   //m, scaled: *100, 0-30 deg available, 0xFFFF invalid
+		uint16_t spp_ver_pos_al;   //m, scaled: *100, 0-30m available, 0xFFFF invalid
+		uint16_t spp_hor_vel_al;   //m/s, scaled: *100, 0-30m/s available, 0xFFFF invalid
+		uint16_t spp_ver_vel_al;   //m/s, scaled: *100, 0-30m/s available, 0xFFFF invalid
+
+		uint16_t rtk_hor_pos_al;   //m, scaled: *100, 0-30m available, 0xFFFF invalid
+		uint16_t rtk_ver_pos_al;   //m, scaled: *100, 0-30m available, 0xFFFF invalid
+		uint16_t rtk_hor_vel_al;   //m/s, scaled: *100, 0-30m/s available, 0xFFFF invalid
+		uint16_t rtk_ver_vel_al;   //m/s, scaled: *100, 0-30m/s available, 0xFFFF invalid
+		uint16_t rtk_heading_al;   //deg, scaled: *100, 0-30m/s available, 0xFFFF invalid
+
+		gnss_integ_bit status_bit;
+	} gnss_integ_t;
+
+	typedef struct {
+		uint16_t gps_week;      // GPS Week number
+		uint32_t gps_millisecs; // Milliseconds into week
+		float hor_pos_pl;
+		float ver_pos_pl;
+		float hor_vel_pl;
+		float ver_vel_pl;
+		float pitch_pl;
+		float roll_pl;
+		float heading_pl;
+		uint8_t hor_pos_pl_status;
+		uint8_t hor_vel_pl_status;
+		uint8_t ver_pos_pl_status;
+		uint8_t ver_vel_pl_status;
+		uint8_t pitch_pl_status;
+		uint8_t roll_pl_status;
+		uint8_t heading_pl_status;
+	} ins_integ_t;
+
 	typedef enum {
 		INCEPTIO_OUT_NONE = 0,
 		INCEPTIO_OUT_SCALED1,
@@ -223,6 +285,8 @@ namespace RTK330LA_Tool {
 		INCEPTIO_OUT_STATUS,
 		INCEPTIO_OUT_ODO,
 		INCEPTIO_OUT_RTK_DEBUG1,
+		INCEPTIO_OUT_GNSS_INTEG,
+		INCEPTIO_OUT_INS_INTEG,
 	} InceptioOutPacketType;
 
 #pragma pack(pop)

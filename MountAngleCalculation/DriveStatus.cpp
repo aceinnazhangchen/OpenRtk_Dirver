@@ -30,6 +30,7 @@ void DriveStatus::init_patterns()
 void DriveStatus::clear_pattern() {
 	if (pattern.starttime != -1) {
 		memset(&pattern, 0, sizeof(pattern_t));
+		pattern.gps_week = -1;
 		pattern.starttime = -1;
 		pattern.endtime = -1;
 		pattern.curtime = -1;
@@ -61,6 +62,7 @@ void DriveStatus::addestcheckdata() {
 
 	estdata.status = curinsresult.ins_status;
 	estdata.postype = curinsresult.ins_position_type;
+	estdata.gps_week = curinsresult.gps_week;
 	estdata.time = curinsresult.gps_millisecs;
 	estdata.angle = angle;
 	estdata.distance = distance;
@@ -130,6 +132,7 @@ void DriveStatus::addestdata2patterns() {
 		}
 		else {
 			liveresult.type = 8;
+			liveresult.gps_week = 0;
 			liveresult.starttime = 0;
 			liveresult.curtime = 0;
 			liveresult.distance = 0.0;
@@ -160,6 +163,7 @@ int DriveStatus::checkdatapattern(int mode)
 				pattern.mode = mode;
 				pattern.starttime = estdata.time;
 			}
+			pattern.gps_week = estdata.gps_week;
 			pattern.curtime = estdata.time;
 			pattern.angle = pattern.angle + estdata.angle;
 			pattern.distance = pattern.distance + estdata.distance;
@@ -192,6 +196,7 @@ int DriveStatus::checkdatapattern(int mode)
 		}
 	}
 	if (ret == 1 || ret == 2) {
+		pattern.gps_week = estdata.gps_week;
 		pattern.endtime = estdata.time;
 		patterns.push_back(pattern);
 	}
@@ -233,10 +238,12 @@ int DriveStatus::calpatterns(int mode) {
 	else if (mode == 2) {
 		if (pattern.mode == 2) {
 			if (pattern.distance > 300) {
+				liveresult.gps_week = pattern.gps_week;
 				liveresult.starttime = pattern.starttime;
 				liveresult.curtime = pattern.curtime;
 			}
 			else {
+				liveresult.gps_week = 0;
 				liveresult.starttime = 0;
 				liveresult.curtime = 0;
 			}

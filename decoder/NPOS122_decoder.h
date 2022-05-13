@@ -6,6 +6,7 @@
 #include "kml.h"
 
 namespace NPOS122_Tool {
+#define NPOS122_BUFFER_LEN 1280
 #pragma pack(push, 1)
 	typedef struct {
 		uint8_t flag;				//header同步字是否满足包的条件 0:未满足, 1:满足
@@ -13,7 +14,7 @@ namespace NPOS122_Tool {
 		uint8_t header[4];
 		uint32_t nbyte;
 		uint32_t msg_len;
-		uint8_t buff[1280];
+		uint8_t buff[NPOS122_BUFFER_LEN];
 	} raw_t;
 
 	typedef struct {

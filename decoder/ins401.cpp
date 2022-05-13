@@ -4,13 +4,15 @@
 #include "common.h"
 #include "rtklib_core.h" //R2D
 #include "rtkcmn.h"
+#include <cassert>
 
 namespace Ins401_Tool {
 
 //#define MI_OUTPUT_FILE  //小米输出文件在项目属性中定义
 
 	Ins401_decoder::Ins401_decoder()
-		:m_MI_file_switch(false)
+		: m_MI_file_switch(false)
+		, m_isOutputFile(true)
 	{
 		f_log = NULL;
 		f_nmea = NULL;
@@ -55,6 +57,7 @@ namespace Ins401_Tool {
 		memset(&gnss_integ, 0, sizeof(gnss_integ));
 		memset(&rtk_debug1, 0, sizeof(rtk_debug1));
 		memset(&system_fault_detection, 0, sizeof(system_fault_detection));		
+		memset(&ins_integ, 0, sizeof(ins_integ));
 		memset(&gnss_kml, 0, sizeof(gnss_kml));
 		memset(&ins_kml, 0, sizeof(ins_kml));
 		memset(base_file_name, 0, 256);
@@ -71,6 +74,23 @@ namespace Ins401_Tool {
 		all_type_pack_num[em_GNSS_SOL_INTEGEITY] = 0;
 		all_type_pack_num[em_RTK_DEBUG1] = 0;
 		all_type_pack_num[em_PACKAGE_FD] = 0;
+		all_type_pack_num[em_INS_INTERGRITY] = 0;
+		all_type_pack_num[em_G1] = 0;
+
+		all_type_file_output[em_RAW_IMU] = 1;
+		all_type_file_output[em_GNSS_SOL] = 1;
+		all_type_file_output[em_INS_SOL] = 1;
+		all_type_file_output[em_RAW_ODO] = 1;
+		all_type_file_output[em_DIAGNOSTIC_MSG] = 1;
+		all_type_file_output[em_ROVER_RTCM] = 1;
+		all_type_file_output[em_MISALIGN] = 1;
+		all_type_file_output[PowerUpDR_MES] = 1;
+		all_type_file_output[em_CHECK] = 1;
+		all_type_file_output[em_GNSS_SOL_INTEGEITY] = 1;
+		all_type_file_output[em_RTK_DEBUG1] = 1;
+		all_type_file_output[em_PACKAGE_FD] = 1;
+		all_type_file_output[em_INS_INTERGRITY] = 1;
+		all_type_file_output[em_G1] = 1;
 		Kml_Generator::Instance()->init();
 	}
 
@@ -247,6 +267,18 @@ namespace Ins401_Tool {
 		//process $GPVEL
 		fprintf(f_process, "$GPVEL,%d,%11.4f,%10.4f,%10.4f,%10.4f\n",
 			gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, horizontal_speed, track_over_ground, gnss.up_vel);
+
+		FILE* f_gnss_time_txt = NULL;
+		std::string gnss_time_file = "gnss_process_time.csv";
+		FilesMap::iterator it = output_file_map.find(gnss_time_file);
+		if (it == output_file_map.end()) {
+			create_file(f_gnss_time_txt, gnss_time_file.c_str(), NULL);
+			output_file_map[gnss_time_file] = f_gnss_time_txt;
+		}
+		f_gnss_time_txt = output_file_map[gnss_time_file];
+		if (f_gnss_time_txt) {
+			fprintf(f_gnss_time_txt, "%d,%11.4f,%6.4f\n", gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, (imu.gps_millisecs - gnss.gps_millisecs) / 1000.0);
+		}		
 #endif
 		append_gnss_kml();
 	}
@@ -343,6 +375,77 @@ namespace Ins401_Tool {
 		}
 #endif
 		append_ins_kml();
+	}
+
+	void Ins401_decoder::output_ins_integ()
+	{
+		FILE* f_ins_intergrity_csv = NULL;
+		std::string ins_intergrity_name = "ins_intergrity.csv";
+		FilesMap::iterator it = output_file_map.find(ins_intergrity_name);
+		if (it == output_file_map.end()) {
+			std::string ins_intergrity_title = 
+				"GPS_Week(),GPS_TimeOfWeek(s)"
+				",hor_pos_pl, ver_pos_pl, hor_vel_pl, ver_vel_pl"
+				",pitch_pl, roll_pl, heading_pl"
+				",hor_pos_pl_status, ver_pos_pl_status, hor_vel_pl_status, ver_vel_pl_status"
+				",pitch_pl_status, roll_pl_status, heading_pl_status\n"
+				;
+			create_file(f_ins_intergrity_csv, ins_intergrity_name.c_str(), ins_intergrity_title.c_str());
+			output_file_map[ins_intergrity_name] = f_ins_intergrity_csv;
+		}
+		f_ins_intergrity_csv = output_file_map[ins_intergrity_name];
+		if (f_ins_intergrity_csv) {
+			fprintf(f_ins_intergrity_csv, "%4d,%11.4f", ins_integ.gps_week, (double)ins_integ.gps_millisecs / 1000.0);
+			fprintf(f_ins_intergrity_csv, ",%8.3f,%8.3f,%8.3f,%8.3f", ins_integ.hor_pos_pl, ins_integ.ver_pos_pl, ins_integ.hor_vel_pl, ins_integ.ver_vel_pl);
+			fprintf(f_ins_intergrity_csv, ",%8.3f,%8.3f,%8.3f", ins_integ.pitch_pl, ins_integ.roll_pl, ins_integ.heading_pl);
+			fprintf(f_ins_intergrity_csv, ",%2d,%2d,%2d,%2d", ins_integ.hor_pos_pl_status, ins_integ.ver_pos_pl_status, ins_integ.hor_vel_pl_status, ins_integ.ver_vel_pl_status);
+			fprintf(f_ins_intergrity_csv, ",%2d,%2d,%2d", ins_integ.pitch_pl_status, ins_integ.roll_pl_status, ins_integ.heading_pl_status);
+			fprintf(f_ins_intergrity_csv, "\n");
+		}
+	}
+
+	void Ins401_decoder::output_ins_and_integ()
+	{
+		if (ins.gps_millisecs != ins_integ.gps_millisecs) {
+			return;
+		}
+		if (ins.gps_millisecs % 100 >= 10) {
+			return;
+		}
+		FILE* f_ins_and_intergrity_csv = NULL;
+		std::string ins_and_intergrity_name = "ins_and_intergrity.csv";
+		FilesMap::iterator it = output_file_map.find(ins_and_intergrity_name);
+		if (it == output_file_map.end()) {
+			std::string ins_and_intergrity_title =
+				"GPS_Week(),GPS_TimeOfWeek(s)"
+				",latitude(deg),longitude(deg),height(m)"
+				",north_velocity(m/s),east_velocity(m/s),up_velocity(m/s)"
+				",roll(deg),pitch(deg),heading(deg)"
+				",ins_status(),ins_position_type()"
+				",latitude_std(m),longitude_std(m),height_std(m)"
+				",north_velocity_std(m/s),east_velocity_std(m/s),up_velocity_std(m/s)"
+				",roll_std(deg),pitch_std(deg),heading_std(deg)"
+				",hor_pos_pl, ver_pos_pl, hor_vel_pl, ver_vel_pl"
+				",pitch_pl, roll_pl, heading_pl\n";
+			create_file(f_ins_and_intergrity_csv, ins_and_intergrity_name.c_str(), NULL);
+			output_file_map[ins_and_intergrity_name] = f_ins_and_intergrity_csv;
+		}
+		f_ins_and_intergrity_csv = output_file_map[ins_and_intergrity_name];
+		if (f_ins_and_intergrity_csv) {
+			fprintf(f_ins_and_intergrity_csv, 
+				"%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d",
+				ins.gps_week, (double)ins.gps_millisecs / 1000.0
+				, ins.latitude, ins.longitude, ins.height
+				, ins.north_velocity, ins.east_velocity, ins.up_velocity
+				, ins.roll, ins.pitch, ins.heading
+				, ins.ins_position_type, ins.ins_status);
+			fprintf(f_ins_and_intergrity_csv, ",%8.3f,%8.3f,%8.3f", ins.latitude_std, ins.longitude_std, ins.height_std);
+			fprintf(f_ins_and_intergrity_csv, ",%8.3f,%8.3f,%8.3f", ins.north_velocity_std, ins.east_velocity_std, ins.up_velocity_std);
+			fprintf(f_ins_and_intergrity_csv, ",%8.3f,%8.3f,%8.3f", ins.roll_std, ins.pitch_std, ins.heading_std);
+			fprintf(f_ins_and_intergrity_csv, ",%8.3f,%8.3f,%8.3f,%8.3f", ins_integ.hor_pos_pl, ins_integ.ver_pos_pl, ins_integ.hor_vel_pl, ins_integ.ver_vel_pl);
+			fprintf(f_ins_and_intergrity_csv, ",%8.3f,%8.3f,%8.3f", ins_integ.pitch_pl, ins_integ.roll_pl, ins_integ.heading_pl);
+			fprintf(f_ins_and_intergrity_csv, "\n");
+		}
 	}
 
 	void Ins401_decoder::MI_output_ins_sol()
@@ -496,7 +599,7 @@ namespace Ins401_Tool {
 		}
 	}
 
-	void Ins401_decoder::output_gnss_sol_and_integ()
+	void Ins401_decoder::output_gnss_and_integ()
 	{
 		if (gnss.gps_week == 0 || gnss_integ.week == 0)
 			return;
@@ -504,7 +607,7 @@ namespace Ins401_Tool {
 			return;
 		if (gnss.gps_millisecs != (uint32_t)gnss_integ.gps_millisecs)
 			return;
-		FILE* f_gnss_sol_integ_csv = NULL;
+		FILE* f_gnss_and_integ_csv = NULL;
 		std::string gnss_sol_integ_name = "gnss_and_integrity.csv";
 		FilesMap::iterator it = output_file_map.find(gnss_sol_integ_name);
 		if (it == output_file_map.end()) {
@@ -518,21 +621,21 @@ namespace Ins401_Tool {
 				",north_vel_standard_deviation(m/s),east_vel_standard_deviation(m/s),up_vel_standard_deviation(m/s)"
 				",rtk_hor_pos_pl(m),rtk_ver_pos_pl(m),rtk_hor_pos_stat,rtk_ver_pos_stat"
 				",rtk_hor_vel_pl(m/s),rtk_ver_vel_pl(m/s),rtk_hor_vel_stat,rtk_ver_vel_stat\n";
-			create_file(f_gnss_sol_integ_csv, gnss_sol_integ_name.c_str(), gnss_and_integ_title.c_str());
-			output_file_map[gnss_sol_integ_name] = f_gnss_sol_integ_csv;
+			create_file(f_gnss_and_integ_csv, gnss_sol_integ_name.c_str(), gnss_and_integ_title.c_str());
+			output_file_map[gnss_sol_integ_name] = f_gnss_and_integ_csv;
 		}
-		f_gnss_sol_integ_csv = output_file_map[gnss_sol_integ_name];
-		if (f_gnss_sol_integ_csv) {
-			fprintf(f_gnss_sol_integ_csv, "%d,%11.4f,%3d", gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, gnss.position_type);
-			fprintf(f_gnss_sol_integ_csv, ",%14.9f,%14.9f,%10.4f", gnss.latitude, gnss.longitude, gnss.height);
-			fprintf(f_gnss_sol_integ_csv, ",%10.4f,%10.4f,%10.4f", gnss.latitude_std, gnss.longitude_std, gnss.height_std);
-			fprintf(f_gnss_sol_integ_csv, ",%3d,%3d", gnss.numberOfSVs, gnss.numberOfSVs_in_solution);
-			fprintf(f_gnss_sol_integ_csv, ",%5.1f,%5.1f", gnss.hdop, gnss.diffage);
-			fprintf(f_gnss_sol_integ_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel, gnss.east_vel, gnss.up_vel);
-			fprintf(f_gnss_sol_integ_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel_std, gnss.east_vel_std, gnss.up_vel_std);
-			fprintf(f_gnss_sol_integ_csv, ",%8.3f,%8.3f,%2d,%2d", (float)gnss_integ.rtk_hor_pos_pl / 100, (float)gnss_integ.rtk_ver_pos_pl / 100, gnss_integ.status_bit.rtk_hor_pos_s, gnss_integ.status_bit.rtk_ver_pos_s);
-			fprintf(f_gnss_sol_integ_csv, ",%8.3f,%8.3f,%2d,%2d", (float)gnss_integ.rtk_hor_vel_pl / 100, (float)gnss_integ.rtk_ver_vel_pl / 100, gnss_integ.status_bit.rtk_hor_vel_s, gnss_integ.status_bit.rtk_ver_vel_s);
-			fprintf(f_gnss_sol_integ_csv, "\n");
+		f_gnss_and_integ_csv = output_file_map[gnss_sol_integ_name];
+		if (f_gnss_and_integ_csv) {
+			fprintf(f_gnss_and_integ_csv, "%d,%11.4f,%3d", gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, gnss.position_type);
+			fprintf(f_gnss_and_integ_csv, ",%14.9f,%14.9f,%10.4f", gnss.latitude, gnss.longitude, gnss.height);
+			fprintf(f_gnss_and_integ_csv, ",%10.4f,%10.4f,%10.4f", gnss.latitude_std, gnss.longitude_std, gnss.height_std);
+			fprintf(f_gnss_and_integ_csv, ",%3d,%3d", gnss.numberOfSVs, gnss.numberOfSVs_in_solution);
+			fprintf(f_gnss_and_integ_csv, ",%5.1f,%5.1f", gnss.hdop, gnss.diffage);
+			fprintf(f_gnss_and_integ_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel, gnss.east_vel, gnss.up_vel);
+			fprintf(f_gnss_and_integ_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel_std, gnss.east_vel_std, gnss.up_vel_std);
+			fprintf(f_gnss_and_integ_csv, ",%8.3f,%8.3f,%2d,%2d", (float)gnss_integ.rtk_hor_pos_pl / 100, (float)gnss_integ.rtk_ver_pos_pl / 100, gnss_integ.status_bit.rtk_hor_pos_s, gnss_integ.status_bit.rtk_ver_pos_s);
+			fprintf(f_gnss_and_integ_csv, ",%8.3f,%8.3f,%2d,%2d", (float)gnss_integ.rtk_hor_vel_pl / 100, (float)gnss_integ.rtk_ver_vel_pl / 100, gnss_integ.status_bit.rtk_hor_vel_s, gnss_integ.status_bit.rtk_ver_vel_s);
+			fprintf(f_gnss_and_integ_csv, "\n");
 		}
 	}
 
@@ -548,7 +651,7 @@ namespace Ins401_Tool {
 		}
 		f_check_csv = output_file_map[check_name];
 		if (f_check_csv) {
-
+			fprintf(f_check_csv, "%d \n", packetcheck.runtime.value);
 		}
 	}
 
@@ -574,17 +677,34 @@ namespace Ins401_Tool {
 		std::string fd_name = "fd.csv";
 		FilesMap::iterator it = output_file_map.find(fd_name);
 		if (it == output_file_map.end()) {
-			std::string check_title = "";
+			std::string check_title = "err_out_pin(),rf_err_pin(),ant_err_pin(),handshake_flag(),reset_pin()\n";
 			create_file(f_fd, fd_name.c_str(), check_title.c_str());
 			output_file_map[fd_name] = f_fd;
 		}
 		f_fd = output_file_map[fd_name];
 		if (f_fd) {
-			fprintf(f_fd, "%d,%d,%d,%d\n",
+			fprintf(f_fd, "%d,%d,%d,%d,%d\n",
 				system_fault_detection.gnss_err_out_pin,
 				system_fault_detection.gnss_rf_err_pin,
 				system_fault_detection.gnss_ant_err_pin,
-				system_fault_detection.gnss_handshake_flag);
+				system_fault_detection.gnss_handshake_flag,
+				system_fault_detection.gnss_reset_pin);
+		}
+	}
+
+	void Ins401_decoder::output_G1()
+	{
+		FILE* f_g1 = NULL;
+		std::string fd_name = "g1.csv";
+		FilesMap::iterator it = output_file_map.find(fd_name);
+		if (it == output_file_map.end()) {
+			create_file(f_g1, fd_name.c_str(), "");
+			output_file_map[fd_name] = f_g1;
+		}
+		f_g1 = output_file_map[fd_name];
+		if (f_g1) {
+			uint8_t* payload = raw.buff + 6;
+			fwrite(payload, 1, raw.length, f_g1);
 		}
 	}
 
@@ -597,17 +717,20 @@ namespace Ins401_Tool {
 	void Ins401_decoder::parse_packet_payload()
 	{
 		uint8_t* payload = raw.buff + 6;
+		if (all_type_file_output.find(raw.packet_type) == all_type_file_output.end()) return;
+		if (all_type_file_output[raw.packet_type] == 0) return;
 		switch (raw.packet_type) {
 		case em_RAW_IMU:
 		{
 			size_t packet_size = sizeof(raw_imu_t);
 			if (raw.length == packet_size) {
 				memcpy(&imu, payload, packet_size);
+				if (!m_isOutputFile) break;
 				output_imu_raw();
 				MI_output_imu_raw();
-#ifdef OUTPUT_INNER_FILE
-				save_imu_bin();
-#endif
+//#ifdef OUTPUT_INNER_FILE
+//				save_imu_bin();
+//#endif
 			}
 		}break;
 		case em_GNSS_SOL:
@@ -615,9 +738,10 @@ namespace Ins401_Tool {
 			size_t packet_size = sizeof(gnss_sol_t);
 			if (raw.length == packet_size) {
 				memcpy(&gnss, payload, packet_size);
+				if (!m_isOutputFile) break;
 				output_gnss_sol();
 				//MI_output_gnss_sol();
-				output_gnss_sol_and_integ();
+				output_gnss_and_integ();
 			}
 		}break;
 		case em_INS_SOL:
@@ -626,15 +750,27 @@ namespace Ins401_Tool {
 			size_t packet_size = sizeof(ins_sol_t);
 			if (raw.length == packet_size || raw.length == packet_size_20211207) {
 				memcpy(&ins, payload, raw.length);
+				if (!m_isOutputFile) break;
 				output_ins_sol();
 				MI_output_ins_sol();
 			}
+		}break;
+		case em_INS_INTERGRITY:
+		{
+			size_t packet_size = sizeof(ins_intergrity_t);
+			if (raw.length == packet_size) {
+				memcpy(&ins_integ, payload, packet_size);
+				if (!m_isOutputFile) break;
+				output_ins_integ();
+				output_ins_and_integ();
+			}	
 		}break;
 		case em_RAW_ODO:
 		{
 			size_t packet_size = sizeof(odo_t);
 			if (raw.length == packet_size) {
 				memcpy(&odo, payload, packet_size);
+				if (!m_isOutputFile) break;
 				output_odo_raw();
 			}
 		}break;
@@ -643,6 +779,7 @@ namespace Ins401_Tool {
 			size_t packet_size = sizeof(diagnostic_msg_t);
 			if (raw.length == packet_size) {
 				memcpy(&dm, payload, packet_size);
+				if (!m_isOutputFile) break;
 				output_dm_raw();
 			}
 		}break;
@@ -655,6 +792,7 @@ namespace Ins401_Tool {
 			size_t packet_size = sizeof(binary_misalign_t);
 			if (raw.length == packet_size) {
 				memcpy(&misa, payload, packet_size);
+				if (!m_isOutputFile) break;
 				output_misa_sol();
 			}
 		}
@@ -663,6 +801,7 @@ namespace Ins401_Tool {
 		{
 			size_t packet_size = sizeof(SaveMsg);
 			int ret = 0;
+			if (!m_isOutputFile) break;
 			for (uint32_t i = 0; i < raw.length; i++)
 			{
 				ret = input_ins_save_data(raw.buff[i]);
@@ -674,6 +813,7 @@ namespace Ins401_Tool {
 			size_t packet_size = sizeof(stPacketCheck);
 			if (raw.length == packet_size){
 				memcpy(&packetcheck, payload, packet_size);
+				output_check();
 			}
 		}
 		break;
@@ -682,8 +822,9 @@ namespace Ins401_Tool {
 			size_t packet_size = sizeof(gnss_integ_t);
 			if (raw.length == packet_size) {
 				memcpy(&gnss_integ, payload, packet_size);
+				if (!m_isOutputFile) break;
 				output_gnss_integ();
-				output_gnss_sol_and_integ();
+				output_gnss_and_integ();
 				last_gnss_integ_millisecs = (uint32_t)gnss_integ.gps_millisecs;
 			}
 		}
@@ -693,7 +834,8 @@ namespace Ins401_Tool {
 #ifdef OUTPUT_INNER_FILE
 			size_t packet_size = sizeof(binary_rtk_debug1_t);
 			if (raw.length == packet_size) {
-				memcpy(&rtk_debug1, payload, packet_size);		
+				memcpy(&rtk_debug1, payload, packet_size);	
+				if (!m_isOutputFile) break;
 				output_rtk_debug1();
 			}
 #endif
@@ -704,8 +846,14 @@ namespace Ins401_Tool {
 			size_t packet_size = sizeof(system_fault_detection_t);
 			if (raw.length == packet_size) {
 				memcpy(&system_fault_detection, payload, packet_size);
+				if (!m_isOutputFile) break;
 				output_system_fault_detection();
 			}
+		}
+		break;
+		case em_G1:
+		{
+			output_G1();
 		}
 		break;
 		default:
@@ -777,11 +925,13 @@ namespace Ins401_Tool {
 				raw.nmea[raw.nmeabyte - 2] = 0x0A;
 				raw.nmea[raw.nmeabyte - 1] = 0;
 				raw.nmea_flag = 0;
-				create_file(f_nmea, "nmea.txt", NULL);
-				fprintf(f_nmea, (char*)raw.nmea);
+				if (m_isOutputFile) {
+					create_file(f_nmea, "nmea.txt", NULL);
+					fprintf(f_nmea, (char*)raw.nmea);
 #ifdef MI_OUTPUT_FILE
-				parse_gga();
+					parse_gga();
 #endif //MI_OUTPUT_FILE
+				}
 				return 2;
 			}
 		}
@@ -803,8 +953,18 @@ namespace Ins401_Tool {
 		m_MI_file_switch = write;
 	}
 
+	void Ins401_decoder::set_output_file(bool output)
+	{
+		m_isOutputFile = output;
+	}
+
 	int Ins401_decoder::input_data(uint8_t data)
 	{
+		assert(raw.header_len <= 4);
+		//assert(raw.nbyte <= 112);
+		if (raw.nbyte > 118) {
+			printf("error\n");
+		}
 		int ret = 0;
 		if (raw.flag == 0) {
 			raw.header[raw.header_len++] = data;

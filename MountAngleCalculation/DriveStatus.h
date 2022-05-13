@@ -21,6 +21,7 @@ struct ins_sol_data {
 struct est_t {
 	uint8_t		status;
 	uint8_t		postype;
+	uint16_t	gps_week;
 	uint32_t	time;		// millisecs
 	float		angle;
 	double		distance;
@@ -28,6 +29,7 @@ struct est_t {
 
 struct pattern_t {
 	uint8_t		mode;
+	uint16_t	gps_week;
 	uint32_t	starttime;	// millisecs
 	uint32_t	curtime;	// millisecs
 	uint32_t	endtime;	// millisecs
@@ -40,6 +42,7 @@ struct liveresult_t {
 	float		totalangle_r;
 	float		totalangle_l;
 	double		distance;
+	uint16_t	gps_week;
 	uint32_t	starttime;	// millisecs
 	uint32_t	curtime;	// millisecs
 };

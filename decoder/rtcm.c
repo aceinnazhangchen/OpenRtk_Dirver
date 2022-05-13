@@ -5810,7 +5810,10 @@ extern int input_rtcm3_data(rtcm_t *rtcm, unsigned char data, obs_t *obs, nav_t 
         {
             rtcm->key = data;
             rtcm->buff[rtcm->nbyte++] = data;
-        }
+		}
+		else {
+			return -1;
+		}
         return 0;
     }
 

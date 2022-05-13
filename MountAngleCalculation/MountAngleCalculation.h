@@ -32,19 +32,21 @@ protected:
 	void setOperable(bool enable);
 	void setSplitOperable(bool enable);
 	void readAngleFromFile(QString file_path);
+	void readAngleFromFile_1(QString file_path);
 	void CalculateAverageAngle();
 private slots:
 	void onSelectFileClicked();
 	void onSelectProcessFileClicked();
 	void onSaveClicked();
 	void onDecodeClicked();
+	void onProcessClicked();
 	void onSplitClicked();
 	void onCalculateClicked();
 	void onCalculateAllClicked();
 	void onCalculateNext();
 	void onTimeSlicesChanged(const QString & time_str);
 	void onProcess(int present, int msecs);
-	void onFinished();
+	void onDecodeFinished();
 	void onSplitFinished();
 signals:
 	void sgnCalculateNext();

@@ -241,9 +241,14 @@ namespace Ins401_Tool {
 		uint32_t  BackUp : 27;
 	}stFdHwMonitor;
 
+	typedef union {
+		uint32_t value;
+		stFdHwMonitor runtime;
+	}uFdHwMonitor;
+
 	typedef struct {
 		stFdHwStUp  start_up;
-		stFdHwMonitor runtime;
+		uFdHwMonitor runtime;
 	}stPacketCheck;
 
 	typedef struct {
@@ -257,7 +262,7 @@ namespace Ins401_Tool {
 		uint16_t rtk_ver_vel_s : 1;
 		uint16_t rtk_heading_s : 1;
 		uint16_t reserved : 7;
-	}gnss_sol_integ_bit;
+	}gnss_integ_bit;
 
 	typedef struct {
 		uint16_t	week;
@@ -282,7 +287,7 @@ namespace Ins401_Tool {
 		uint16_t	rtk_hor_vel_al;
 		uint16_t	rtk_ver_vel_al;
 		uint16_t	rtk_heading_al;
-		gnss_sol_integ_bit	status_bit;
+		gnss_integ_bit	status_bit;
 	}gnss_integ_t;
 
 	typedef struct {
@@ -296,7 +301,27 @@ namespace Ins401_Tool {
 		uint8_t gnss_rf_err_pin;
 		uint8_t gnss_ant_err_pin;
 		uint8_t gnss_handshake_flag; // 1 ok ,0 failure
+		uint8_t gnss_reset_pin;
 	} system_fault_detection_t;
+
+	typedef struct {
+		uint16_t gps_week;
+		uint32_t gps_millisecs;
+		float hor_pos_pl;
+		float ver_pos_pl;
+		float hor_vel_pl;
+		float ver_vel_pl;
+		float pitch_pl;
+		float roll_pl;
+		float heading_pl;
+		uint8_t hor_pos_pl_status;
+		uint8_t ver_pos_pl_status;
+		uint8_t hor_vel_pl_status;
+		uint8_t ver_vel_pl_status;
+		uint8_t pitch_pl_status;
+		uint8_t roll_pl_status;
+		uint8_t heading_pl_status;
+	}ins_intergrity_t;
 
 #pragma pack(pop)
 
@@ -313,6 +338,8 @@ namespace Ins401_Tool {
 		em_GNSS_SOL_INTEGEITY = 0x6749,
 		em_RTK_DEBUG1 = 0xd101,
 		em_PACKAGE_FD = 0x6664,
+		em_INS_INTERGRITY= 0x6949,
+		em_G1 = 0x7a01,
 	};
 
 	typedef std::map<std::string, FILE*> FilesMap;
@@ -333,6 +360,7 @@ namespace Ins401_Tool {
 		gnss_integ_t gnss_integ;
 		binary_rtk_debug1_t rtk_debug1;
 		system_fault_detection_t system_fault_detection;
+		ins_intergrity_t ins_integ;
 		kml_gnss_t gnss_kml;
 		kml_ins_t ins_kml;
 		char base_file_name[256];
@@ -360,10 +388,12 @@ namespace Ins401_Tool {
 		int crc_right_num;
 		int crc_error_num;
 		std::map<uint16_t, int> all_type_pack_num;
+		std::map<uint16_t, int> all_type_file_output;
 		FilesMap output_file_map;			//现在输出文件不断增加，把文件指针都保存到map中
 		bool m_MI_file_switch;				//输出小米文件开关
 		double height_msl;					//海平面高
 		uint32_t last_gnss_integ_millisecs;	//上次gnss完好性包的周内秒，因为在没有gnss的情况下会不断输出同一个包
+		bool m_isOutputFile;
 	private:
 		void close_all_files();
 		void create_file(FILE * &file, const char * suffix, const char * title, bool format_time);
@@ -375,16 +405,19 @@ namespace Ins401_Tool {
 		void output_gnss_sol();
 		void MI_output_gnss_sol();
 		void output_ins_sol();
+		void output_ins_integ();
+		void output_ins_and_integ();
 		void MI_output_ins_sol();
 		void output_odo_raw();
 		void output_dm_raw();
 		void output_rover_rtcm();
 		void output_misa_sol();
 		void output_gnss_integ();
-		void output_gnss_sol_and_integ();
+		void output_gnss_and_integ();
 		void output_check();
 		void output_rtk_debug1();
 		void output_system_fault_detection();
+		void output_G1();
 		void parse_packet_payload();
 		void save_imu_bin();
 		void parse_gga();
@@ -394,6 +427,7 @@ namespace Ins401_Tool {
 		void set_base_file_name(char* file_name);
 		void set_show_format_time(bool show);
 		void set_MI_file_switch(bool write);
+		void set_output_file(bool output);
 		int input_data(uint8_t data);
 		int input_ins_save_data(unsigned char data);		
 		void finish();

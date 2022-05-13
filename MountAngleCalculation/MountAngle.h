@@ -5,6 +5,7 @@
 #include <vector>
 
 struct stTimeSlice {
+	uint16_t	week;
 	uint32_t	starttime;	// second
 	uint32_t	endtime;	// second
 	uint32_t	during;		// second

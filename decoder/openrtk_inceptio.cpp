@@ -12,7 +12,8 @@
 #define VERSION_EARLY		0
 #define VERSION_24_01_21	1
 namespace RTK330LA_Tool {
-	const char* inceptioPacketsTypeList[MAX_INCEPTIO_PACKET_TYPES] = { "s1","s2","gN","iN","d1","d2","sT","o1","fM","rt","sP","gI","r1" };
+#define MAX_INCEPTIO_PACKET_TYPES 16
+	const char* inceptioPacketsTypeList[MAX_INCEPTIO_PACKET_TYPES] = { "s1","s2","gN","iN","d1","d2","sT","o1","fM","rt","sP","gI","r1","gI","iI","g1" };
 
 	static int data_version = 0;
 	static usrRaw inceptio_raw = { 0 };
@@ -27,6 +28,8 @@ namespace RTK330LA_Tool {
 	static inceptio_sT_t inceptio_pak_sT = { 0 };
 	static inceptio_o1_t inceptio_pak_o1 = { 0 };
 	static rtk_debug1_t rtk_debug1 = { 0 };
+	static gnss_integ_t gnss_integ = { 0 };
+	static ins_integ_t ins_integ = { 0 };
 
 	static kml_gnss_t gnss_kml = { 0 };
 	static kml_ins_t ins_kml = { 0 };
@@ -49,6 +52,11 @@ namespace RTK330LA_Tool {
 	static FILE* f_ins = NULL;
 	static FILE* f_odo = NULL;
 	static FILE* fs1_b = NULL;
+	static FILE* f_gnss_time_txt = NULL;
+	static FILE* f_gnss_integ = NULL;
+	static FILE* f_ins_integ = NULL;
+	static FILE* f_ins_and_integ = NULL;
+	static FILE* f_g1 = NULL;
 	static char base_inceptio_file_name[256] = { 0 };
 
 	int crc_error_num = 0;
@@ -67,6 +75,9 @@ namespace RTK330LA_Tool {
 		memset(&inceptio_pak_d2, 0, sizeof(inceptio_d2_t));
 		memset(&inceptio_pak_sT, 0, sizeof(inceptio_sT_t));
 		memset(&inceptio_pak_o1, 0, sizeof(inceptio_o1_t));
+		memset(&rtk_debug1, 0, sizeof(rtk_debug1_t));
+		memset(&gnss_integ, 0, sizeof(gnss_integ_t));
+		memset(&ins_integ, 0, sizeof(ins_integ_t));
 		Kml_Generator::Instance()->init();
 	}
 
@@ -105,6 +116,25 @@ namespace RTK330LA_Tool {
 		if (f_odo)fclose(f_odo); f_odo = NULL;
 
 		if (fs1_b)fclose(fs1_b); fs1_b = NULL;
+		if (f_gnss_time_txt)fclose(f_gnss_time_txt); f_gnss_time_txt = NULL;
+		if (f_gnss_integ)fclose(f_gnss_integ); f_gnss_integ = NULL;
+		if (f_ins_integ)fclose(f_ins_integ); f_ins_integ = NULL;
+		if (f_ins_and_integ)fclose(f_ins_and_integ); f_ins_and_integ = NULL;
+		if (f_g1)fclose(f_g1); f_g1 = NULL;
+	}
+
+	static void create_file(FILE* &file, const char* suffix, const char* title, bool format_time = false) {
+		if (strlen(base_inceptio_file_name) == 0) return;
+		if (file == NULL) {
+			char file_name[256] = { 0 };
+			sprintf(file_name, "%s_%s", base_inceptio_file_name, suffix);
+			file = fopen(file_name, "wb");
+			if (file && title) {
+				if (format_time)
+					fprintf(file, "DateTime(),");
+				fprintf(file, title);
+			}
+		}
 	}
 
 	void inceptio_append_early_gnss_kml() {
@@ -468,6 +498,12 @@ namespace RTK330LA_Tool {
 		write_inceptio_process_file(inceptio_raw.ntype, 1, inceptio_output_msg);
 		//kml
 		inceptio_append_early_gnss_kml();
+
+		if (!f_gnss_time_txt) {
+			create_file(f_gnss_time_txt, "gnss_process_time.csv", NULL);
+		}
+		fprintf(f_gnss_time_txt, "%d,%11.4f,%6.4f\n", inceptio_pak_gN_early.GPS_Week, inceptio_pak_gN_early.GPS_TimeOfWeek, (inceptio_pak_s1.GPS_TimeOfWeek - inceptio_pak_gN_early.GPS_TimeOfWeek));
+
 	}
 
 	void output_inceptio_gN() {
@@ -517,7 +553,7 @@ namespace RTK330LA_Tool {
 			, inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek
 			,(double)inceptio_pak_gN.latitude*180.0 / MAX_INT, (double)inceptio_pak_gN.longitude*180.0 / MAX_INT
 			, inceptio_pak_gN.height, latitude_std, longitude_std, height_std
-			, inceptio_pak_gN.positionMode, inceptio_pak_gN_early.diffage);
+			, inceptio_pak_gN.positionMode, inceptio_pak_gN.diffage);
 		write_inceptio_process_file(INCEPTIO_OUT_GNSS, 0, inceptio_output_msg);
 		//process $GPVEL
 		sprintf(inceptio_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n", inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek, horizontal_speed, track_over_ground, up_vel);
@@ -525,7 +561,35 @@ namespace RTK330LA_Tool {
 		//kml
 		inceptio_append_gnss_kml();
 
+		if (!f_gnss_time_txt) {
+			create_file(f_gnss_time_txt, "gnss_process_time.csv",NULL);
+		}
+		fprintf(f_gnss_time_txt, "%d,%11.4f,%6.4f\n", inceptio_pak_gN.GPS_Week, inceptio_pak_gN.GPS_TimeOfWeek, (inceptio_pak_s2.GPS_TimeOfWeek - inceptio_pak_gN.GPS_TimeOfWeek));
+
 		last_GPS_TimeOfWeek = inceptio_pak_gN.GPS_TimeOfWeek;
+	}
+
+	void output_gnss_integ()
+	{
+		std::string gnss_integ_title =
+			"week,timeOfWeek(s),spp_fail_rate,rtk_fail_rate"
+			",spp_hor_pos_pl(m),spp_ver_pos_pl(m),spp_hor_vel_pl(m/s),spp_ver_vel_pl(m/s)"
+			",rtk_hor_pos_pl(m),rtk_ver_pos_pl(m),rtk_hor_vel_pl(m/s),rtk_ver_vel_pl(m/s),rtk_heading_pl(deg)"
+			",spp_hor_pos_al(m),spp_ver_pos_al(m),spp_hor_vel_al(m/s),spp_ver_vel_al(m/s)"
+			",rtk_hor_pos_al(m),rtk_ver_pos_al(m),rtk_hor_vel_al(m/s),rtk_ver_vel_al(m/s),rtk_heading_pl(deg)"
+			",spp_hor_pos_stat,spp_ver_pos_stat,spp_hor_vel_stat,spp_ver_vel_stat"
+			",rtk_hor_pos_stat,rtk_ver_pos_stat,rtk_hor_vel_stat,rtk_ver_vel_stat,rtk_heading_stat\n";
+		create_file(f_gnss_integ, "gnss_integ.csv", gnss_integ_title.c_str());
+		if (f_gnss_integ) {
+			fprintf(f_gnss_integ, "%4d,%11.4f,%8.3f,%8.3f", gnss_integ.gps_week, (double)gnss_integ.gps_millisecs / 1000, (float)gnss_integ.spp_fail_rate / 1.0e-10, (float)gnss_integ.rtk_fail_rate / 1.0e-10);
+			fprintf(f_gnss_integ, ",%8.3f,%8.3f,%8.3f,%8.3f", (float)gnss_integ.spp_hor_pos_pl / 100, (float)gnss_integ.spp_ver_pos_pl / 100, (float)gnss_integ.spp_hor_vel_pl / 100, (float)gnss_integ.spp_ver_vel_pl / 100);
+			fprintf(f_gnss_integ, ",%8.3f,%8.3f,%8.3f,%8.3f,%8.3f", (float)gnss_integ.rtk_hor_pos_pl / 100, (float)gnss_integ.rtk_ver_pos_pl / 100, (float)gnss_integ.rtk_hor_vel_pl / 100, (float)gnss_integ.rtk_ver_vel_pl / 100, (float)gnss_integ.rtk_heading_pl / 100);
+			fprintf(f_gnss_integ, ",%8.3f,%8.3f,%8.3f,%8.3f", (float)gnss_integ.spp_hor_pos_al / 100, (float)gnss_integ.spp_ver_pos_al / 100, (float)gnss_integ.spp_hor_vel_al / 100, (float)gnss_integ.spp_ver_vel_al / 100);
+			fprintf(f_gnss_integ, ",%8.3f,%8.3f,%8.3f,%8.3f,%8.3f", (float)gnss_integ.rtk_hor_pos_al / 100, (float)gnss_integ.rtk_ver_pos_al / 100, (float)gnss_integ.rtk_hor_vel_al / 100, (float)gnss_integ.rtk_ver_vel_al / 100, (float)gnss_integ.rtk_heading_al / 100);
+			fprintf(f_gnss_integ, ",%2d,%2d,%2d,%2d", gnss_integ.status_bit.spp_hor_pos_s, gnss_integ.status_bit.spp_ver_pos_s, gnss_integ.status_bit.spp_hor_vel_s, gnss_integ.status_bit.spp_ver_vel_s);
+			fprintf(f_gnss_integ, ",%2d,%2d,%2d,%2d,%2d", gnss_integ.status_bit.rtk_hor_pos_s, gnss_integ.status_bit.rtk_ver_pos_s, gnss_integ.status_bit.rtk_hor_vel_s, gnss_integ.status_bit.rtk_ver_vel_s, gnss_integ.status_bit.rtk_heading_s);
+			fprintf(f_gnss_integ, "\n");
+		}
 	}
 
 	void output_inceptio_iN() {
@@ -555,21 +619,71 @@ namespace RTK330LA_Tool {
 		inceptio_append_ins_kml();
 	}
 
+	void output_ins_integ()
+	{
+		std::string ins_intergrity_title =
+			"GPS_Week(),GPS_TimeOfWeek(s)"
+			",hor_pos_pl, ver_pos_pl, hor_vel_pl, ver_vel_pl"
+			",pitch_pl, roll_pl, heading_pl"
+			",hor_pos_pl_status, ver_pos_pl_status, hor_vel_pl_status, ver_vel_pl_status"
+			",pitch_pl_status, roll_pl_status, heading_pl_status\n"
+			;
+		create_file(f_ins_integ, "ins_integ.csv", ins_intergrity_title.c_str());
+		if (f_ins_integ) {
+			fprintf(f_ins_integ, "%4d,%11.4f", ins_integ.gps_week, (double)ins_integ.gps_millisecs / 1000.0);
+			fprintf(f_ins_integ, ",%8.3f,%8.3f,%8.3f,%8.3f", ins_integ.hor_pos_pl, ins_integ.ver_pos_pl, ins_integ.hor_vel_pl, ins_integ.ver_vel_pl);
+			fprintf(f_ins_integ, ",%8.3f,%8.3f,%8.3f", ins_integ.pitch_pl, ins_integ.roll_pl, ins_integ.heading_pl);
+			fprintf(f_ins_integ, ",%2d,%2d,%2d,%2d", ins_integ.hor_pos_pl_status, ins_integ.ver_pos_pl_status, ins_integ.hor_vel_pl_status, ins_integ.ver_vel_pl_status);
+			fprintf(f_ins_integ, ",%2d,%2d,%2d", ins_integ.pitch_pl_status, ins_integ.roll_pl_status, ins_integ.heading_pl_status);
+			fprintf(f_ins_integ, "\n");
+		}
+	}
+
+	void output_ins_and_integ()
+	{
+		if (ins_integ.gps_millisecs % 100 != 0) {
+			return;
+		}
+		if (uint32_t(inceptio_pak_iN.GPS_TimeOfWeek*1000) != ins_integ.gps_millisecs) {
+			return;
+		}
+		std::string ins_and_intergrity_title = 
+			"GPS_Week(),GPS_TimeOfWeek(s)"
+			",latitude(deg),longitude(deg),height(m)"
+			",north_velocity(m/s),east_velocity(m/s),up_velocity(m/s)"
+			",roll(deg),pitch(deg),heading(deg)"
+			",ins_status(),ins_position_type()"
+			",latitude_std(m),longitude_std(m),height_std(m)"
+			",north_velocity_std(m/s),east_velocity_std(m/s),up_velocity_std(m/s)"
+			",roll_std(deg),pitch_std(deg),heading_std(deg)"
+			",hor_pos_pl, ver_pos_pl, hor_vel_pl, ver_vel_pl"
+			",pitch_pl, roll_pl, heading_pl\n";
+		create_file(f_ins_and_integ, "ins_and_integ.csv", NULL);
+		if (f_ins_and_integ) {
+			fprintf(f_ins_and_integ, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d", inceptio_pak_iN.GPS_Week, inceptio_pak_iN.GPS_TimeOfWeek,
+				(double)inceptio_pak_iN.latitude*180.0 / MAX_INT, (double)inceptio_pak_iN.longitude*180.0 / MAX_INT, inceptio_pak_iN.height,
+				(float)inceptio_pak_iN.velocityNorth / 100.0, (float)inceptio_pak_iN.velocityEast / 100.0, (float)inceptio_pak_iN.velocityUp / 100.0,
+				(float)inceptio_pak_iN.roll / 100.0, (float)inceptio_pak_iN.pitch / 100.0, (float)inceptio_pak_iN.heading / 100.0, inceptio_pak_iN.insPositionType, inceptio_pak_iN.insStatus);
+			fprintf(f_ins_and_integ, ",%8.3f,%8.3f,%8.3f", (float)inceptio_pak_d1.latitude_std / 100.0, (float)inceptio_pak_d1.longitude_std / 100.0, (float)inceptio_pak_d1.height_std / 100.0);
+			fprintf(f_ins_and_integ, ",%8.3f,%8.3f,%8.3f", (float)inceptio_pak_d1.north_vel_std / 100.0, (float)inceptio_pak_d1.east_vel_std / 100.0, (float)inceptio_pak_d1.up_vel_std / 100.0);
+			fprintf(f_ins_and_integ, ",%8.3f,%8.3f,%8.3f", (float)inceptio_pak_d1.roll_std / 100.0, (float)inceptio_pak_d1.pitch_std / 100.0, (float)inceptio_pak_d1.heading_std / 100.0);
+			fprintf(f_ins_and_integ, ",%8.3f,%8.3f,%8.3f,%8.3f", ins_integ.hor_pos_pl, ins_integ.ver_pos_pl, ins_integ.hor_vel_pl, ins_integ.ver_vel_pl);
+			fprintf(f_ins_and_integ, ",%8.3f,%8.3f,%8.3f\n", ins_integ.pitch_pl, ins_integ.roll_pl, ins_integ.heading_pl);
+		}
+	}
+
 	void output_inceptio_d1() {
 		//csv
-		sprintf(inceptio_output_msg, "%d,%11.4f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f\n", inceptio_pak_d1.GPS_Week, inceptio_pak_d1.GPS_TimeOfWeek,
-			(float)inceptio_pak_d1.latitude_std / 100.0, (float)inceptio_pak_d1.longitude_std / 100.0, (float)inceptio_pak_d1.height_std / 100.0,
-			(float)inceptio_pak_d1.north_vel_std / 100.0, (float)inceptio_pak_d1.east_vel_std / 100.0, (float)inceptio_pak_d1.up_vel_std / 100.0,
-			(float)inceptio_pak_d1.roll_std / 100.0, (float)inceptio_pak_d1.pitch_std / 100.0, (float)inceptio_pak_d1.heading_std / 100.0);
+		sprintf(inceptio_output_msg, "%d,%11.4f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f\n"
+			, inceptio_pak_d1.GPS_Week, inceptio_pak_d1.GPS_TimeOfWeek
+			,(float)inceptio_pak_d1.latitude_std / 100.0, (float)inceptio_pak_d1.longitude_std / 100.0, (float)inceptio_pak_d1.height_std / 100.0
+			,(float)inceptio_pak_d1.north_vel_std / 100.0, (float)inceptio_pak_d1.east_vel_std / 100.0, (float)inceptio_pak_d1.up_vel_std / 100.0
+			,(float)inceptio_pak_d1.roll_std / 100.0, (float)inceptio_pak_d1.pitch_std / 100.0, (float)inceptio_pak_d1.heading_std / 100.0);
 		write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
 	}
 
 	void output_inceptio_d2() {
 		//csv
-		//sprintf(inceptio_output_msg, "%d,%11.4f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%3d,%3d\n", inceptio_pak_d2.GPS_Week, inceptio_pak_d2.GPS_TimeOfWeek,
-		//	(float)inceptio_pak_d2.latitude_std / 100.0, (float)inceptio_pak_d2.longitude_std / 100.0, (float)inceptio_pak_d2.height_std / 100.0,
-		//	(float)inceptio_pak_d2.north_vel_std / 100.0, (float)inceptio_pak_d2.east_vel_std / 100.0, (float)inceptio_pak_d2.up_vel_std / 100.0,
-		//	inceptio_pak_d2.hor_pos_pl, inceptio_pak_d2.ver_pos_pl, inceptio_pak_d2.hor_vel_pl, inceptio_pak_d2.ver_vel_pl, inceptio_pak_d2.pos_integrity_status, inceptio_pak_d2.vel_integrity_status);
 		sprintf(inceptio_output_msg, "%d,%11.4f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f,%8.3f\n", inceptio_pak_d2.GPS_Week, inceptio_pak_d2.GPS_TimeOfWeek,
 			(float)inceptio_pak_d2.latitude_std / 100.0, (float)inceptio_pak_d2.longitude_std / 100.0, (float)inceptio_pak_d2.height_std / 100.0,
 			(float)inceptio_pak_d2.north_vel_std / 100.0, (float)inceptio_pak_d2.east_vel_std / 100.0, (float)inceptio_pak_d2.up_vel_std / 100.0);
@@ -610,6 +724,15 @@ namespace RTK330LA_Tool {
 	void output_rtk_debug1() {
 		sprintf(inceptio_output_msg, "%d,%11.4f,%d\n", rtk_debug1.gps_week, rtk_debug1.gps_millisecs, rtk_debug1.ins_aid);
 		write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
+	}
+
+	void output_g1(uint8_t* buff) {
+		uint8_t payload_lenth = buff[2];
+		uint8_t* payload = buff + 3;
+		create_file(f_g1, "g1.csv", NULL);
+		if (f_g1) {
+			fwrite(payload, 1, payload_lenth, f_g1);
+		}
 	}
 
 	void parse_inceptio_packet_payload(uint8_t* buff, uint32_t nbyte) {
@@ -692,6 +815,26 @@ namespace RTK330LA_Tool {
 				memcpy(&rtk_debug1, payload, sizeof(rtk_debug1_t));
 				output_rtk_debug1();
 			}
+		}
+		else if (strcmp(packet_type, "gI") == 0) {
+			inceptio_raw.ntype = INCEPTIO_OUT_GNSS_INTEG;
+			size_t psize = sizeof(gnss_integ_t);
+			if (payload_lenth == psize) {
+				memcpy(&gnss_integ, payload, psize);
+				output_gnss_integ();
+			}
+		}
+		else if (strcmp(packet_type, "iI") == 0) {
+			inceptio_raw.ntype = INCEPTIO_OUT_INS_INTEG;
+			size_t psize = sizeof(ins_integ_t);
+			if (payload_lenth == psize) {
+				memcpy(&ins_integ, payload, psize);
+				output_ins_integ();
+				output_ins_and_integ();
+			}
+		}
+		else if (strcmp(packet_type, "g1") == 0) {
+			output_g1(buff);
 		}
 	}
 

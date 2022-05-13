@@ -31,7 +31,7 @@ void split_rtcm(char* filename) {
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
 			read_size += readcount;
 			for (int i = 0; i < readcount; i++) {
-				rtcm_split->input_data(read_cache[i]);
+				rtcm_split->split_data(read_cache[i]);
 			}
 			double percent = (double)read_size / (double)file_size * 100;
 			printf("Process : %4.1f %%\r", percent);

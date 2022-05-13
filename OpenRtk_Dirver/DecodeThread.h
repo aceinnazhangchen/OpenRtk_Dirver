@@ -54,6 +54,7 @@ protected:
 	void decode_beidou();
 	void decode_npos112();
 	void decode_st_rtcm();
+	void decode_lg69t_rtcm();
 private:
 	bool m_isStop;
 	int m_FileFormat;

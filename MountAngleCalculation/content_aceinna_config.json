@@ -2,7 +2,7 @@
     "CarrierMode": 0,
     "GNSSinterrupt": [
     ],
-    "IsUseMisAlignment": 1,
+    "IsUseMisAlignment": 0,
     "MisAlignment": [
         0,
         0,
@@ -13,6 +13,7 @@
         2,
         3
     ],
+    "OutputMessageType": 8191,
     "accBias": [
         0,
         0,
@@ -28,12 +29,12 @@
         0,
         0
     ],
-    "fileOutputType": 2,
+    "fileOutputType": 15,
     "gnssDataRate": 1,
     "gnssDataType": 3,
+    "gnssFileName": "",
     "gnssOutputDataRate": 1,
     "gnssSensorType": 0,
-    "gnssfileNme": "",
     "gyroBias": [
         0,
         0,
@@ -46,41 +47,46 @@
     ],
     "imuDataRate": 100,
     "imuSensorType": 1,
+    "initfile": "",
+    "initfiletype": 0,
+    "initfmpre": 0,
     "initialAttitudeMode": 0,
+    "insFileName": "",
     "insOutputDataRate": 10,
-    "insfileName": "",
-    "isKmlOutput": 0,
+    "isKmlOutput": 1,
     "isOnlineMisAlignmentEst": 0,
     "isTiltCalibrationRIGHT": 0,
     "isUseDuaAnt": 0,
     "isUseGNSSVel": 0,
     "isUseNHC": 0,
-    "isUseOdo": 1,
+    "isUseNHCRES": 0,
+    "isUseOdo": 0,
     "isUseTiltCalibration": 0,
     "isUseZUPT": 1,
     "isUseZUPTLOCK": 1,
     "isUserOutPut": 1,
     "kmlOutputDateRate": 1,
     "odoDataRate": 10,
-    "odoLeverarm": [
-        1.27,
-        -0.08,
-        -0.72
+    "odoFileName": "",
+    "odoLeverArm": [
+        0.6,
+        0.13,
+        0.21
     ],
     "odoScale": 1,
-    "odofileName": "",
+    "outputFileName": "F:/data/2022/29/2/ins401/user_2022_01_29_09_54_34_d/user_2022_01_29_09_54_34_process",
     "priLeverArm": [
-        1.27,
-        -0.08,
-        -0.72
+        1.37,
+        -0.17,
+        -0.94
     ],
+    "procFileName": "F:/data/2022/29/2/ins401/user_2022_01_29_09_54_34_d/user_2022_01_29_09_54_34_process",
     "procType": 0,
-    "procfileNme": "F:/data/2022/42/openrtk_log_20220211_131516/user_2022_02_11_13_15_16_d\\user_2022_02_11_13_15_16_process",
-    "profiletype": 512,
+    "profiletype": 127,
     "rotationRBV": [
         0,
         0,
-        0
+        180
     ],
     "secLeverArm": [
         0,
@@ -89,8 +95,8 @@
     ],
     "useGNSSRate": 1,
     "userLeverArm": [
-        1.27,
-        -0.08,
-        -0.72
+        1.37,
+        -0.17,
+        -0.94
     ]
 }

@@ -18,6 +18,11 @@ void decode_ins401(char* filename)
 	decode_ins401_interface(filename, is_parse_dr);
 }
 
+void decode_ins401c(char* filename)
+{
+	decode_ins401c_interface(filename);
+}
+
 int main(int argc, char* argv[]) {
 	if (argc > 2) {
 		char* filename = argv[2];
@@ -36,12 +41,15 @@ int main(int argc, char* argv[]) {
 		else if (strcmp(argv[1], "-npos122") == 0) {
 			decode_npos122_interface(filename);
 		}
+		else if (strcmp(argv[1], "-ins401c") == 0) {
+			decode_ins401c(filename);
+		}
 		else {
-			printf("User_Decoder_Console.exe -u(OpenRTK330LI)|i(RTK330LA)|ins401|beidou <filename> \n");
+			printf("User_Decoder_Console.exe -u(OpenRTK330LI)|i(RTK330LA)|ins401|beidou|npos122 <filename> \n");
 		}
 	}
 	else {
-		printf("User_Decoder_Console.exe -u(OpenRTK330LI)|i(RTK330LA)|ins401|beidou <filename> \n");
+		printf("User_Decoder_Console.exe -u(OpenRTK330LI)|i(RTK330LA)|ins401|beidou|npos122 <filename> \n");
 	}
 	return 0;
 }
