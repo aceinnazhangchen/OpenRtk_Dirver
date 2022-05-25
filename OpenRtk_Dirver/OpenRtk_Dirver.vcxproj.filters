@@ -142,9 +142,6 @@
     <ClCompile Include="..\decoder\beidou.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
-    <ClCompile Include="rtk330la_decoder.cpp">
-      <Filter>decoder</Filter>
-    </ClCompile>
     <ClCompile Include="..\decoder\NPOS122_decoder.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
@@ -156,6 +153,9 @@
     </ClCompile>
     <ClCompile Include="StaticAnalysis.cpp">
       <Filter>Source Files\Analysis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\rtk330la_decoder.cpp">
+      <Filter>decoder</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -286,10 +286,10 @@
     <ClInclude Include="..\decoder\beidou.h">
       <Filter>decoder</Filter>
     </ClInclude>
-    <ClInclude Include="rtk330la_decoder.h">
+    <ClInclude Include="..\decoder\NPOS122_decoder.h">
       <Filter>decoder</Filter>
     </ClInclude>
-    <ClInclude Include="..\decoder\NPOS122_decoder.h">
+    <ClInclude Include="..\decoder\rtk330la_decoder.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>

@@ -3,6 +3,7 @@
 #include "common.h"
 #include "openrtk_user.h"
 #include "openrtk_inceptio.h"
+#include "rtk330la_decoder.h"
 #include "ins401.h"
 #include "ins_save_parse.h"
 #include "beidou.h"
@@ -53,31 +54,36 @@ void decode_openrtk330li_interface(char* filename)
 
 void decode_rtk330la_interface(char* filename)
 {
+	RTK330LA_Tool::Rtk330la_decoder* rtk330la_decoder = new RTK330LA_Tool::Rtk330la_decoder();
 	FILE* file = fopen(filename, "rb");
-	if (file) {
+	if (file && rtk330la_decoder) {
 		char dirname[256] = { 0 };
 		int ret = 0;
 		int64_t file_size = getFileSize(file);
 		size_t read_size = 0;
 		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
-		RTK330LA_Tool::set_output_inceptio_file(1);
 		createDirByFilePath(filename, dirname);
-		RTK330LA_Tool::set_base_inceptio_file_name(dirname);
+		rtk330la_decoder->init();
+		rtk330la_decoder->set_base_file_name(dirname);
+		//RTK330LA_Tool::set_base_inceptio_file_name(dirname);
 		while (!feof(file)) {
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
 			read_size += readcount;
 			for (size_t i = 0; i < readcount; i++) {
-				ret = RTK330LA_Tool::input_inceptio_raw(read_cache[i]);
+				//ret = RTK330LA_Tool::input_inceptio_raw(read_cache[i]);
+				ret = rtk330la_decoder->input_raw(read_cache[i]);
 			}
 			double percent = (double)read_size / (double)file_size * 100;
 			printf("Process : %4.1f %%\r", percent);
 		}
-		RTK330LA_Tool::write_inceptio_kml_files();
-		RTK330LA_Tool::close_inceptio_all_log_file();
+		//RTK330LA_Tool::write_inceptio_kml_files();
+		//RTK330LA_Tool::close_inceptio_all_log_file();
+		rtk330la_decoder->finish();
 		fclose(file);
 		printf("\nfinished\r\n");
 	}
+	delete rtk330la_decoder;
 }
 
 void decode_ins401_interface(char* filename, char* is_parse_dr)

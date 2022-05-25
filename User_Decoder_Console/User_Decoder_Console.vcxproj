@@ -159,6 +159,7 @@
     <ClInclude Include="..\decoder\openrtk_user.h" />
     <ClInclude Include="..\decoder\rtcm.h" />
     <ClInclude Include="..\decoder\rtcm_split.h" />
+    <ClInclude Include="..\decoder\rtk330la_decoder.h" />
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
   </ItemGroup>
@@ -180,6 +181,7 @@
     <ClCompile Include="..\decoder\openrtk_user.cpp" />
     <ClCompile Include="..\decoder\rtcm.c" />
     <ClCompile Include="..\decoder\rtcm_split.cpp" />
+    <ClCompile Include="..\decoder\rtk330la_decoder.cpp" />
     <ClCompile Include="..\decoder\rtkcmn.c" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
