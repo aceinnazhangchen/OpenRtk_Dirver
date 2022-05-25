@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QThread>
-#include "MountAngle.h"
+#include "SplitByTime.h"
 
 class LoadInsTextFileThread : public QThread
 {
@@ -20,7 +20,7 @@ protected:
 private:
 	bool m_isStop;
 	QString m_InsTextFileName;
-	MountAngle* m_MountAngle;
+	SplitByTime* m_SplitByTime;
 signals:
 	void sgnFinished();
 };

@@ -2,6 +2,7 @@
 #include "ConfigFile.h"
 #include <QProgressBar>
 #include <QFileDialog>
+#include <QMessageBox>
 #include "CalculationCall.h"
 
 #define DIMENSION	3
@@ -14,15 +15,19 @@ MountAngleCalculation::MountAngleCalculation(QWidget *parent)
 	m_ProcessFilePath = "";
 	m_SimpleDecodeThread = new SimpleDecodeThread(this);
 	m_LoadInsTextFileThread = new LoadInsTextFileThread(this);
+	m_JsonFileLoader = new JsonFileLoader(this);
 	LoadJsonFile();
 	ui.tableWidget_config->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 	ui.tableWidget_config->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 	//connect(ui.pushButton_save, SIGNAL(clicked()), this, SLOT(onSaveClicked()));
 	connect(ui.select_btn, SIGNAL(clicked()), this, SLOT(onSelectFileClicked()));
+	connect(ui.novatel_ins_convert_btn, SIGNAL(clicked()), this, SLOT(onConvertClicked()));
 	connect(ui.pushButton_decode, SIGNAL(clicked()), this, SLOT(onDecodeClicked()));
 	connect(ui.pushButton_process, SIGNAL(clicked()), this, SLOT(onProcessClicked()));
 	connect(ui.pushButton_split, SIGNAL(clicked()), this, SLOT(onSplitClicked()));
+	connect(ui.novatel_ins_select_btn, SIGNAL(clicked()), this, SLOT(onSelectNovatelInsFileClicked()));
 	connect(ui.process_select_btn, SIGNAL(clicked()), this, SLOT(onSelectProcessFileClicked()));
+	connect(ui.result_select_btn, SIGNAL(clicked()), this, SLOT(onSelectResultFileClicked()));
 	connect(ui.pushButton_calculate, SIGNAL(clicked()), this, SLOT(onCalculateClicked()));
 	connect(ui.pushButton_calculate_all, SIGNAL(clicked()), this, SLOT(onCalculateAllClicked()));
 	connect(this, SIGNAL(sgnCalculateNext()), this, SLOT(onCalculateNext()));
@@ -58,6 +63,14 @@ void MountAngleCalculation::dropEvent(QDropEvent * event)
 		QString name = event->mimeData()->urls().first().toLocalFile();
 		ui.filepath_edt->setText(name);
 	}
+	else if (ui.novatel_ins_path_edt->isEnabled() && ui.novatel_ins_path_edt->geometry().contains(event->pos())) {
+		QString name = event->mimeData()->urls().first().toLocalFile();
+		ui.novatel_ins_path_edt->setText(name);
+	}
+	else if (ui.tableWidget_config->isEnabled() && ui.tableWidget_config->geometry().contains(event->pos())) {
+		QString name = event->mimeData()->urls().first().toLocalFile();
+		LoadConfigureJsonFile(name);
+	}
 	else if (ui.process_filepath_edt->isEnabled() && ui.process_filepath_edt->geometry().contains(event->pos())) {
 		QString name = event->mimeData()->urls().first().toLocalFile();
 		ui.process_filepath_edt->setText(name);
@@ -65,6 +78,86 @@ void MountAngleCalculation::dropEvent(QDropEvent * event)
 	else if (ui.result_filepath_edt->isEnabled() && ui.result_filepath_edt->geometry().contains(event->pos())) {
 		QString name = event->mimeData()->urls().first().toLocalFile();
 		ui.result_filepath_edt->setText(name);
+	}
+}
+
+void MountAngleCalculation::LoadConfigureJsonFile(QString filename)
+{
+	if (m_JsonFileLoader == NULL) return;
+	if (m_JsonFileLoader->readJsonArrayFile(filename) == false) return;
+	ui.label_9->setText(filename);
+	QJsonObject& configJson = m_JsonFileLoader->getConfig();
+	if (configJson["parameters"].isObject()) {
+		//ui.tableWidget_config->clearContents();
+		QJsonObject parameters = configJson["parameters"].toObject();
+		//rtk330 pri lever
+		if (parameters["pri lever arm x"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(0, 0);
+			item->setText(QString::number(parameters["pri lever arm x"].toDouble()));
+		}
+		if (parameters["pri lever arm y"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(0, 1);
+			item->setText(QString::number(parameters["pri lever arm y"].toDouble()));
+		}
+		if (parameters["pri lever arm z"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(0, 2);
+			item->setText(QString::number(parameters["pri lever arm z"].toDouble()));
+		}
+		//ins401 gnss lever
+		if (parameters["gnss lever arm x"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(0, 0);
+			item->setText(QString::number(parameters["gnss lever arm x"].toDouble()));
+		}
+		if (parameters["gnss lever arm y"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(0, 1);
+			item->setText(QString::number(parameters["gnss lever arm y"].toDouble()));
+		}
+		if (parameters["gnss lever arm z"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(0, 2);
+			item->setText(QString::number(parameters["gnss lever arm z"].toDouble()));
+		}
+		//vrp lever arm
+		if (parameters["vrp lever arm x"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(1, 0);
+			item->setText(QString::number(parameters["vrp lever arm x"].toDouble()));
+		}
+		if (parameters["vrp lever arm y"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(1, 1);
+			item->setText(QString::number(parameters["vrp lever arm y"].toDouble()));
+		}
+		if (parameters["vrp lever arm z"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(1, 2);
+			item->setText(QString::number(parameters["vrp lever arm z"].toDouble()));
+		}
+		//user lever arm
+		if (parameters["user lever arm x"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(2, 0);
+			item->setText(QString::number(parameters["user lever arm x"].toDouble()));
+		}
+		if (parameters["user lever arm y"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(2, 1);
+			item->setText(QString::number(parameters["user lever arm y"].toDouble()));
+		}
+		if (parameters["user lever arm z"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(2, 2);
+			item->setText(QString::number(parameters["user lever arm z"].toDouble()));
+		}
+		//rotation rbvx
+		if (parameters["rotation rbvx"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(3, 0);
+			item->setText(QString::number(parameters["rotation rbvx"].toDouble()));
+		}
+		if (parameters["rotation rbvy"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(3, 1);
+			item->setText(QString::number(parameters["rotation rbvy"].toDouble()));
+		}
+		if (parameters["rotation rbvz"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(3, 2);
+			item->setText(QString::number(parameters["rotation rbvz"].toDouble()));
+		}
+	}
+	else {
+		QMessageBox::critical(NULL, "Error", "The Json File don't have the key \"parameters\"!");
 	}
 }
 
@@ -82,22 +175,13 @@ void MountAngleCalculation::LoadJsonFile()
 				ui.tableWidget_config->setItem(0, i, item);
 			}
 		}
-		//rotationRBV
-		QJsonArray rotationRBV = configJson["rotationRBV"].toArray();
-		if (rotationRBV.size() == DIMENSION) {
-			for (int i = 0; i < DIMENSION; i++) {
-				double rotationRBV_value = rotationRBV[i].toDouble();
-				QTableWidgetItem *item = new QTableWidgetItem(QString::number(rotationRBV_value));
-				ui.tableWidget_config->setItem(1, i, item);
-			}
-		}
 		//odoLeverarm
 		QJsonArray odoLeverarm = configJson["odoLeverArm"].toArray();
 		if (odoLeverarm.size() == DIMENSION) {
 			for (int i = 0; i < DIMENSION; i++) {
 				double odoLeverarm_value = odoLeverarm[i].toDouble();
 				QTableWidgetItem *item = new QTableWidgetItem(QString::number(odoLeverarm_value));
-				ui.tableWidget_config->setItem(2, i, item);
+				ui.tableWidget_config->setItem(1, i, item);
 			}
 		}
 		//userLeverArm
@@ -106,6 +190,15 @@ void MountAngleCalculation::LoadJsonFile()
 			for (int i = 0; i < DIMENSION; i++) {
 				double userLeverArm_value = userLeverArm[i].toDouble();
 				QTableWidgetItem *item = new QTableWidgetItem(QString::number(userLeverArm_value));
+				ui.tableWidget_config->setItem(2, i, item);
+			}
+		}
+		//rotationRBV
+		QJsonArray rotationRBV = configJson["rotationRBV"].toArray();
+		if (rotationRBV.size() == DIMENSION) {
+			for (int i = 0; i < DIMENSION; i++) {
+				double rotationRBV_value = rotationRBV[i].toDouble();
+				QTableWidgetItem *item = new QTableWidgetItem(QString::number(rotationRBV_value));
 				ui.tableWidget_config->setItem(3, i, item);
 			}
 		}
@@ -116,6 +209,7 @@ void MountAngleCalculation::SaveJsonFile()
 {
 	QJsonObject& configJson = ConfigFile::getInstance()->getConfig();
 	configJson["procFileName"] = m_ProcessFilePath;
+	configJson["outputFileName"] = m_ProcessFilePath;
 	//priLeverArm
 	QJsonArray priLeverArm;
 	for (int i = 0; i < DIMENSION; i++) {
@@ -123,27 +217,27 @@ void MountAngleCalculation::SaveJsonFile()
 		priLeverArm.append(item->text().toDouble());
 	}
 	configJson["priLeverArm"] = priLeverArm;
-	//rotationRBV
-	QJsonArray rotationRBV;
-	for (int i = 0; i < DIMENSION; i++) {
-		QTableWidgetItem *item = ui.tableWidget_config->item(1, i);
-		rotationRBV.append(item->text().toDouble());
-	}
-	configJson["rotationRBV"] = rotationRBV;
 	//odoLeverarm
 	QJsonArray odoLeverarm;
 	for (int i = 0; i < DIMENSION; i++) {
-		QTableWidgetItem *item = ui.tableWidget_config->item(2, i);
+		QTableWidgetItem *item = ui.tableWidget_config->item(1, i);
 		odoLeverarm.append(item->text().toDouble());
 	}
 	configJson["odoLeverArm"] = odoLeverarm;
 	//userLeverArm
 	QJsonArray userLeverArm;
 	for (int i = 0; i < DIMENSION; i++) {
-		QTableWidgetItem *item = ui.tableWidget_config->item(3, i);
+		QTableWidgetItem *item = ui.tableWidget_config->item(2, i);
 		userLeverArm.append(item->text().toDouble());
 	}
 	configJson["userLeverArm"] = userLeverArm;
+	//rotationRBV
+	QJsonArray rotationRBV;
+	for (int i = 0; i < DIMENSION; i++) {
+		QTableWidgetItem *item = ui.tableWidget_config->item(3, i);
+		rotationRBV.append(item->text().toDouble());
+	}
+	configJson["rotationRBV"] = rotationRBV;
 	ConfigFile::getInstance()->writeConfigFile();
 }
 
@@ -196,11 +290,12 @@ void MountAngleCalculation::readAngleFromFile(QString file_path)
 		angle_list.push_back(angle);
 		double rotationRBV[DIMENSION] = { 0 };
 		for (int i = 0; i < DIMENSION; i++) {
-			QTableWidgetItem *item = ui.tableWidget_config->item(1, i);
+			QTableWidgetItem *item = ui.tableWidget_config->item(3, i);
 			rotationRBV[i] = item->text().toDouble();
 		}
 		ui.offset_edt->setText(QString::asprintf("%.2f,%.2f,%.2f", angle.roll, angle.pitch, angle.heading));
 		ui.result_edt->setText(QString::asprintf("%.2f,%.2f,%.2f", rotationRBV[0]-angle.roll, rotationRBV[1]-angle.pitch, rotationRBV[2]-angle.heading));
+		fclose(f_out);
 	}
 }
 
@@ -243,6 +338,20 @@ void MountAngleCalculation::onSelectFileClicked()
 	ui.filepath_edt->setText(path);
 }
 
+void MountAngleCalculation::onSelectNovatelInsFileClicked()
+{
+	QString current_path = ".";
+	QString file_name = ui.novatel_ins_path_edt->text();
+	if (!file_name.isEmpty()) {
+		current_path = QDir(file_name).absolutePath();
+	}
+	QString path = QFileDialog::getOpenFileName(this, tr("Open Files"), current_path, tr("Data Files(*.* )"));
+	if (path.length() == 0) {
+		return;
+	}
+	ui.novatel_ins_path_edt->setText(path);
+}
+
 void MountAngleCalculation::onSelectProcessFileClicked()
 {
 	QString current_path = ".";
@@ -257,8 +366,93 @@ void MountAngleCalculation::onSelectProcessFileClicked()
 	ui.process_filepath_edt->setText(path);
 }
 
+void MountAngleCalculation::onSelectResultFileClicked()
+{
+	QString current_path = ".";
+	QString file_name = ui.result_filepath_edt->text();
+	if (!file_name.isEmpty()) {
+		current_path = QDir(file_name).absolutePath();
+	}
+	QString path = QFileDialog::getOpenFileName(this, tr("Open Files"), current_path, tr("Data Files(*.* )"));
+	if (path.length() == 0) {
+		return;
+	}
+	ui.result_filepath_edt->setText(path);
+}
+
 void MountAngleCalculation::onSaveClicked() {
 	SaveJsonFile();
+}
+
+QString MountAngleCalculation::ConvertNovatelPosType(QString novateType)
+{
+	QString pos_type = "";
+	if (novateType == "16" || novateType == "53") {
+		pos_type = "1";
+	}
+	else if (novateType == "17" || novateType == "54") {
+		pos_type = "2";
+	}
+	else if (novateType == "50" || novateType == "56") {
+		pos_type = "4";
+	}
+	else if (novateType == "34" || novateType == "55") {
+		pos_type = "5";
+	}
+	return pos_type;
+}
+
+void MountAngleCalculation::onConvertClicked()
+{
+	QString filename = ui.novatel_ins_path_edt->text();
+	if (filename.isEmpty()) {
+		return;
+	}
+	QString ins_result_filename = filename;
+	if (filename.endsWith("_ins.txt")) {
+		ins_result_filename = ins_result_filename.replace("_ins.txt", "_process_ins.txt");
+	}
+	else {
+		int index = ins_result_filename.lastIndexOf(".");
+		ins_result_filename = ins_result_filename.left(index);
+		ins_result_filename = ins_result_filename + "_process_ins.txt";
+	}
+	QFile novatel_ins_file(filename);
+	QFile ins_result_file(ins_result_filename);
+	if (novatel_ins_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		if (ins_result_file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+			char cline[256] = { 0 };
+			while (!novatel_ins_file.atEnd()) {
+				novatel_ins_file.readLine(cline, 256);
+				QString line(cline);
+				line = line.trimmed();
+				QStringList items = line.split(",");
+				if (items.size() == 13) {
+					QStringList new_items;
+					for (int i = 0; i < 11; i++) {
+						new_items.append(items[i]);
+					}
+					for (int i = 11; i < 17;i++) {
+						new_items.append("0.00000");
+					}
+					for (int i = 17; i < 19; i++) {
+						new_items.append("0");
+					}
+					new_items.append(items[11]);
+					QString pos_type = ConvertNovatelPosType(items[12]);
+					new_items.append(pos_type);
+					new_items.append("0");
+					new_items.append("1.00000");
+					QString new_line = new_items.join(',');
+					new_line.append("\n");
+					ins_result_file.write(new_line.toLocal8Bit());
+				}
+			}
+			ui.result_filepath_edt->setText(ins_result_filename);
+			ins_result_file.close();
+		}
+		novatel_ins_file.close();
+	}
 }
 
 void MountAngleCalculation::onDecodeClicked()
@@ -364,7 +558,7 @@ void MountAngleCalculation::CalculateAverageAngle()
 
 	double rotationRBV[DIMENSION] = { 0 };
 	for (int i = 0; i < DIMENSION; i++) {
-		QTableWidgetItem *item = ui.tableWidget_config->item(1, i);
+		QTableWidgetItem *item = ui.tableWidget_config->item(3, i);
 		rotationRBV[i] = item->text().toDouble();
 	}
 	ui.offset_edt->setText(QString::asprintf("%.2f,%.2f,%.2f", avg_angle.roll, avg_angle.pitch, avg_angle.heading));
@@ -401,7 +595,7 @@ void MountAngleCalculation::onSplitFinished()
 	ui.time_slices_comb->clear();
 	std::vector<stTimeSlice>& time_slices = m_LoadInsTextFileThread->get_time_slices();
 	for (int i = 0; i < time_slices.size(); i++) {
-		QString time_str = QString::asprintf("%d:%d:%d:%d", time_slices[i].week, time_slices[i].starttime, time_slices[i].endtime,time_slices[i].during);
+		QString time_str = QString::asprintf("%d:%d:%d:%d", time_slices[i].week, time_slices[i].starttime / 1000, time_slices[i].endtime / 1000,time_slices[i].during);
 		ui.time_slices_comb->addItem(time_str);
 	}
 	setSplitOperable(true);

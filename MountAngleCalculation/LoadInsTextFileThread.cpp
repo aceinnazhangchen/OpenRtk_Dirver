@@ -6,12 +6,12 @@ LoadInsTextFileThread::LoadInsTextFileThread(QObject *parent)
 	: QThread(parent)
 	, m_isStop(false)
 {
-	m_MountAngle = new MountAngle(this);
+	m_SplitByTime = new SplitByTime(this);
 }
 
 LoadInsTextFileThread::~LoadInsTextFileThread()
 {
-	delete m_MountAngle;
+	delete m_SplitByTime;
 }
 
 void LoadInsTextFileThread::run()
@@ -40,7 +40,7 @@ QString LoadInsTextFileThread::getBasePath() {
 
 std::vector<stTimeSlice>& LoadInsTextFileThread::get_time_slices()
 {
-	return m_MountAngle->get_time_slices();
+	return m_SplitByTime->get_time_slices();
 }
 
 void LoadInsTextFileThread::LoadInsText()
@@ -49,8 +49,7 @@ void LoadInsTextFileThread::LoadInsText()
 	if (!QFile::exists(m_InsTextFileName))return;
 	QFile InsTextFile(m_InsTextFileName);
 	if (InsTextFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-		m_MountAngle->init();
-		m_MountAngle->set_base_file_name(getBasePath().toLocal8Bit().data());
+		m_SplitByTime->init();
 		while (!InsTextFile.atEnd() && !m_isStop) {
 			QByteArray byte_line = InsTextFile.readLine(256);
 			QByteArrayList byte_items = byte_line.trimmed().split(',');
@@ -73,10 +72,10 @@ void LoadInsTextFileThread::LoadInsText()
 				ins_data.roll = value_list[8];
 				ins_data.pitch = value_list[9];
 				ins_data.heading = value_list[10];
-				m_MountAngle->process_live_data(ins_data);
+				m_SplitByTime->input_sol_data(ins_data);
 			}
 		}
-		m_MountAngle->finish();
+		m_SplitByTime->finish();
 		InsTextFile.close();
 	}
 }

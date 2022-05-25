@@ -97,6 +97,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="JsonFileLoader.cpp" />
+    <ClCompile Include="SplitByTime.cpp" />
     <QtRcc Include="MountAngleCalculation.qrc" />
     <QtUic Include="MountAngleCalculation.ui" />
     <QtMoc Include="MountAngleCalculation.h" />
@@ -143,6 +145,8 @@
     <ClInclude Include="..\decoder\rtcm_split.h" />
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
+    <QtMoc Include="JsonFileLoader.h" />
+    <QtMoc Include="SplitByTime.h" />
     <QtMoc Include="LoadInsTextFileThread.h" />
     <QtMoc Include="CalculationCall.h" />
     <ClInclude Include="DriveStatus.h" />
