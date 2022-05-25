@@ -4,6 +4,7 @@
 #include <QTime>
 #include <QList>
 #include "ins401.h"
+#include "rtk330la_decoder.h"
 #include "E2E_protocol.h"
 #include "NPOS122_decoder.h"
 #include "StaticAnalysis.h"
@@ -12,9 +13,9 @@
 enum emDecodeFormat {
 	emDecodeFormat_OpenRTK330LI,
 	emDecodeFormat_RTK330LA,
+	emDecodeFormat_Ins401,
 	emDecodeFormat_Mixed_Raw,
 	emDecodeFormat_Imu,
-	emDecodeFormat_Ins401,
 	emDecodeFormat_E2E_Protocol,
 	emDecodeFormat_RTCM_EPVT,
 	emDecodeFormat_Convbin,
@@ -44,6 +45,7 @@ protected:
 	void makeOutPath(QString filename);
 	void decode_openrtk_user();
 	void decode_openrtk_inceptio();
+	void decode_rtk330la();
 	void decode_mixed_raw();
 	void decode_imu();
 	void decode_ins401();
@@ -62,6 +64,7 @@ private:
 	QString m_OutBaseName;
 	QTime m_TimeCounter;
 	Ins401_Tool::Ins401_decoder* ins401_decoder;
+	RTK330LA_Tool::Rtk330la_decoder* rtk330la_decoder;
 	E2E::E2E_protocol* e2e_deocder;
 	NPOS122_Tool::NPOS122_decoder* npos122_decoder;
 	bool m_show_time;

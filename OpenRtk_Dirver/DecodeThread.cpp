@@ -20,6 +20,7 @@ DecodeThread::DecodeThread(QObject *parent)
 {
 	m_static_point_ecp = true;
 	ins401_decoder = new Ins401_Tool::Ins401_decoder();
+	rtk330la_decoder = new RTK330LA_Tool::Rtk330la_decoder();
 	e2e_deocder = new E2E::E2E_protocol();
 	npos122_decoder = new NPOS122_Tool::NPOS122_decoder();
 	m_StaticAnalysis = new StaticAnalysis(this);
@@ -42,7 +43,8 @@ void DecodeThread::run()
 			decode_openrtk_user();
 			break;
 		case emDecodeFormat_RTK330LA:
-			decode_openrtk_inceptio();
+			//decode_openrtk_inceptio();
+			decode_rtk330la();
 			break;
 		case emDecodeFormat_Mixed_Raw:
 			decode_mixed_raw();
@@ -203,6 +205,46 @@ void DecodeThread::decode_openrtk_inceptio()
 		if (m_static_point_ecp) {
 			m_StaticAnalysis->summary();
 		}		
+		fclose(file);
+	}
+}
+
+void DecodeThread::decode_rtk330la()
+{
+	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
+	if (file && rtk330la_decoder) {
+		int ret = 0;
+		size_t file_size = getFileSize(file);
+		size_t read_size = 0;
+		size_t readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		rtk330la_decoder->init();
+		rtk330la_decoder->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
+		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
+		m_StaticAnalysis->init();
+		m_StaticAnalysis->set_out_base_name(m_OutBaseName);
+		while (!feof(file)) {
+			if (m_isStop) break;
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (size_t i = 0; i < readcount; i++) {
+				ret = rtk330la_decoder->input_raw(read_cache[i]);
+				if (m_static_point_ecp &&ret == 1) {
+					if (RTK330LA_Tool::em_gN == rtk330la_decoder->get_current_type()) {
+						m_StaticAnalysis->append_gnss_sol_rtk330la(rtk330la_decoder->get_gnss_sol());
+					}
+					else if (RTK330LA_Tool::em_s2 == rtk330la_decoder->get_current_type()) {
+						m_StaticAnalysis->append_imu_rtk330la(rtk330la_decoder->get_imu_raw());
+					}
+				}
+			}
+			double percent = (double)read_size / (double)file_size * 10000;
+			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		rtk330la_decoder->finish();
+		if (m_static_point_ecp) {
+			m_StaticAnalysis->summary();
+		}
 		fclose(file);
 	}
 }

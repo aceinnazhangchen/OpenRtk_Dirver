@@ -323,6 +323,75 @@ namespace Ins401_Tool {
 		uint8_t heading_pl_status;
 	}ins_intergrity_t;
 
+	typedef struct {
+		uint16_t week;
+		uint32_t tow;
+		uint16_t rollcnt;           // 0 ~ 65535
+		uint8_t protocol_version;   // 0
+		uint16_t report_mask;
+	}runstatus_monitor_head_t;
+
+	typedef struct {
+		uint16_t state;         // 
+		uint32_t data_tow;      // ms
+		int16_t receive_delay;  // us
+		uint32_t master_status;
+		int16_t temperature;    // 0.01бу Celsius
+	}runstatus_monitor_imu_t;
+
+	typedef struct {
+		uint16_t state;
+		uint32_t data_tow;
+		uint8_t safe_state;
+		uint8_t PPS_status;
+		uint8_t time_validity;
+		uint8_t system_status;
+		uint8_t antenna_sensing;
+		int16_t temperature;
+		uint32_t CPU_usage;
+		uint8_t epvt_status;
+		uint32_t RTCM_obs;
+		uint32_t PPS_cnt;
+		uint32_t PPS_measurement;
+	}runstatus_monitor_TeseoV_t;
+
+	typedef struct {
+		uint32_t RTCM_obs;
+	}runstatus_monitor_base_t;
+
+	typedef struct {
+		uint32_t sol_tow;
+		uint8_t sol_fixtype;
+		int16_t sol_delay;     // ms
+	}runstatus_monitor_gnss_t;
+
+	typedef struct {
+		uint32_t odo_tow;      // ms
+	}runstatus_monitor_odo_t;
+	
+	typedef struct {
+		uint8_t status;
+		uint8_t position_type;
+		int16_t sol_delay;      // us
+	}runstatus_monitor_ins_t;
+
+	typedef struct {
+		uint8_t system_time_status;
+		int16_t MCU_temperature;
+		uint16_t cycle_time;        // us
+	}runstatus_monitor_sys_t;
+
+	typedef struct {
+		runstatus_monitor_head_t head;
+		runstatus_monitor_imu_t imu;
+		runstatus_monitor_TeseoV_t TeseoV;
+		runstatus_monitor_base_t base;		
+		runstatus_monitor_gnss_t gnss;
+		runstatus_monitor_odo_t odo;
+		runstatus_monitor_ins_t ins;
+		runstatus_monitor_sys_t sys;
+	} runstatus_monitor_t;
+
 #pragma pack(pop)
 
 	enum emPackageType {
@@ -340,6 +409,7 @@ namespace Ins401_Tool {
 		em_PACKAGE_FD = 0x6664,
 		em_INS_INTERGRITY= 0x6949,
 		em_G1 = 0x7a01,
+		em_RUNSTATUS_MONITOR = 0xde01,
 	};
 
 	typedef std::map<std::string, FILE*> FilesMap;
@@ -348,6 +418,7 @@ namespace Ins401_Tool {
 		Ins401_decoder();
 		~Ins401_decoder();
 	private:
+		char base_file_name[256];
 		raw_t raw;
 		raw_imu_t imu;
 		gnss_sol_t gnss;
@@ -361,26 +432,9 @@ namespace Ins401_Tool {
 		binary_rtk_debug1_t rtk_debug1;
 		system_fault_detection_t system_fault_detection;
 		ins_intergrity_t ins_integ;
+		runstatus_monitor_t monitor;
 		kml_gnss_t gnss_kml;
 		kml_ins_t ins_kml;
-		char base_file_name[256];
-		char output_msg[1024];
-		FILE* f_log;
-		FILE* f_nmea;
-		FILE* f_process;
-		FILE* f_imu_csv;
-		FILE* f_imu_txt;
-		FILE* f_imu_bin;
-		FILE* f_gnss_csv;
-		FILE* f_gnss_txt;
-		FILE* f_ins_csv;
-		FILE* f_ins_txt;
-		FILE* f_odo_csv;
-		FILE* f_odo_txt;
-		FILE* f_misa_csv;
-		FILE* f_misa_txt;
-		FILE* f_dm_csv;
-		FILE* f_rover_rtcm;
 		FILE* f_ins_log;
 		FILE* f_ins_save;
 		bool show_format_time;
@@ -397,6 +451,7 @@ namespace Ins401_Tool {
 	private:
 		void close_all_files();
 		void create_file(FILE * &file, const char * suffix, const char * title, bool format_time);
+		FILE* get_file(std::string suffix, std::string title, bool format_time);
 		char * week_2_time_str(int week, uint32_t millisecs);
 		void append_gnss_kml();
 		void append_ins_kml();
@@ -418,6 +473,7 @@ namespace Ins401_Tool {
 		void output_rtk_debug1();
 		void output_system_fault_detection();
 		void output_G1();
+		void output_runstatus_monitor();
 		void parse_packet_payload();
 		void save_imu_bin();
 		void parse_gga();

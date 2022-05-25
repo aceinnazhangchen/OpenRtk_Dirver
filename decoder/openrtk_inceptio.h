@@ -10,10 +10,12 @@ namespace RTK330LA_Tool {
 		uint8_t header_len;
 		uint8_t header[4];
 		uint32_t nbyte;
+		uint32_t length;
 		uint8_t buff[256];
 		uint32_t nmeabyte;
 		uint8_t nmea[256];
 		uint8_t ntype;
+		uint16_t packet_type;
 	} usrRaw;
 
 	typedef struct {
@@ -273,6 +275,75 @@ namespace RTK330LA_Tool {
 		uint8_t roll_pl_status;
 		uint8_t heading_pl_status;
 	} ins_integ_t;
+
+	typedef struct {
+		uint16_t week;
+		uint32_t tow;
+		uint16_t rollcnt;           // 0 ~ 65535
+		uint8_t protocol_version;   // 0
+		uint16_t report_mask;
+	}runstatus_monitor_head_t;
+
+	typedef struct {
+		uint16_t state;         // 
+		uint32_t data_tow;      // ms
+		int16_t receive_delay;  // us
+		uint32_t master_status;
+		int16_t temperature;    // 0.01бу Celsius
+	}runstatus_monitor_imu_t;
+
+	typedef struct {
+		uint16_t state;
+		uint32_t data_tow;
+		uint8_t safe_state;
+		uint8_t PPS_status;
+		uint8_t time_validity;
+		uint8_t system_status;
+		uint8_t antenna_sensing;
+		int16_t temperature;
+		uint32_t CPU_usage;
+		uint8_t epvt_status;
+		uint32_t RTCM_obs;
+		uint32_t PPS_cnt;
+		uint32_t PPS_measurement;
+	}runstatus_monitor_TeseoV_t;
+
+	typedef struct {
+		uint32_t RTCM_obs;
+	}runstatus_monitor_base_t;
+
+	typedef struct {
+		uint32_t sol_tow;
+		uint8_t sol_fixtype;
+		int16_t sol_delay;     // ms
+	}runstatus_monitor_gnss_t;
+
+	typedef struct {
+		uint32_t odo_tow;      // ms
+	}runstatus_monitor_odo_t;
+
+	typedef struct {
+		uint8_t status;
+		uint8_t position_type;
+		int16_t sol_delay;      // us
+	}runstatus_monitor_ins_t;
+
+	typedef struct {
+		uint8_t system_time_status;
+		int16_t MCU_temperature;
+		uint16_t cycle_time;        // us
+	}runstatus_monitor_sys_t;
+
+	typedef struct {
+		runstatus_monitor_head_t head;
+		runstatus_monitor_imu_t imu;
+		runstatus_monitor_TeseoV_t TeseoV;
+		runstatus_monitor_base_t base;
+		runstatus_monitor_gnss_t gnss;
+		runstatus_monitor_odo_t odo;
+		runstatus_monitor_ins_t ins;
+		runstatus_monitor_sys_t sys;
+	} runstatus_monitor_t;
 
 	typedef enum {
 		INCEPTIO_OUT_NONE = 0,

@@ -30,6 +30,7 @@ namespace RTK330LA_Tool {
 	static rtk_debug1_t rtk_debug1 = { 0 };
 	static gnss_integ_t gnss_integ = { 0 };
 	static ins_integ_t ins_integ = { 0 };
+	static runstatus_monitor_t monitor = { 0 };
 
 	static kml_gnss_t gnss_kml = { 0 };
 	static kml_ins_t ins_kml = { 0 };
@@ -54,6 +55,7 @@ namespace RTK330LA_Tool {
 	static FILE* fs1_b = NULL;
 	static FILE* f_gnss_time_txt = NULL;
 	static FILE* f_gnss_integ = NULL;
+	static FILE* f_gnss_and_integ = NULL;
 	static FILE* f_ins_integ = NULL;
 	static FILE* f_ins_and_integ = NULL;
 	static FILE* f_g1 = NULL;
@@ -118,6 +120,7 @@ namespace RTK330LA_Tool {
 		if (fs1_b)fclose(fs1_b); fs1_b = NULL;
 		if (f_gnss_time_txt)fclose(f_gnss_time_txt); f_gnss_time_txt = NULL;
 		if (f_gnss_integ)fclose(f_gnss_integ); f_gnss_integ = NULL;
+		if (f_gnss_and_integ)fclose(f_gnss_and_integ); f_gnss_and_integ = NULL;
 		if (f_ins_integ)fclose(f_ins_integ); f_ins_integ = NULL;
 		if (f_ins_and_integ)fclose(f_ins_and_integ); f_ins_and_integ = NULL;
 		if (f_g1)fclose(f_g1); f_g1 = NULL;
@@ -219,6 +222,9 @@ namespace RTK330LA_Tool {
 			if (fgN == NULL) {
 				sprintf(file_name, "%s_gN.csv", base_inceptio_file_name);
 				fgN = fopen(file_name, "w");
+				memset(file_name, 0, 256);
+				sprintf(file_name, "%s_gnss_and_integrity.csv", base_inceptio_file_name);
+				f_gnss_and_integ = fopen(file_name, "w");
 				if (VERSION_EARLY == data_version) {
 					if (fgN) fprintf(fgN, 
 						"GPS_Week(),GPS_TimeofWeek(s),positionMode()"
@@ -236,9 +242,18 @@ namespace RTK330LA_Tool {
 						",latitude_std(m),longitude_std(m),height_std(m)"
 						",pos_hor_pl(m),pos_ver_pl(m),pos_status()"
 						",vel_hor_pl(m/s),vel_ver_pl(m/s),vel_status()\n");
+					if (f_gnss_and_integ) fprintf(f_gnss_and_integ,
+						"GPS_Week(),GPS_TimeofWeek(s),positionMode()"
+						",latitude(deg),longitude(deg),height(m)"
+						",numberOfSVs(),hdop(),vdop(),tdop(),diffage()"
+						",velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s)"
+						",latitude_std(m),longitude_std(m),height_std(m)"
+						",pos_hor_pl(m),pos_ver_pl(m),pos_status()"
+						",vel_hor_pl(m/s),vel_ver_pl(m/s),vel_status()\n");
 				}
 			}
 			if (fgN) fprintf(fgN, log);
+			if (f_gnss_and_integ) fprintf(f_gnss_and_integ, log);
 		}
 		break;
 		case INCEPTIO_OUT_INSPVA:
@@ -579,7 +594,7 @@ namespace RTK330LA_Tool {
 			",rtk_hor_pos_al(m),rtk_ver_pos_al(m),rtk_hor_vel_al(m/s),rtk_ver_vel_al(m/s),rtk_heading_pl(deg)"
 			",spp_hor_pos_stat,spp_ver_pos_stat,spp_hor_vel_stat,spp_ver_vel_stat"
 			",rtk_hor_pos_stat,rtk_ver_pos_stat,rtk_hor_vel_stat,rtk_ver_vel_stat,rtk_heading_stat\n";
-		create_file(f_gnss_integ, "gnss_integ.csv", gnss_integ_title.c_str());
+		create_file(f_gnss_integ, "gnss_intergrity.csv", gnss_integ_title.c_str());
 		if (f_gnss_integ) {
 			fprintf(f_gnss_integ, "%4d,%11.4f,%8.3f,%8.3f", gnss_integ.gps_week, (double)gnss_integ.gps_millisecs / 1000, (float)gnss_integ.spp_fail_rate / 1.0e-10, (float)gnss_integ.rtk_fail_rate / 1.0e-10);
 			fprintf(f_gnss_integ, ",%8.3f,%8.3f,%8.3f,%8.3f", (float)gnss_integ.spp_hor_pos_pl / 100, (float)gnss_integ.spp_ver_pos_pl / 100, (float)gnss_integ.spp_hor_vel_pl / 100, (float)gnss_integ.spp_ver_vel_pl / 100);
@@ -628,7 +643,7 @@ namespace RTK330LA_Tool {
 			",hor_pos_pl_status, ver_pos_pl_status, hor_vel_pl_status, ver_vel_pl_status"
 			",pitch_pl_status, roll_pl_status, heading_pl_status\n"
 			;
-		create_file(f_ins_integ, "ins_integ.csv", ins_intergrity_title.c_str());
+		create_file(f_ins_integ, "ins_intergrity.csv", ins_intergrity_title.c_str());
 		if (f_ins_integ) {
 			fprintf(f_ins_integ, "%4d,%11.4f", ins_integ.gps_week, (double)ins_integ.gps_millisecs / 1000.0);
 			fprintf(f_ins_integ, ",%8.3f,%8.3f,%8.3f,%8.3f", ins_integ.hor_pos_pl, ins_integ.ver_pos_pl, ins_integ.hor_vel_pl, ins_integ.ver_vel_pl);
@@ -658,7 +673,7 @@ namespace RTK330LA_Tool {
 			",roll_std(deg),pitch_std(deg),heading_std(deg)"
 			",hor_pos_pl, ver_pos_pl, hor_vel_pl, ver_vel_pl"
 			",pitch_pl, roll_pl, heading_pl\n";
-		create_file(f_ins_and_integ, "ins_and_integ.csv", NULL);
+		create_file(f_ins_and_integ, "ins_and_intergrity.csv", NULL);
 		if (f_ins_and_integ) {
 			fprintf(f_ins_and_integ, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d", inceptio_pak_iN.GPS_Week, inceptio_pak_iN.GPS_TimeOfWeek,
 				(double)inceptio_pak_iN.latitude*180.0 / MAX_INT, (double)inceptio_pak_iN.longitude*180.0 / MAX_INT, inceptio_pak_iN.height,
