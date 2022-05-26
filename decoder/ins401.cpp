@@ -656,11 +656,11 @@ namespace Ins401_Tool {
 			std::string title = "week,tow,rollcnt,state,data_tow,receive_delay,master_status,temperature\n";
 			FILE* file = get_file(file_name, title);
 			if (file) {
-				fprintf(file, "%d,%11.4f,", monitor.head.week, (float)monitor.head.tow / 1000.0);
+				fprintf(file, "%d,%12.4f,", monitor.head.week, (double)monitor.head.tow / 1000.0);
 				fprintf(file, "%7d,%6d,%12.4f,%7.3f,%5d,%7.2f\n", 
-					monitor.head.rollcnt,monitor.imu.state, (float)monitor.imu.data_tow/1000.0, 
-					(float)monitor.imu.receive_delay/1000.0,monitor.imu.master_status,
-					(float)monitor.imu.temperature/100.0);
+					monitor.head.rollcnt,monitor.imu.state, (double)monitor.imu.data_tow/1000.0,
+					(double)monitor.imu.receive_delay/1000.0,monitor.imu.master_status,
+					(double)monitor.imu.temperature/100.0);
 			}
 		}
 		if (monitor.head.report_mask & (1 << 1)) {
@@ -671,13 +671,13 @@ namespace Ins401_Tool {
 			std::string title = "week,tow,state,data_tow,safe_state,PPS_status,time_validity,system_status,antenna_sensing,temperature,CPU_usage,epvt_status,RTCM_obs,PPS_cnt,PPS_measurement\n";
 			FILE* file = get_file(file_name, title);
 			if (file) {
-				fprintf(file, "%d,%11.4f,", monitor.head.week, (float)monitor.head.tow / 1000);
+				fprintf(file, "%d,%12.4f,", monitor.head.week, (double)monitor.head.tow / 1000);
 				fprintf(file, "%6d,%12.4f,%4d,%4d,%4d,%4d,%4d,%7.2f,%7.2f,%4d,%11d,%11d,%11d\n",
-					monitor.TeseoV.state, (float)monitor.TeseoV.data_tow / 1000,
+					monitor.TeseoV.state, (double)monitor.TeseoV.data_tow / 1000,
 					monitor.TeseoV.safe_state, monitor.TeseoV.PPS_status,
 					monitor.TeseoV.time_validity, monitor.TeseoV.system_status,
-					monitor.TeseoV.antenna_sensing, (float)monitor.TeseoV.temperature/100,
-					(float)monitor.TeseoV.CPU_usage/100, monitor.TeseoV.epvt_status,
+					monitor.TeseoV.antenna_sensing, (double)monitor.TeseoV.temperature/100,
+					(double)monitor.TeseoV.CPU_usage/100, monitor.TeseoV.epvt_status,
 					monitor.TeseoV.RTCM_obs, monitor.TeseoV.PPS_cnt, monitor.TeseoV.PPS_measurement);
 			}
 		}
@@ -689,7 +689,7 @@ namespace Ins401_Tool {
 			std::string title = "week,tow,obs\n";
 			FILE* file = get_file(file_name, title);
 			if (file) {
-				fprintf(file, "%d,%11.4f,", monitor.head.week, (float)monitor.head.tow / 1000);
+				fprintf(file, "%d,%12.4f,", monitor.head.week, (double)monitor.head.tow / 1000);
 				fprintf(file, "%11d\n", monitor.base.RTCM_obs);
 			}
 
@@ -702,8 +702,8 @@ namespace Ins401_Tool {
 			std::string title = "week,tow,sol_tow,fixtype,delay\n";
 			FILE* file = get_file(file_name, title);
 			if (file) {
-				fprintf(file, "%d,%11.4f,", monitor.head.week, (float)monitor.head.tow / 1000);
-				fprintf(file, "%13.4f,%5d,%7d\n", (float)monitor.gnss.sol_tow / 1000, monitor.gnss.sol_fixtype, monitor.gnss.sol_delay);
+				fprintf(file, "%d,%12.4f,", monitor.head.week, (double)monitor.head.tow / 1000);
+				fprintf(file, "%13.4f,%5d,%7d\n", (double)monitor.gnss.sol_tow / 1000, monitor.gnss.sol_fixtype, monitor.gnss.sol_delay);
 			}
 		}
 		if (monitor.head.report_mask & (1 << 4)) {
@@ -714,8 +714,8 @@ namespace Ins401_Tool {
 			std::string title = "week,tow,odo_tow\n";
 			FILE* file = get_file(file_name, title);
 			if (file) {
-				fprintf(file, "%d,%11.4f,", monitor.head.week, (float)monitor.head.tow / 1000);
-				fprintf(file, "%13.4f\n", (float)monitor.odo.odo_tow / 1000);
+				fprintf(file, "%d,%12.4f,", monitor.head.week, (double)monitor.head.tow / 1000);
+				fprintf(file, "%13.4f\n", (double)monitor.odo.odo_tow / 1000);
 			}
 		}
 		if (monitor.head.report_mask & (1 << 5)) {
@@ -726,8 +726,8 @@ namespace Ins401_Tool {
 			std::string title = "week,tow,status,position_type,sol_delay\n";
 			FILE* file = get_file(file_name, title);
 			if (file) {
-				fprintf(file, "%d,%11.4f,", monitor.head.week, (float)monitor.head.tow / 1000);
-				fprintf(file, "%5d,%5d,%7.3f\n", monitor.ins.status, monitor.ins.position_type, (float)monitor.ins.sol_delay / 1000);
+				fprintf(file, "%d,%12.4f,", monitor.head.week, (double)monitor.head.tow / 1000);
+				fprintf(file, "%5d,%5d,%7.3f\n", monitor.ins.status, monitor.ins.position_type, (double)monitor.ins.sol_delay / 1000);
 			}
 		}
 		if (monitor.head.report_mask & (1 << 6)) {
@@ -738,8 +738,8 @@ namespace Ins401_Tool {
 			std::string title = "week,tow,system_time_status,MCU_temperature,cycle_time\n";
 			FILE* file = get_file(file_name, title);
 			if (file) {
-				fprintf(file, "%d,%11.4f,", monitor.head.week, (float)monitor.head.tow / 1000);
-				fprintf(file, "%5d,%7.2f,%7.3f\n", monitor.sys.system_time_status, (float)monitor.sys.MCU_temperature/100, (float)monitor.sys.cycle_time / 1000);
+				fprintf(file, "%d,%12.4f,", monitor.head.week, (double)monitor.head.tow / 1000);
+				fprintf(file, "%5d,%7.2f,%7.3f\n", monitor.sys.system_time_status, (double)monitor.sys.MCU_temperature/100, (double)monitor.sys.cycle_time / 1000);
 			}
 		}
 	}
