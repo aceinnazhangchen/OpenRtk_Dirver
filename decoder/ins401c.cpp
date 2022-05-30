@@ -221,8 +221,6 @@ namespace ins401c_Tool {
         printf("INS_Std_Lon:%0.2f\n", to->INS_Std_Lon);
         printf("INS_Std_LocatHeight:%0.2f\n", to->INS_Std_LocatHeight);
         printf("INS_Std_Heading:%0.2f\n", to->INS_Std_Heading);
-        char test[10];
-        scanf(test);
 #endif
 		sprintf(ins401c_output_msg, "%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.7f,%u,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%d,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.4f\n",\
         to->ACC_X, to->ACC_Y, to->ACC_Z,\
@@ -685,7 +683,7 @@ namespace ins401c_Tool {
     {
         if (NULL == from || NULL == to)
             return false;
-        for (int i = 0; i < sizeof(list_canfd_dbc_msgs); i++) {
+        for (int i = 0; i < sizeof(list_canfd_dbc_msgs)/sizeof(list_canfd_dbc_msgs[0]); i++) {
             if (mid == list_canfd_dbc_msgs[i].mid)
             {
                 list_canfd_dbc_msgs[i].func(to, from);
@@ -699,7 +697,7 @@ namespace ins401c_Tool {
         if (NULL == from || NULL == to)
             return false;
 
-        for (int i = 0; i < sizeof(list_can_dbc_msgs); i++) {
+        for (int i = 0; i < sizeof(list_can_dbc_msgs)/sizeof(list_can_dbc_msgs[0]); i++) {
             if (mid == list_can_dbc_msgs[i].mid)
             {
                 list_can_dbc_msgs[i].func(to, from);
