@@ -616,7 +616,7 @@ namespace Ins401_Tool {
             ",lonStd(),latStd(),hgStd()"
             ",velNStd(),velEStd(),velUStd()"
             ",horPosPl(),verPosPl(),horVelPl(),verVelPl()"
-            ",posPlStatus(),velPlStatus(),fwVer()"
+            ",posPlStatus(),velPlStatus(),fwVer(),alo_time(),"
 			",contient()\n";
 		FILE* f_movbs_csv = get_file("movbs.csv", title);
 		// create_file(f_movbs_csv, "movbs.csv", title.c_str(), show_format_time);
@@ -638,7 +638,7 @@ namespace Ins401_Tool {
             fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.lonStd, movbs.latStd, movbs.hgStd);
             fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.velNStd, movbs.velEStd, movbs.velUStd);
             fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,,%8.3f", movbs.horPosPl, movbs.verPosPl, movbs.horVelPl, movbs.verVelPl);
-            fprintf(f_movbs_csv, "%d,%d,%d\n", movbs.posPlStatus, movbs.velPlStatus, movbs.fwVer);
+            fprintf(f_movbs_csv, "%d,%d,%d,%d\n", movbs.posPlStatus, movbs.velPlStatus, movbs.fwVer, movbs.alo_time);
         }
 #ifdef OUTPUT_INNER_FILE
 #if 1
@@ -1071,7 +1071,7 @@ namespace Ins401_Tool {
 	{
 		assert(raw.header_len <= 4);
 		//assert(raw.nbyte <= 112);
-		if (raw.nbyte > 187) {
+		if (raw.nbyte > 221) {
 			printf("error, raw.nbyte = %d\n", raw.nbyte);
 		}
 		int ret = 0;
