@@ -6,6 +6,7 @@
 #include "rtkcmn.h"
 #include <cassert>
 
+#define OUTPUT_INNER_FILE
 namespace Ins401_Tool {
 
 //#define MI_OUTPUT_FILE  //С������ļ�����Ŀ�����ж���
@@ -52,6 +53,7 @@ namespace Ins401_Tool {
 		all_type_pack_num[em_RAW_IMU] = 0;
 		all_type_pack_num[em_GNSS_SOL] = 0;
 		all_type_pack_num[em_MOVBS_SOL] = 0;
+        all_type_pack_num[em_HEADING_SOL] = 0;
 		all_type_pack_num[em_INS_SOL] = 0;
 		all_type_pack_num[em_RAW_ODO] = 0;
 		all_type_pack_num[em_DIAGNOSTIC_MSG] = 0;
@@ -69,6 +71,7 @@ namespace Ins401_Tool {
 		all_type_file_output[em_RAW_IMU] = 1;
 		all_type_file_output[em_GNSS_SOL] = 1;
 		all_type_file_output[em_MOVBS_SOL] = 1;
+        all_type_file_output[em_HEADING_SOL] = 1;
 		all_type_file_output[em_INS_SOL] = 1;
 		all_type_file_output[em_RAW_ODO] = 1;
 		all_type_file_output[em_DIAGNOSTIC_MSG] = 1;
@@ -642,20 +645,54 @@ namespace Ins401_Tool {
         }
 #ifdef OUTPUT_INNER_FILE
 #if 1
-			//txt
-			create_file(f_ins_txt, "movbs.txt", NULL);
-			fprintf(f_ins_txt, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
+            FILE* f_movbs_txt = get_file("movbs.txt");
+			if (f_movbs_txt) {
+				fprintf(f_movbs_txt, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
 				movbs.week, movbs.tow, movbs.masterFlag, movbs.slaveFlag, movbs.masterType,
 				movbs.slaveType, movbs.roll, movbs.pitch, movbs.heading);
-			
-            //process
-			create_file(f_process, "process", NULL);
-			fprintf(f_process, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
+            }
+			//process
+			FILE* f_process = get_file("process");
+			if (f_process) {
+				fprintf(f_process, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
 				movbs.week, movbs.tow, movbs.masterFlag, movbs.slaveFlag, movbs.masterType,
 				movbs.slaveType, movbs.roll, movbs.pitch, movbs.heading);
+            }
 #endif
 #endif
 	}
+
+	void Ins401_decoder::output_heading_sol()
+	{
+		std::string title = 
+			"GPS_Week(),GPS_TimeOfWeek(s)"
+			",length(m),heading(),pitch(),roll()"
+			",hdgstddev(),ptchstddev()\n";
+		FILE* f_heading_csv = get_file("hG.csv", title);
+        if (f_heading_csv)
+        {
+            fprintf(f_heading_csv, "%d,%11.4f,", heading.gps_week, (double)heading.gps_millisecs);
+            fprintf(f_heading_csv, "%10.6f,%10.6f,%10.6f,%10.6f,", heading.length, heading.heading, heading.pitch, heading.roll);
+            fprintf(f_heading_csv, "%10.6f,%10.6f\n", heading.hdgstddev, heading.ptchstddev);
+        }
+#ifdef OUTPUT_INNER_FILE
+#if 1
+			//txt
+            FILE* f_heading_txt = get_file("heading.txt");
+			if (f_heading_txt) {
+				fprintf(f_heading_txt, "$GPHEADING,%d,%11.4f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f\n",heading.gps_week, heading.gps_millisecs,
+			heading.length, heading.heading, heading.pitch, heading.hdgstddev, heading.ptchstddev);
+			}
+			//process
+			FILE* f_process = get_file("process");
+			if (f_process) {
+				fprintf(f_process, "$GPHEADING,%d,%11.4f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f\n",heading.gps_week, heading.gps_millisecs,
+			heading.length, heading.heading, heading.pitch, heading.hdgstddev, heading.ptchstddev);
+			}
+
+#endif
+#endif
+	}    
 
 	void Ins401_decoder::output_check()
 	{
@@ -849,6 +886,14 @@ namespace Ins401_Tool {
 			}
 		}
         break;
+        case em_HEADING_SOL:
+        {
+			size_t packet_size = sizeof(heading_t);
+			if (raw.length == packet_size) {
+				memcpy(&heading, payload, packet_size);
+				output_heading_sol();
+			}            
+        }
 		case em_INS_SOL:
 		{
 			size_t packet_size_20211207 = sizeof(ins_sol_t_20211207);
