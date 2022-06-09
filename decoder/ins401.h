@@ -11,7 +11,7 @@ namespace Ins401_Tool {
 #pragma pack(push, 1)
 	typedef struct {
 		uint8_t nmea_flag;
-		uint8_t flag;			//headerÊÇ·ñÂú×ã°üµÄÌõ¼ş 0:Î´Âú×ã, 1:Âú×ã
+		uint8_t flag;			//headeræ˜¯å¦æ»¡è¶³åŒ…çš„æ¡ä»¶ 0:æœªæ»¡è¶³, 1:æ»¡è¶³
 		uint8_t header_len;
 		uint8_t header[4];
 		uint32_t nbyte;
@@ -62,7 +62,7 @@ namespace Ins401_Tool {
 		float		gyro_z;
 	}raw_imu_t;
 
-	struct gnss_sol_t {
+	typedef struct {
 		uint16_t	gps_week;
 		uint32_t	gps_millisecs;
 		/*
@@ -89,7 +89,7 @@ namespace Ins401_Tool {
 		float		north_vel_std;
 		float		east_vel_std;
 		float		up_vel_std;
-	};
+	}gnss_sol_t;
 
 	struct ins_sol_t_20211207 {
 		uint16_t	gps_week;
@@ -336,7 +336,7 @@ namespace Ins401_Tool {
 		uint32_t data_tow;      // ms
 		int16_t receive_delay;  // us
 		uint32_t master_status;
-		int16_t temperature;    // 0.01¡ã Celsius
+		int16_t temperature;    // 0.01Â° Celsius
 	}runstatus_monitor_imu_t;
 
 	typedef struct {
@@ -391,12 +391,58 @@ namespace Ins401_Tool {
 		runstatus_monitor_ins_t ins;
 		runstatus_monitor_sys_t sys;
 	} runstatus_monitor_t;
-
+    typedef struct {
+        uint8_t masterFlag;              /* master solution flag of available, 1-available, 0-invalid */
+        uint8_t slaveFlag;               /* slave solution flag of available, 1-available, 0-invalid */
+        uint8_t masterType;              /* master antenna, 0:NGNSS, 1:spp, 2:PSR, 4:fixed, 5:float */
+        uint8_t slaveType;               /* slave antenna, 0:NGNSS, 1:spp, 2:PSR, 4:fixed, 5:float */
+        uint8_t masterSatView;           /* master number of satellite in view, 0-128 */
+        uint8_t masterSatSol;            /* master number of satellite in solution, 0-128 */
+        uint8_t slaveSatView;            /* slave number of satellite in view, 0-128 */
+        uint8_t slaveSatSol;             /* slave number of satellite in solution, 0-128 */
+        uint16_t week;                   /* GPS Week number, 2048 - 10240*/
+        float tow;                       /* second of week (s) 0 - 604800.0 */
+        float HDOP;                      /* horizontal dilution of precision, 0-30.0 */
+        float VDOP;                      /* vertical dilution of precision, 0-30.0 */
+        float TDOP;                      /* time dilution of precision, 0-30.0 */
+        float PDOP;                      /* position dilution of precision, 0-30.0 */
+        float solAge;                    /* solution age (s), 0-30.0 */
+        double masterLon;	             /* master longitude (degrees), -180.0~+180.0 */
+        double masterLat;	             /* master latitude (degrees),-90.0~+90.0 */
+        double masterHg;	             /* master ellipsoidal height, WGS84 (m), -18000.0~+18000.0 */
+        double slaveLon;	             /* slave longitude (degrees), -180.0~+180.0 */
+        double slaveLat;	             /* slave latitude (degrees),-90.0~+90.0 */
+        double slaveHg;	                 /* slave ellipsoidal height, WGS84 (m), -18000.0~+18000.0 */
+        double roll;	                 /* roll (degrees), -180.0~+180.0 */
+        double pitch;	                 /* pitch (degrees), -90.0~+90.0 */
+        double heading;	                 /* heading (degrees), 0.0-360.0 */
+        float geoSep;                    /* Geoidal separation (m),-3600.0~+3600.0 */
+        float masterVelN;	             /* master north velocity (m/s), 0.0-500.0 */
+        float masterVelE;	             /* master east velocity (m/s), 0.0-500.0 */
+        float masterVelU;		         /* master up velocity (m/s), 0.0-500.0 */
+        float slaveVelN;	             /* slave north velocity (m/s), 0.0-500.0 */
+        float slaveVelE;	             /* slave east velocity (m/s), 0.0-500.0 */
+        float slaveVelU;		         /* slave up velocity (m/s), 0.0-500.0 */
+        float lonStd;	                 /* longitude standard deviation (e-8degrees), 0.0-30000.0 */
+        float latStd;	                 /* latitude standard deviation (e-8degrees), 0.0-30000.0 */
+        float hgStd;	                 /* height standard deviation (meters), 0.0-300.0 */
+        float velNStd;	                 /* north velocity standard deviation (m/s), 0.0-30.0 */
+        float velEStd;                   /* east velocity standard deviation (m/s), 0.0-30.0 */
+        float velUStd;                   /* up velocity standard deviation (m/s), 0.0-30.0 */
+        float horPosPl;                  /* horizontal position protection level (m), 0.0-300.0 */
+        float verPosPl;                  /* vertical position protection level (m), 0.0-300.0 */
+        float horVelPl;                  /* horizontal velocity protection level (m/s), 0.0-30.0 */
+        float verVelPl;                  /* vertical velocity protection level (m/s), 0.0-30.0 */
+        uint8_t posPlStatus;             /* status of position protection level */
+        uint8_t velPlStatus;             /* status of velocity protection level */
+        int32_t fwVer;                   /* gnss algorithm firmware version */
+    } movbs_sol_t;
 #pragma pack(pop)
 
 	enum emPackageType {
 		em_RAW_IMU = 0x0a01,
 		em_GNSS_SOL = 0x0a02,
+        em_MOVBS_SOL = 0x0a0a,
 		em_INS_SOL = 0x0a03,
 		em_RAW_ODO = 0x0a04,
 		em_DIAGNOSTIC_MSG = 0x0a05,
@@ -422,6 +468,7 @@ namespace Ins401_Tool {
 		raw_t raw;
 		raw_imu_t imu;
 		gnss_sol_t gnss;
+        movbs_sol_t movbs;
 		ins_sol_t ins;
 		odo_t odo;
 		binary_misalign_t misa;
@@ -443,10 +490,10 @@ namespace Ins401_Tool {
 		int crc_error_num;
 		std::map<uint16_t, int> all_type_pack_num;
 		std::map<uint16_t, int> all_type_file_output;
-		FilesMap output_file_map;			//ÏÖÔÚÊä³öÎÄ¼ş²»¶ÏÔö¼Ó£¬°ÑÎÄ¼şÖ¸Õë¶¼±£´æµ½mapÖĞ
-		bool m_MI_file_switch;				//Êä³öĞ¡Ã×ÎÄ¼ş¿ª¹Ø
-		double height_msl;					//º£Æ½Ãæ¸ß
-		uint32_t last_gnss_integ_millisecs;	//ÉÏ´ÎgnssÍêºÃĞÔ°üµÄÖÜÄÚÃë£¬ÒòÎªÔÚÃ»ÓĞgnssµÄÇé¿öÏÂ»á²»¶ÏÊä³öÍ¬Ò»¸ö°ü
+		FilesMap output_file_map;			//ç°åœ¨è¾“å‡ºæ–‡ä»¶ä¸æ–­å¢åŠ ï¼ŒæŠŠæ–‡ä»¶æŒ‡é’ˆéƒ½ä¿å­˜åˆ°mapä¸­
+		bool m_MI_file_switch;				//è¾“å‡ºå°ç±³æ–‡ä»¶å¼€å…³
+		double height_msl;					//æµ·å¹³é¢é«˜
+		uint32_t last_gnss_integ_millisecs;	//ä¸Šæ¬¡gnsså®Œå¥½æ€§åŒ…çš„å‘¨å†…ç§’ï¼Œå› ä¸ºåœ¨æ²¡æœ‰gnssçš„æƒ…å†µä¸‹ä¼šä¸æ–­è¾“å‡ºåŒä¸€ä¸ªåŒ…
 		bool m_isOutputFile;
 	private:
 		void close_all_files();
@@ -459,6 +506,7 @@ namespace Ins401_Tool {
 		void MI_output_imu_raw();
 		void output_gnss_sol();
 		void MI_output_gnss_sol();
+        void output_movbs_sol();
 		void output_ins_sol();
 		void output_ins_integ();
 		void output_ins_and_integ();
