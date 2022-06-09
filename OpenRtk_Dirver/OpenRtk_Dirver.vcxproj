@@ -112,6 +112,7 @@
     <ClCompile Include="..\decoder\openrtk_user.cpp" />
     <ClCompile Include="..\decoder\rtcm.c" />
     <ClCompile Include="..\decoder\rtcm_split.cpp" />
+    <ClCompile Include="..\decoder\rtk330la_decoder.cpp" />
     <ClCompile Include="..\decoder\rtkcmn.c" />
     <ClCompile Include="AnalysisConfigUI.cpp" />
     <ClCompile Include="AnalysisThread.cpp" />
@@ -122,7 +123,6 @@
     <ClCompile Include="DecodeTools.cpp" />
     <ClCompile Include="MergeThread.cpp" />
     <ClCompile Include="MergeTools.cpp" />
-    <ClCompile Include="rtk330la_decoder.cpp" />
     <ClCompile Include="SingleStream.cpp" />
     <ClCompile Include="SplitThread.cpp" />
     <ClCompile Include="SplitTools.cpp" />
@@ -168,12 +168,12 @@
     <ClInclude Include="..\decoder\openrtk_user.h" />
     <ClInclude Include="..\decoder\rtcm.h" />
     <ClInclude Include="..\decoder\rtcm_split.h" />
+    <ClInclude Include="..\decoder\rtk330la_decoder.h" />
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
     <QtMoc Include="StaticAnalysis.h" />
     <QtMoc Include="CsvAnalysisTools.h" />
     <QtMoc Include="CsvAnalysisThread.h" />
-    <ClInclude Include="rtk330la_decoder.h" />
     <QtMoc Include="AnalysisConfigUI.h" />
     <ClInclude Include="Analysis_Define.h" />
     <ClInclude Include="resource.h" />

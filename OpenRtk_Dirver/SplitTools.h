@@ -27,5 +27,6 @@ public slots:
 	void onSelectFileClicked();
 	void onSplitClicked();
 	void onProcess(int present, int msecs);
+	void onRepeatChanged(int);
 	void onFinished();
 };

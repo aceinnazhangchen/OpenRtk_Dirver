@@ -4,7 +4,6 @@
 #include <QTime>
 #include <QList>
 #include "ins401.h"
-#include "MountAngle.h"
 
 enum emDecodeFormat {
 	emDecodeFormat_OpenRTK330LI,
@@ -27,7 +26,6 @@ public:
 	void setKmlFrequency(int frequency);
 	void setDateTime(QString time);
 	QString& getOutBaseName();
-	std::vector<stTimeSlice>& get_time_slices();
 protected:
 	void makeOutPath(QString filename);
 	void decode_openrtk330li();
@@ -43,7 +41,6 @@ private:
 	bool m_show_time;
 	int ins_kml_frequency;
 	QString m_datatime;
-	MountAngle* m_MountAngle;
 signals:
 	void sgnProgress(int present, int msecs);
 	void sgnFinished();

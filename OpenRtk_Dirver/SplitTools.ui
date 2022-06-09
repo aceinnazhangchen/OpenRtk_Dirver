@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>608</width>
+    <width>927</width>
     <height>127</height>
    </rect>
   </property>
@@ -21,6 +21,11 @@
        <item>
         <property name="text">
          <string>RTCM</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>INS401</string>
         </property>
        </item>
       </widget>
@@ -60,6 +65,23 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>ref time</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDateTimeEdit" name="dateTimeEdit_ref">
+       <property name="displayFormat">
+        <string>yyyy/MM/dd HH:mm:ss</string>
+       </property>
+       <property name="calendarPopup">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
@@ -125,6 +147,13 @@
          <minute>0</minute>
          <second>0</second>
         </time>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBox_repeat">
+       <property name="text">
+        <string>repeat data</string>
        </property>
       </widget>
      </item>

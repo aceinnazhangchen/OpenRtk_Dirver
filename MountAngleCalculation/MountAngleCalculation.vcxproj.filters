@@ -103,6 +103,12 @@
     <ClCompile Include="LoadInsTextFileThread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SplitByTime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="JsonFileLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ConfigFile.h">
@@ -118,6 +124,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="LoadInsTextFileThread.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="SplitByTime.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="JsonFileLoader.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -173,5 +185,15 @@
     <ClInclude Include="DriveStatus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="logo.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="logo.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

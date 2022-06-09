@@ -147,7 +147,7 @@ void Kml_Generator::write_header(FILE * kml_file, int ntype)
 		};
 		const char* color_ins[6] = {
 			"ffffffff","ff0000ff","ffff00ff","ffff901e","ff00ff00","ff00aaff"
-			/*write,    read,	   purple,    blue,      green,     orange*/
+			/*write,    red,	   purple,    blue,      green,     orange*/
 		};
 		int i;
 		fprintf(kml_file, HEADKML1);

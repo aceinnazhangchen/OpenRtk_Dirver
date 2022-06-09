@@ -26,7 +26,7 @@ void MountAngle::set_base_file_name(char * file_name)
 }
 
 void MountAngle::process_ins() {
-	CalculationCall::call_ins_start("./content_aceinna_config.json", 0);
+	CalculationCall::call_ins_start("./content_aceinna_config.json");
 }
 
 void MountAngle::mountangle_process() {
@@ -37,10 +37,11 @@ void MountAngle::mountangle_process() {
 		uint32_t starttime = drive_res->starttime + 3000;
 		uint32_t endtime = drive_res->curtime;
 		stTimeSlice time_slice = { 0 };
+		time_slice.week = drive_res->gps_week;
 		time_slice.starttime = starttime / 1000;
 		time_slice.endtime = endtime / 1000;
 		time_slice.during = time_slice.endtime - time_slice.starttime;
-		if (f_time_log) fprintf(f_time_log, "%d,%d,%d\n", time_slice.starttime, time_slice.endtime, time_slice.during);
+		if (f_time_log) fprintf(f_time_log, "%d,%d,%d,%d\n", time_slice.week,time_slice.starttime, time_slice.endtime, time_slice.during);
 		time_slices.push_back(time_slice);
 	}
 	else if (drive_res->type == 15) {
@@ -48,17 +49,18 @@ void MountAngle::mountangle_process() {
 		uint32_t starttime = drive_res->starttime + 5000;
 		uint32_t endtime = drive_res->curtime - 5000;
 		stTimeSlice time_slice = { 0 };
+		time_slice.week = drive_res->gps_week;
 		time_slice.starttime = starttime / 1000;
 		time_slice.endtime = endtime / 1000;
 		time_slice.during = time_slice.endtime - time_slice.starttime;
-		if (f_time_log) fprintf(f_time_log, "%d,%d,%d\n", time_slice.starttime, time_slice.endtime, time_slice.during);
+		if (f_time_log) fprintf(f_time_log, "%d,%d,%d,%d\n", time_slice.week, time_slice.starttime, time_slice.endtime, time_slice.during);
 		time_slices.push_back(time_slice);
 		starttime = drive_res->starttime + 3000;
 		endtime = drive_res->curtime;
 		time_slice.starttime = starttime / 1000;
 		time_slice.endtime = endtime / 1000;
 		time_slice.during = time_slice.endtime - time_slice.starttime;
-		if (f_time_log) fprintf(f_time_log, "%d,%d,%d\n", time_slice.starttime, time_slice.endtime, time_slice.during);
+		if (f_time_log) fprintf(f_time_log, "%d,%d,%d,%d\n", time_slice.week,time_slice.starttime, time_slice.endtime, time_slice.during);
 		time_slices.push_back(time_slice);
 	}
 }
@@ -93,7 +95,7 @@ void MountAngle::create_file(FILE *& file, const char * suffix, const char * tit
 
 void MountAngle::finish()
 {
-	process_ins();
+	//process_ins();
 	if (f_log) fclose(f_log); f_log = NULL;
 	if (f_time_log) fclose(f_time_log); f_time_log = NULL;
 }

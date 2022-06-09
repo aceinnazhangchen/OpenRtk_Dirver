@@ -99,7 +99,7 @@ namespace NPOS122_Tool {
 		FILE* f_pva_csv = get_file("pva.csv", title.c_str());
 		if (!f_pva_csv) return;
 		fprintf(f_pva_csv, "%d,%11.4f,%3d,%3d,", msg_header.gps_week, (double)msg_header.gps_millisecs / 1000.0, pva.ins_status, pva.pos_type);
-		fprintf(f_pva_csv, "%14.9f,%14.9f,%10.4f,", pva.latitude, pva.longitude, pva.height);
+		fprintf(f_pva_csv, "%14.9f,%14.9f,%10.4f,", pva.latitude, pva.longitude, pva.height + pva.undulation);
 		fprintf(f_pva_csv, "%10.4f,%10.4f,%10.4f,", pva.vel_x, pva.vel_y, pva.vel_z);
 		fprintf(f_pva_csv, "%14.9f,%14.9f,%14.9f,", pva.roll, pva.pitch, pva.azimuth);
 		fprintf(f_pva_csv, "%8.3f,%8.3f,%8.3f,", pva.latitude_std, pva.longitude_std, pva.height_std);
@@ -113,7 +113,7 @@ namespace NPOS122_Tool {
 		FILE* f_ins_txt = get_file("ins.txt", NULL);
 		if (!f_ins_txt) return;
 		fprintf(f_ins_txt, "%d,%11.4f,", msg_header.gps_week, (double)msg_header.gps_millisecs / 1000.0);
-		fprintf(f_ins_txt, "%14.9f,%14.9f,%10.4f,", pva.latitude, pva.longitude, pva.height);
+		fprintf(f_ins_txt, "%14.9f,%14.9f,%10.4f,", pva.latitude, pva.longitude, pva.height + pva.undulation);
 		fprintf(f_ins_txt, "%10.4f,%10.4f,%10.4f,", pva.vel_x, pva.vel_y, pva.vel_z);
 		fprintf(f_ins_txt, "%14.9f,%14.9f,%14.9f,", pva.roll, pva.pitch, pva.azimuth);
 		fprintf(f_ins_txt, "%3d,%3d\n", get_normal_pos_type(pva.pos_type), pva.ins_status);
@@ -230,10 +230,13 @@ namespace NPOS122_Tool {
 			}
 		}
 		else {
+			if (raw.nbyte > NPOS122_BUFFER_LEN) {
+				return -1;
+			}
 			raw.buff[raw.nbyte++] = data;
 			if (raw.nbyte == 12) {
 				memcpy(&raw.msg_len, &raw.buff[8], sizeof(uint32_t));
-				if (raw.msg_len == 0) {
+				if (raw.msg_len <= 0 || raw.msg_len >= NPOS122_BUFFER_LEN) {
 					raw.flag = 0;
 					raw.nbyte = 0;
 					raw.msg_len = 0;

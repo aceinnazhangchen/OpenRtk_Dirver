@@ -1,4 +1,5 @@
 <RCC>
-    <qresource prefix="MountAngleCalculation">
+    <qresource prefix="/MountAngleCalculation">
+        <file>logo.ico</file>
     </qresource>
 </RCC>

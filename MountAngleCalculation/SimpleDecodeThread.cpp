@@ -2,6 +2,7 @@
 #include <QDir>
 #include <math.h>
 #include "common.h"
+#include "DriveStatus.h"
 #include "openrtk_user.h"
 #include "openrtk_inceptio.h"
 #include <QProcess>
@@ -14,7 +15,6 @@ SimpleDecodeThread::SimpleDecodeThread(QObject *parent)
 	, ins_kml_frequency(1000)
 {
 	ins401_decoder = new Ins401_Tool::Ins401_decoder();
-	m_MountAngle = new MountAngle(this);
 }
 
 SimpleDecodeThread::~SimpleDecodeThread()
@@ -84,11 +84,6 @@ QString& SimpleDecodeThread::getOutBaseName()
 	return m_OutBaseName;
 }
 
-std::vector<stTimeSlice>& SimpleDecodeThread::get_time_slices()
-{
-	return m_MountAngle->get_time_slices();
-}
-
 void SimpleDecodeThread::makeOutPath(QString filename)
 {
 	QFileInfo outDir(filename);
@@ -114,8 +109,6 @@ void SimpleDecodeThread::decode_openrtk330li()
 		char read_cache[READ_CACHE_SIZE] = { 0 };
 		OpenRTK330LI_Tool::set_output_user_file(1);
 		OpenRTK330LI_Tool::set_base_user_file_name(m_OutBaseName.toLocal8Bit().data());
-		m_MountAngle->init();
-		m_MountAngle->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
 		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
 		while (!feof(file)) {
 			if (m_isStop) break;
@@ -140,7 +133,6 @@ void SimpleDecodeThread::decode_openrtk330li()
 						ins_data.roll = ins_p->roll;
 						ins_data.pitch = ins_p->pitch;
 						ins_data.heading = ins_p->heading;
-						m_MountAngle->process_live_data(ins_data);
 					}
 				}
 			}
@@ -149,7 +141,6 @@ void SimpleDecodeThread::decode_openrtk330li()
 		}
 		OpenRTK330LI_Tool::write_kml_files();
 		OpenRTK330LI_Tool::close_user_all_log_file();
-		m_MountAngle->finish();
 		fclose(file);
 	}
 }
@@ -165,8 +156,6 @@ void SimpleDecodeThread::decode_openrtk_inceptio()
 		char read_cache[READ_CACHE_SIZE] = { 0 };
 		RTK330LA_Tool::set_output_inceptio_file(1);
 		RTK330LA_Tool::set_base_inceptio_file_name(m_OutBaseName.toLocal8Bit().data());
-		m_MountAngle->init();
-		m_MountAngle->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
 		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
 		while (!feof(file)) {
 			if (m_isStop) break;
@@ -191,7 +180,6 @@ void SimpleDecodeThread::decode_openrtk_inceptio()
 						ins_data.roll = (float)ins_p->roll / 100.0;
 						ins_data.pitch = (float)ins_p->pitch / 100.0;
 						ins_data.heading = (float)ins_p->heading / 100.0;
-						m_MountAngle->process_live_data(ins_data);
 					}
 				}
 			}
@@ -200,7 +188,6 @@ void SimpleDecodeThread::decode_openrtk_inceptio()
 		}
 		RTK330LA_Tool::write_inceptio_kml_files();
 		RTK330LA_Tool::close_inceptio_all_log_file();
-		m_MountAngle->finish();
 		fclose(file);
 	}
 }
@@ -217,8 +204,6 @@ void SimpleDecodeThread::decode_ins401()
 		ins401_decoder->init();
 		ins401_decoder->set_show_format_time(m_show_time);
 		ins401_decoder->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
-		m_MountAngle->init();
-		m_MountAngle->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
 		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
 		while (!feof(file)) {
 			if (m_isStop) break;
@@ -243,7 +228,6 @@ void SimpleDecodeThread::decode_ins401()
 						ins_data.roll = ins_p->roll;
 						ins_data.pitch = ins_p->pitch;
 						ins_data.heading = ins_p->heading;
-						m_MountAngle->process_live_data(ins_data);
 					}
 				}
 			}
@@ -251,7 +235,6 @@ void SimpleDecodeThread::decode_ins401()
 			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
 		}
 		ins401_decoder->finish();
-		m_MountAngle->finish();		
 		fclose(file);
 	}
 }

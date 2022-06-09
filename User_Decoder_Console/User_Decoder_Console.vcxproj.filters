@@ -75,6 +75,12 @@
     <ClInclude Include="..\decoder\NPOS122_decoder.h">
       <Filter>decoder</Filter>
     </ClInclude>
+    <ClInclude Include="..\decoder\ins401c.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\rtk330la_decoder.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\decoder\imu_raw.cpp">
@@ -129,6 +135,12 @@
       <Filter>decoder</Filter>
     </ClCompile>
     <ClCompile Include="..\decoder\NPOS122_decoder.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\ins401c.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\rtk330la_decoder.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
   </ItemGroup>
