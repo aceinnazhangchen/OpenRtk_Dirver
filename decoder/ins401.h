@@ -11,7 +11,7 @@ namespace Ins401_Tool {
 #pragma pack(push, 1)
 	typedef struct {
 		uint8_t nmea_flag;
-		uint8_t flag;			//headerÊÇ·ñÂú×ã°üµÄÌõ¼þ 0:Î´Âú×ã, 1:Âú×ã
+		uint8_t flag;			//headerï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 0:Î´ï¿½ï¿½ï¿½ï¿½, 1:ï¿½ï¿½ï¿½ï¿½
 		uint8_t header_len;
 		uint8_t header[4];
 		uint32_t nbyte;
@@ -298,6 +298,53 @@ namespace Ins401_Tool {
 		uint8_t gnss_handshake_flag; // 1 ok ,0 failure
 	} system_fault_detection_t;
 
+    typedef struct {
+        uint8_t masterFlag;              /* master solution flag of available, 1-available, 0-invalid */
+        uint8_t slaveFlag;               /* slave solution flag of available, 1-available, 0-invalid */
+        uint8_t masterType;              /* master antenna, 0:NGNSS, 1:spp, 2:PSR, 4:fixed, 5:float */
+        uint8_t slaveType;               /* slave antenna, 0:NGNSS, 1:spp, 2:PSR, 4:fixed, 5:float */
+        uint8_t masterSatView;           /* master number of satellite in view, 0-128 */
+        uint8_t masterSatSol;            /* master number of satellite in solution, 0-128 */
+        uint8_t slaveSatView;            /* slave number of satellite in view, 0-128 */
+        uint8_t slaveSatSol;             /* slave number of satellite in solution, 0-128 */
+        uint16_t week;                   /* GPS Week number, 2048 - 10240*/
+        float tow;                       /* second of week (s) 0 - 604800.0 */
+        float HDOP;                      /* horizontal dilution of precision, 0-30.0 */
+        float VDOP;                      /* vertical dilution of precision, 0-30.0 */
+        float TDOP;                      /* time dilution of precision, 0-30.0 */
+        float PDOP;                      /* position dilution of precision, 0-30.0 */
+        float solAge;                    /* solution age (s), 0-30.0 */
+        double masterLon;	             /* master longitude (degrees), -180.0~+180.0 */
+        double masterLat;	             /* master latitude (degrees),-90.0~+90.0 */
+        double masterHg;	             /* master ellipsoidal height, WGS84 (m), -18000.0~+18000.0 */
+        double slaveLon;	             /* slave longitude (degrees), -180.0~+180.0 */
+        double slaveLat;	             /* slave latitude (degrees),-90.0~+90.0 */
+        double slaveHg;	                 /* slave ellipsoidal height, WGS84 (m), -18000.0~+18000.0 */
+        double roll;	                 /* roll (degrees), -180.0~+180.0 */
+        double pitch;	                 /* pitch (degrees), -90.0~+90.0 */
+        double heading;	                 /* heading (degrees), 0.0-360.0 */
+        float geoSep;                    /* Geoidal separation (m),-3600.0~+3600.0 */
+        float masterVelN;	             /* master north velocity (m/s), 0.0-500.0 */
+        float masterVelE;	             /* master east velocity (m/s), 0.0-500.0 */
+        float masterVelU;		         /* master up velocity (m/s), 0.0-500.0 */
+        float slaveVelN;	             /* slave north velocity (m/s), 0.0-500.0 */
+        float slaveVelE;	             /* slave east velocity (m/s), 0.0-500.0 */
+        float slaveVelU;		         /* slave up velocity (m/s), 0.0-500.0 */
+        float lonStd;	                 /* longitude standard deviation (e-8degrees), 0.0-30000.0 */
+        float latStd;	                 /* latitude standard deviation (e-8degrees), 0.0-30000.0 */
+        float hgStd;	                 /* height standard deviation (meters), 0.0-300.0 */
+        float velNStd;	                 /* north velocity standard deviation (m/s), 0.0-30.0 */
+        float velEStd;                   /* east velocity standard deviation (m/s), 0.0-30.0 */
+        float velUStd;                   /* up velocity standard deviation (m/s), 0.0-30.0 */
+        float horPosPl;                  /* horizontal position protection level (m), 0.0-300.0 */
+        float verPosPl;                  /* vertical position protection level (m), 0.0-300.0 */
+        float horVelPl;                  /* horizontal velocity protection level (m/s), 0.0-30.0 */
+        float verVelPl;                  /* vertical velocity protection level (m/s), 0.0-30.0 */
+        uint8_t posPlStatus;             /* status of position protection level */
+        uint8_t velPlStatus;             /* status of velocity protection level */
+        int32_t fwVer;                   /* gnss algorithm firmware version */
+    } movbs_sol_t;
+
 #pragma pack(pop)
 
 	enum emPackageType {
@@ -309,6 +356,7 @@ namespace Ins401_Tool {
 		em_ROVER_RTCM = 0x0a06,
 		em_MISALIGN = 0x0a07,
 		PowerUpDR_MES = 0x0a09,
+        em_MOVBS_SOL = 0x0a0a,
 		em_CHECK = 0x4D44,
 		em_GNSS_SOL_INTEGEITY = 0x6749,
 		em_RTK_DEBUG1 = 0xd101,
@@ -325,6 +373,7 @@ namespace Ins401_Tool {
 		raw_imu_t imu;
 		gnss_sol_t gnss;
 		ins_sol_t ins;
+        movbs_sol_t movbs;
 		odo_t odo;
 		binary_misalign_t misa;
 		diagnostic_msg_t dm;
@@ -346,6 +395,7 @@ namespace Ins401_Tool {
 		FILE* f_gnss_csv;
 		FILE* f_gnss_txt;
 		FILE* f_ins_csv;
+        FILE* f_movbs_csv;
 		FILE* f_ins_txt;
 		FILE* f_odo_csv;
 		FILE* f_odo_txt;
@@ -360,10 +410,10 @@ namespace Ins401_Tool {
 		int crc_right_num;
 		int crc_error_num;
 		std::map<uint16_t, int> all_type_pack_num;
-		FilesMap output_file_map;			//ÏÖÔÚÊä³öÎÄ¼þ²»¶ÏÔö¼Ó£¬°ÑÎÄ¼þÖ¸Õë¶¼±£´æµ½mapÖÐ
-		bool m_MI_file_switch;				//Êä³öÐ¡Ã×ÎÄ¼þ¿ª¹Ø
-		double height_msl;					//º£Æ½Ãæ¸ß
-		uint32_t last_gnss_integ_millisecs;	//ÉÏ´ÎgnssÍêºÃÐÔ°üµÄÖÜÄÚÃë£¬ÒòÎªÔÚÃ»ÓÐgnssµÄÇé¿öÏÂ»á²»¶ÏÊä³öÍ¬Ò»¸ö°ü
+		FilesMap output_file_map;			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ö¸ï¿½ë¶¼ï¿½ï¿½ï¿½æµ½mapï¿½ï¿½
+		bool m_MI_file_switch;				//ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
+		double height_msl;					//ï¿½ï¿½Æ½ï¿½ï¿½ï¿½
+		uint32_t last_gnss_integ_millisecs;	//ï¿½Ï´ï¿½gnssï¿½ï¿½ï¿½ï¿½Ô°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë£¬ï¿½ï¿½Îªï¿½ï¿½Ã»ï¿½ï¿½gnssï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â»á²»ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Ò»ï¿½ï¿½ï¿½ï¿½
 	private:
 		void close_all_files();
 		void create_file(FILE * &file, const char * suffix, const char * title, bool format_time);
@@ -382,6 +432,7 @@ namespace Ins401_Tool {
 		void output_misa_sol();
 		void output_gnss_integ();
 		void output_gnss_sol_and_integ();
+        void output_movbs_sol();
 		void output_check();
 		void output_rtk_debug1();
 		void output_system_fault_detection();
