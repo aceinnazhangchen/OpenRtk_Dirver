@@ -663,6 +663,9 @@ namespace RTK330LA_Tool {
 				memcpy(&pak_s2, payload, sizeof(inceptio_s1_t));
 				if (!m_isOutputFile) break;
 				output_s2();
+#ifdef OUTPUT_INNER_FILE
+				save_novatel_raw_imu();
+#endif
 			}
 
 		}break;
@@ -677,7 +680,7 @@ namespace RTK330LA_Tool {
 			else if(raw.length == sizeof(inceptio_gN_24_01_21_t)
 				|| raw.length == sizeof(inceptio_gN_t)){
 				memcpy(&pak_gN, payload, raw.length);
-				//output_gN();
+				//output_gN();//em_d2
 			}
 
 		}break;
@@ -765,6 +768,21 @@ namespace RTK330LA_Tool {
 		}break;
 		default:
 			break;
+		}
+	}
+
+	void Rtk330la_decoder::save_novatel_raw_imu() {
+		FILE* f_imu_bin = get_file("raw_imu.bin");
+		if (f_imu_bin) {
+			novatel_rawimu_t raw_imu = { 0 };
+			raw_imu.seconds = pak_s2.GPS_TimeOfWeek;
+			raw_imu.x_gyro = pak_s2.x_gyro * Gyro_Scale_Factor / Date_Rate;
+			raw_imu.y_gyro = pak_s2.y_gyro * Gyro_Scale_Factor / Date_Rate;
+			raw_imu.z_gyro = pak_s2.z_gyro * Gyro_Scale_Factor / Date_Rate;
+			raw_imu.x_accel = pak_s2.x_accel * Accel_Scale_Factor / Date_Rate;
+			raw_imu.y_accel = pak_s2.y_accel * Accel_Scale_Factor / Date_Rate;
+			raw_imu.z_accel = pak_s2.z_accel * Accel_Scale_Factor / Date_Rate;
+			fwrite(&raw_imu, 1, sizeof(raw_imu), f_imu_bin);
 		}
 	}
 

@@ -67,6 +67,7 @@ namespace RTK330LA_Tool {
 		void create_file(FILE * &file, const char * suffix, const char * title, bool format_time);
 		FILE* get_file(std::string suffix, std::string title, bool format_time);
 		void parse_packet_payload();
+		void save_novatel_raw_imu();
 		int parse_nmea(uint8_t data);
 		void append_early_gnss_kml();
 		void append_gnss_kml();

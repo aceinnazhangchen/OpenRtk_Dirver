@@ -62,7 +62,7 @@ namespace Ins401_Tool {
 		float		gyro_z;
 	}raw_imu_t;
 
-	typedef struct {
+	struct gnss_sol_t {
 		uint16_t	gps_week;
 		uint32_t	gps_millisecs;
 		/*
@@ -89,7 +89,7 @@ namespace Ins401_Tool {
 		float		north_vel_std;
 		float		east_vel_std;
 		float		up_vel_std;
-	}gnss_sol_t;
+	};
 
 	struct ins_sol_t_20211207 {
 		uint16_t	gps_week;
@@ -476,6 +476,7 @@ namespace Ins401_Tool {
 		void output_runstatus_monitor();
 		void parse_packet_payload();
 		void save_imu_bin();
+		void save_novatel_raw_imu();
 		void parse_gga();
 		int8_t parse_nmea(uint8_t data);		
 	public:

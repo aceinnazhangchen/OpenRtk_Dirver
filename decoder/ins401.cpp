@@ -766,9 +766,9 @@ namespace Ins401_Tool {
 				if (!m_isOutputFile) break;
 				output_imu_raw();
 				MI_output_imu_raw();
-//#ifdef OUTPUT_INNER_FILE
-//				save_imu_bin();
-//#endif
+#ifdef OUTPUT_INNER_FILE
+				save_novatel_raw_imu();
+#endif
 			}
 		}break;
 		case em_GNSS_SOL:
@@ -914,6 +914,21 @@ namespace Ins401_Tool {
 			buffer[3 + len] = (packet_crc >> 8) & 0xff;
 			buffer[3 + len + 1] = packet_crc & 0xff;
 			fwrite(buffer, 1, len + 5, f_imu_bin);
+		}
+	}
+
+	void Ins401_decoder::save_novatel_raw_imu() {
+		FILE* f_imu_bin = get_file("raw_imu.bin");
+		if (f_imu_bin) {
+			novatel_rawimu_t raw_imu = {0};
+			raw_imu.seconds = (double)imu.gps_millisecs / 1000.0;
+			raw_imu.x_gyro = imu.gyro_x * Gyro_Scale_Factor / Date_Rate;
+			raw_imu.y_gyro = imu.gyro_y * Gyro_Scale_Factor / Date_Rate;
+			raw_imu.z_gyro = imu.gyro_z * Gyro_Scale_Factor / Date_Rate;
+			raw_imu.x_accel = imu.accel_x * Accel_Scale_Factor / Date_Rate;
+			raw_imu.y_accel = imu.accel_y * Accel_Scale_Factor / Date_Rate;
+			raw_imu.z_accel = imu.accel_z * Accel_Scale_Factor / Date_Rate;
+			fwrite(&raw_imu, 1, sizeof(raw_imu), f_imu_bin);
 		}
 	}
 
