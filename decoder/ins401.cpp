@@ -8,7 +8,7 @@
 
 namespace Ins401_Tool {
 
-//#define MI_OUTPUT_FILE  //Ð¡Ã×Êä³öÎÄ¼þÔÚÏîÄ¿ÊôÐÔÖÐ¶¨Òå
+//#define MI_OUTPUT_FILE  //Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½
 
 	Ins401_decoder::Ins401_decoder()
 		: m_MI_file_switch(false)
@@ -51,6 +51,7 @@ namespace Ins401_Tool {
 		
 		all_type_pack_num[em_RAW_IMU] = 0;
 		all_type_pack_num[em_GNSS_SOL] = 0;
+		all_type_pack_num[em_MOVBS_SOL] = 0;
 		all_type_pack_num[em_INS_SOL] = 0;
 		all_type_pack_num[em_RAW_ODO] = 0;
 		all_type_pack_num[em_DIAGNOSTIC_MSG] = 0;
@@ -67,6 +68,7 @@ namespace Ins401_Tool {
 
 		all_type_file_output[em_RAW_IMU] = 1;
 		all_type_file_output[em_GNSS_SOL] = 1;
+		all_type_file_output[em_MOVBS_SOL] = 1;
 		all_type_file_output[em_INS_SOL] = 1;
 		all_type_file_output[em_RAW_ODO] = 1;
 		all_type_file_output[em_DIAGNOSTIC_MSG] = 1;
@@ -599,6 +601,62 @@ namespace Ins401_Tool {
 		}
 	}
 
+	void Ins401_decoder::output_movbs_sol()
+	{
+		std::string title = 
+			"GPS_Week(),GPS_TimeOfWeek(s),masterFlag(),slaveFlag()"
+			",masterType(),slaveType(),masterSatView()"
+			",masterSatSol(),slaveSatView(),slaveSatSol()"
+			",HDOP(),VDOP(),TDOP(),PDOP()"
+			",solAge(),masterLon(deg),masterLat(deg), masterHg(m)"
+			",slaveLon(deg),slaveLat(deg),slaveHg(m)"
+			",roll(deg),pitch(deg),heading(deg)"
+			",geoSep(m),masterVelN(m/s),masterVelE(m/s),masterVelU(m/s)"
+			",slaveVelN(m/s),slaveVelE(m/s),slaveVelU(m/s)"
+            ",lonStd(),latStd(),hgStd()"
+            ",velNStd(),velEStd(),velUStd()"
+            ",horPosPl(),verPosPl(),horVelPl(),verVelPl()"
+            ",posPlStatus(),velPlStatus(),fwVer()"
+			",contient()\n";
+		FILE* f_movbs_csv = get_file("movbs.csv", title);
+		// create_file(f_movbs_csv, "movbs.csv", title.c_str(), show_format_time);
+		// if (show_format_time) {
+		// 	fprintf(f_movbs_csv, "%s,", week_2_time_str(movbs.week, movbs.tow));
+		// }
+        if (f_movbs_csv)
+        {
+            fprintf(f_movbs_csv, "%d,%11.4f,", movbs.week, (double)movbs.tow);
+            fprintf(f_movbs_csv, "%d,%d,%d,%d,", movbs.masterFlag, movbs.slaveFlag, movbs.masterType, movbs.slaveType);
+            fprintf(f_movbs_csv, "%d,%d,%d,%d,", movbs.masterSatView, movbs.masterSatSol, movbs.slaveSatView, movbs.slaveSatSol);
+            fprintf(f_movbs_csv, "%10.4f,%10.4f,%10.4f,%10.4f", movbs.HDOP, movbs.VDOP, movbs.TDOP, movbs.PDOP);
+            fprintf(f_movbs_csv, "%4.2f,", movbs.solAge);
+            fprintf(f_movbs_csv, "%14.9f,%14.9f,%14.9f,", movbs.masterLon, movbs.masterLat, movbs.masterHg);
+            fprintf(f_movbs_csv, "%14.9f,%14.9f,%14.9f,", movbs.slaveLon, movbs.slaveLat, movbs.slaveHg);
+            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,,%8.3f", movbs.roll, movbs.pitch, movbs.heading, movbs.geoSep);
+            fprintf(f_movbs_csv, "%8.3f,%8.3f,,%8.3f", movbs.masterVelN, movbs.masterVelE, movbs.masterVelU);
+            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.slaveVelN, movbs.slaveVelE, movbs.slaveVelU);
+            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.lonStd, movbs.latStd, movbs.hgStd);
+            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.velNStd, movbs.velEStd, movbs.velUStd);
+            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,,%8.3f", movbs.horPosPl, movbs.verPosPl, movbs.horVelPl, movbs.verVelPl);
+            fprintf(f_movbs_csv, "%d,%d,%d\n", movbs.posPlStatus, movbs.velPlStatus, movbs.fwVer);
+        }
+#ifdef OUTPUT_INNER_FILE
+#if 1
+			//txt
+			create_file(f_ins_txt, "movbs.txt", NULL);
+			fprintf(f_ins_txt, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
+				movbs.week, movbs.tow, movbs.masterFlag, movbs.slaveFlag, movbs.masterType,
+				movbs.slaveType, movbs.roll, movbs.pitch, movbs.heading);
+			
+            //process
+			create_file(f_process, "process", NULL);
+			fprintf(f_process, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
+				movbs.week, movbs.tow, movbs.masterFlag, movbs.slaveFlag, movbs.masterType,
+				movbs.slaveType, movbs.roll, movbs.pitch, movbs.heading);
+#endif
+#endif
+	}
+
 	void Ins401_decoder::output_check()
 	{
 		FILE* f_check_csv = get_file("check.csv");
@@ -782,6 +840,15 @@ namespace Ins401_Tool {
 				output_gnss_and_integ();
 			}
 		}break;
+        case em_MOVBS_SOL:
+		{
+			size_t packet_size = sizeof(movbs_sol_t);
+			if (raw.length == packet_size) {
+				memcpy(&movbs, payload, packet_size);
+				output_movbs_sol();
+			}
+		}
+        break;
 		case em_INS_SOL:
 		{
 			size_t packet_size_20211207 = sizeof(ins_sol_t_20211207);
@@ -1004,8 +1071,8 @@ namespace Ins401_Tool {
 	{
 		assert(raw.header_len <= 4);
 		//assert(raw.nbyte <= 112);
-		if (raw.nbyte > 118) {
-			printf("error\n");
+		if (raw.nbyte > 187) {
+			printf("error, raw.nbyte = %d\n", raw.nbyte);
 		}
 		int ret = 0;
 		if (raw.flag == 0) {

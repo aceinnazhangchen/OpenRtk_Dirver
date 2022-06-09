@@ -8,6 +8,8 @@
 #include "rtklib_core.h" //R2D
 #include "kml.h"
 
+#include <iostream>
+using namespace std;
 
 #define VERSION_EARLY		0
 #define VERSION_24_01_21	1
