@@ -29,6 +29,7 @@ DecodeThread::DecodeThread(QObject *parent)
 DecodeThread::~DecodeThread()
 {
 	if (ins401_decoder) {delete ins401_decoder; ins401_decoder = NULL;}
+	if (rtk330la_decoder) { delete rtk330la_decoder; rtk330la_decoder = NULL; }
 }
 
 void DecodeThread::run()
@@ -76,6 +77,9 @@ void DecodeThread::run()
 		case emDecodeFormat_ST_RTCM:
 			//decode_st_rtcm();
 			decode_lg69t_rtcm();
+			break;
+		case emDecodeFormat_Ublox:
+			decode_ublox();
 			break;
 		default:
 			break;
@@ -129,7 +133,7 @@ void DecodeThread::makeOutPath(QString filename)
 {
 	QFileInfo outDir(filename);
 	if (outDir.isFile()) {
-		QString basename = outDir.baseName();
+		QString basename = outDir.completeBaseName();
 		QString absoluteDir = outDir.absoluteDir().absolutePath();
 		QDir outPath = absoluteDir + QDir::separator() + basename + "_d";
 		if (!outPath.exists()) {
@@ -425,12 +429,12 @@ void DecodeThread::decode_rtcm_convbin()
 	
 	QString exeFile = "convbin.exe";
 	QFileInfo outDir(m_FileName);
-	QString command_cd = QString("cd /d %1 \n").arg(outDir.absoluteDir().absolutePath());
+	QString command_cd = QString("cd /d \"%1\" \n").arg(outDir.absoluteDir().absolutePath());
 	QString Interval_time = "0.1";
 	if (ins_kml_frequency == 1000) {
 		Interval_time = "1";
 	}
-	QString command = QString("%1 -r rtcm3 -v 3.04 -tr %2 -ti %3 -od -os -oi -ot -ol -f 7 \"%4\" -p %5").arg(QDir::currentPath()+QDir::separator()+ exeFile, m_datatime_str, Interval_time, m_FileName, m_OutBaseName+"_out.csv");
+	QString command = QString("\"%1\" -r rtcm3 -v 3.04 -tr %2 -ti %3 -od -os -oi -ot -ol -f 7 \"%4\" -p \"%5\"").arg(QDir::currentPath()+QDir::separator()+ exeFile, m_datatime_str, Interval_time, m_FileName, m_OutBaseName+"_out.csv");
 	
 	QFile bat_file("run_conbin.bat");
 	if (!bat_file.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -627,5 +631,62 @@ void DecodeThread::decode_lg69t_rtcm()
 		fclose(rtcmfile);
 		fclose(nmeafile);
 		fclose(otherfile);
+	}
+}
+
+
+void DecodeThread::decode_ublox() {
+
+	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
+	FILE* outfile = fopen((m_OutBaseName + "_ins.txt").toLocal8Bit().data(), "w");
+	if (file && outfile) {
+		memset(&m_raw, 0, sizeof(m_raw));
+		if (!init_raw(&m_raw, STRFMT_UBX)) {
+			return;
+		}
+		std::string title_txt =
+			"GPS_Week(),GPS_TimeOfWeek(s)"
+			",latitude(deg),longitude(deg),height(m)"
+			",north_velocity(m/s),east_velocity(m/s),up_velocity(m/s)"
+			",roll(deg),pitch(deg),heading(deg)"
+			",ins_position_type(),ins_status()\n";
+		fprintf(outfile, title_txt.c_str());
+		int8_t ret = 0;
+		int64_t file_size = getFileSize(file);
+		int64_t read_size = 0;
+		size_t readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		int week = 0;
+		while (!feof(file)) {
+			if (m_isStop) break;
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (size_t i = 0; i < readcount; i++) {
+				ret = input_ubx(&m_raw, read_cache[i]);
+				if (ret > 0) {
+					//fprintf(outfile, "0x%04x,%d\n", m_raw.type, ret);
+					if (ret == 15) {
+						time2gpst(m_raw.time_pvt, &week);
+						fprintf(outfile, 
+							"%d,%11.4f"
+							",%14.9f,%14.9f,%10.4f"
+							",%14.9f,%14.9f,%10.4f"
+							",%14.9f,%14.9f,%10.4f"
+							",%3d,%3d\n"
+							, week,m_raw.f9k_data[0]
+							, m_raw.f9k_data[1], m_raw.f9k_data[2], m_raw.f9k_data[3]
+						    , m_raw.f9k_data[9], m_raw.f9k_data[10], m_raw.f9k_data[11]
+							, m_raw.f9k_data[17], m_raw.f9k_data[18], -m_raw.f9k_data[19]
+							,(int)m_raw.f9k_data[14],0);
+					}
+				}
+			}
+			double percent = (double)read_size / (double)file_size * 10000;
+			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		free_raw(&m_raw);
+		fclose(file);
+		fclose(outfile);
+
 	}
 }

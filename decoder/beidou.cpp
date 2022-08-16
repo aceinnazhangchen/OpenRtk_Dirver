@@ -227,6 +227,12 @@ namespace beidou_Tool {
 			if (f_ins == NULL) {
 				sprintf(file_name, "%s-ins.txt", base_beidou_file_name);
 				f_ins = fopen(file_name, "w");
+				if (f_ins) fprintf(f_ins, 
+					"GPS_Week(),GPS_TimeOfWeek(s)"
+					",latitude(deg),longitude(deg),height(m)"
+					",north_velocity(m/s),east_velocity(m/s),up_velocity(m/s)"
+					",roll(deg),pitch(deg),heading(deg)"
+					",ins_position_type(),ins_status()\n");
 			}
 			if (f_ins) fprintf(f_ins, log);
 		}

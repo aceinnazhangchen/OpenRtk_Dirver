@@ -52,12 +52,13 @@ namespace Ins401_Tool {
 		all_type_pack_num[em_RAW_IMU] = 0;
 		all_type_pack_num[em_GNSS_SOL] = 0;
 		all_type_pack_num[em_MOVBS_SOL] = 0;
+        all_type_pack_num[em_HEADING_SOL] = 0;
 		all_type_pack_num[em_INS_SOL] = 0;
 		all_type_pack_num[em_RAW_ODO] = 0;
 		all_type_pack_num[em_DIAGNOSTIC_MSG] = 0;
 		all_type_pack_num[em_ROVER_RTCM] = 0;
 		all_type_pack_num[em_MISALIGN] = 0;
-		all_type_pack_num[PowerUpDR_MES] = 0;
+		all_type_pack_num[em_PowerUpDR_MES] = 0;
 		all_type_pack_num[em_CHECK] = 0;
 		all_type_pack_num[em_GNSS_SOL_INTEGEITY] = 0;
 		all_type_pack_num[em_RTK_DEBUG1] = 0;
@@ -69,12 +70,13 @@ namespace Ins401_Tool {
 		all_type_file_output[em_RAW_IMU] = 1;
 		all_type_file_output[em_GNSS_SOL] = 1;
 		all_type_file_output[em_MOVBS_SOL] = 1;
+        all_type_file_output[em_HEADING_SOL] = 1;
 		all_type_file_output[em_INS_SOL] = 1;
 		all_type_file_output[em_RAW_ODO] = 1;
 		all_type_file_output[em_DIAGNOSTIC_MSG] = 1;
 		all_type_file_output[em_ROVER_RTCM] = 1;
 		all_type_file_output[em_MISALIGN] = 1;
-		all_type_file_output[PowerUpDR_MES] = 1;
+		all_type_file_output[em_PowerUpDR_MES] = 1;
 		all_type_file_output[em_CHECK] = 1;
 		all_type_file_output[em_GNSS_SOL_INTEGEITY] = 1;
 		all_type_file_output[em_RTK_DEBUG1] = 1;
@@ -343,7 +345,13 @@ namespace Ins401_Tool {
 #ifdef OUTPUT_INNER_FILE
 		if (ins.gps_millisecs % 100 < 10) {
 			//txt
-			FILE* f_ins_txt = get_file("ins.txt");
+			std::string title_txt =
+				"GPS_Week(),GPS_TimeOfWeek(s)"
+				",latitude(deg),longitude(deg),height(m)"
+				",north_velocity(m/s),east_velocity(m/s),up_velocity(m/s)"
+				",roll(deg),pitch(deg),heading(deg)"
+				",ins_position_type(),ins_status()\n";
+			FILE* f_ins_txt = get_file("ins.txt", title_txt);
 			if (f_ins_txt) {
 				fprintf(f_ins_txt, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n",
 					ins.gps_week, (double)ins.gps_millisecs / 1000.0, ins.latitude, ins.longitude, ins.height,
@@ -390,7 +398,7 @@ namespace Ins401_Tool {
 		if (ins.gps_millisecs % 100 >= 10) {
 			return;
 		}
-		std::string ins_and_intergrity_title =
+		std::string title =
 			"GPS_Week(),GPS_TimeOfWeek(s)"
 			",latitude(deg),longitude(deg),height(m)"
 			",north_velocity(m/s),east_velocity(m/s),up_velocity(m/s)"
@@ -402,7 +410,7 @@ namespace Ins401_Tool {
 			",hor_pos_pl, ver_pos_pl, hor_vel_pl, ver_vel_pl"
 			",pitch_pl, roll_pl, heading_pl\n";
 
-		FILE* f_ins_and_intergrity_csv = get_file("ins_and_intergrity.csv");
+		FILE* f_ins_and_intergrity_csv = get_file("ins_and_intergrity.csv", title);
 		if (f_ins_and_intergrity_csv) {
 			fprintf(f_ins_and_intergrity_csv, 
 				"%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d",
@@ -572,8 +580,8 @@ namespace Ins401_Tool {
 	{
 		if (gnss.gps_week == 0 || gnss_integ.week == 0)
 			return;
-		if (last_gnss_integ_millisecs == (uint32_t)gnss_integ.gps_millisecs)
-			return;
+		//if (last_gnss_integ_millisecs == (uint32_t)gnss_integ.gps_millisecs)
+		//	return;
 		if (gnss.gps_millisecs != (uint32_t)gnss_integ.gps_millisecs)
 			return;
 		std::string title =
@@ -595,8 +603,14 @@ namespace Ins401_Tool {
 			fprintf(f_gnss_and_integ_csv, ",%5.1f,%5.1f", gnss.hdop, gnss.diffage);
 			fprintf(f_gnss_and_integ_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel, gnss.east_vel, gnss.up_vel);
 			fprintf(f_gnss_and_integ_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel_std, gnss.east_vel_std, gnss.up_vel_std);
-			fprintf(f_gnss_and_integ_csv, ",%8.3f,%8.3f,%2d,%2d", (float)gnss_integ.rtk_hor_pos_pl / 100, (float)gnss_integ.rtk_ver_pos_pl / 100, gnss_integ.status_bit.rtk_hor_pos_s, gnss_integ.status_bit.rtk_ver_pos_s);
-			fprintf(f_gnss_and_integ_csv, ",%8.3f,%8.3f,%2d,%2d", (float)gnss_integ.rtk_hor_vel_pl / 100, (float)gnss_integ.rtk_ver_vel_pl / 100, gnss_integ.status_bit.rtk_hor_vel_s, gnss_integ.status_bit.rtk_ver_vel_s);
+			if (gnss.position_type == 1) {
+				fprintf(f_gnss_and_integ_csv, ",%8.3f,%8.3f,%2d,%2d", (float)gnss_integ.spp_hor_pos_pl / 100, (float)gnss_integ.spp_ver_pos_pl / 100, gnss_integ.status_bit.spp_hor_pos_s, gnss_integ.status_bit.spp_ver_pos_s);
+				fprintf(f_gnss_and_integ_csv, ",%8.3f,%8.3f,%2d,%2d", (float)gnss_integ.spp_hor_vel_pl / 100, (float)gnss_integ.spp_ver_vel_pl / 100, gnss_integ.status_bit.spp_hor_vel_s, gnss_integ.status_bit.spp_ver_vel_s);
+			}
+			else {
+				fprintf(f_gnss_and_integ_csv, ",%8.3f,%8.3f,%2d,%2d", (float)gnss_integ.rtk_hor_pos_pl / 100, (float)gnss_integ.rtk_ver_pos_pl / 100, gnss_integ.status_bit.rtk_hor_pos_s, gnss_integ.status_bit.rtk_ver_pos_s);
+				fprintf(f_gnss_and_integ_csv, ",%8.3f,%8.3f,%2d,%2d", (float)gnss_integ.rtk_hor_vel_pl / 100, (float)gnss_integ.rtk_ver_vel_pl / 100, gnss_integ.status_bit.rtk_hor_vel_s, gnss_integ.status_bit.rtk_ver_vel_s);
+			}
 			fprintf(f_gnss_and_integ_csv, "\n");
 		}
 	}
@@ -604,20 +618,21 @@ namespace Ins401_Tool {
 	void Ins401_decoder::output_movbs_sol()
 	{
 		std::string title = 
-			"GPS_Week(),GPS_TimeOfWeek(s),masterFlag(),slaveFlag()"
-			",masterType(),slaveType(),masterSatView()"
-			",masterSatSol(),slaveSatView(),slaveSatSol()"
+			"GPS_Week(),GPS_TimeOfWeek(s)"
+			",masterFlag(),slaveFlag(),masterType(),slaveType()"
+			",masterSatView(),masterSatSol(),slaveSatView(),slaveSatSol()"
 			",HDOP(),VDOP(),TDOP(),PDOP()"
-			",solAge(),masterLon(deg),masterLat(deg), masterHg(m)"
+			",solAge()"
+			",masterLon(deg),masterLat(deg), masterHg(m)"
 			",slaveLon(deg),slaveLat(deg),slaveHg(m)"
-			",roll(deg),pitch(deg),heading(deg)"
-			",geoSep(m),masterVelN(m/s),masterVelE(m/s),masterVelU(m/s)"
+			",roll(deg),pitch(deg),heading(deg),geoSep(m)"
+			",masterVelN(m/s),masterVelE(m/s),masterVelU(m/s)"
 			",slaveVelN(m/s),slaveVelE(m/s),slaveVelU(m/s)"
             ",lonStd(),latStd(),hgStd()"
             ",velNStd(),velEStd(),velUStd()"
             ",horPosPl(),verPosPl(),horVelPl(),verVelPl()"
-            ",posPlStatus(),velPlStatus(),fwVer()"
-			",contient()\n";
+            ",posPlStatus(),velPlStatus(),fwVer(),alo_time()"
+			"\n";
 		FILE* f_movbs_csv = get_file("movbs.csv", title);
 		// create_file(f_movbs_csv, "movbs.csv", title.c_str(), show_format_time);
 		// if (show_format_time) {
@@ -628,34 +643,68 @@ namespace Ins401_Tool {
             fprintf(f_movbs_csv, "%d,%11.4f,", movbs.week, (double)movbs.tow);
             fprintf(f_movbs_csv, "%d,%d,%d,%d,", movbs.masterFlag, movbs.slaveFlag, movbs.masterType, movbs.slaveType);
             fprintf(f_movbs_csv, "%d,%d,%d,%d,", movbs.masterSatView, movbs.masterSatSol, movbs.slaveSatView, movbs.slaveSatSol);
-            fprintf(f_movbs_csv, "%10.4f,%10.4f,%10.4f,%10.4f", movbs.HDOP, movbs.VDOP, movbs.TDOP, movbs.PDOP);
+            fprintf(f_movbs_csv, "%10.4f,%10.4f,%10.4f,%10.4f,", movbs.HDOP, movbs.VDOP, movbs.TDOP, movbs.PDOP);
             fprintf(f_movbs_csv, "%4.2f,", movbs.solAge);
             fprintf(f_movbs_csv, "%14.9f,%14.9f,%14.9f,", movbs.masterLon, movbs.masterLat, movbs.masterHg);
             fprintf(f_movbs_csv, "%14.9f,%14.9f,%14.9f,", movbs.slaveLon, movbs.slaveLat, movbs.slaveHg);
-            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,,%8.3f", movbs.roll, movbs.pitch, movbs.heading, movbs.geoSep);
-            fprintf(f_movbs_csv, "%8.3f,%8.3f,,%8.3f", movbs.masterVelN, movbs.masterVelE, movbs.masterVelU);
+            fprintf(f_movbs_csv, "%8.4f,%8.4f,%8.4f,%8.4f,", movbs.roll, movbs.pitch, movbs.heading, movbs.geoSep);
+            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.masterVelN, movbs.masterVelE, movbs.masterVelU);
             fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.slaveVelN, movbs.slaveVelE, movbs.slaveVelU);
             fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.lonStd, movbs.latStd, movbs.hgStd);
             fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.velNStd, movbs.velEStd, movbs.velUStd);
-            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,,%8.3f", movbs.horPosPl, movbs.verPosPl, movbs.horVelPl, movbs.verVelPl);
-            fprintf(f_movbs_csv, "%d,%d,%d\n", movbs.posPlStatus, movbs.velPlStatus, movbs.fwVer);
+            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,%8.3f,", movbs.horPosPl, movbs.verPosPl, movbs.horVelPl, movbs.verVelPl);
+            fprintf(f_movbs_csv, "%d,%d,%d,%d\n", movbs.posPlStatus, movbs.velPlStatus, movbs.fwVer, movbs.alo_time);
+        }
+#ifdef OUTPUT_INNER_FILE
+#if 1
+            FILE* f_movbs_txt = get_file("movbs.txt");
+			if (f_movbs_txt) {
+				fprintf(f_movbs_txt, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
+				movbs.week, movbs.tow, movbs.masterFlag, movbs.slaveFlag, movbs.masterType,
+				movbs.slaveType, movbs.roll, movbs.pitch, movbs.heading);
+            }
+			//process
+			FILE* f_process = get_file("process");
+			if (f_process) {
+				fprintf(f_process, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
+				movbs.week, movbs.tow, movbs.masterFlag, movbs.slaveFlag, movbs.masterType,
+				movbs.slaveType, movbs.roll, movbs.pitch, movbs.heading);
+            }
+#endif
+#endif
+	}
+
+	void Ins401_decoder::output_heading_sol()
+	{
+		std::string title = 
+			"GPS_Week(),GPS_TimeOfWeek(s)"
+			",length(m),heading(),pitch(),roll()"
+			",hdgstddev(),ptchstddev()\n";
+		FILE* f_heading_csv = get_file("hG.csv", title);
+        if (f_heading_csv)
+        {
+            fprintf(f_heading_csv, "%d,%11.4f,", heading.gps_week, (double)heading.gps_millisecs);
+            fprintf(f_heading_csv, "%10.6f,%10.6f,%10.6f,%10.6f,", heading.length, heading.heading, heading.pitch, heading.roll);
+            fprintf(f_heading_csv, "%10.6f,%10.6f\n", heading.hdgstddev, heading.ptchstddev);
         }
 #ifdef OUTPUT_INNER_FILE
 #if 1
 			//txt
-			create_file(f_ins_txt, "movbs.txt", NULL);
-			fprintf(f_ins_txt, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
-				movbs.week, movbs.tow, movbs.masterFlag, movbs.slaveFlag, movbs.masterType,
-				movbs.slaveType, movbs.roll, movbs.pitch, movbs.heading);
-			
-            //process
-			create_file(f_process, "process", NULL);
-			fprintf(f_process, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
-				movbs.week, movbs.tow, movbs.masterFlag, movbs.slaveFlag, movbs.masterType,
-				movbs.slaveType, movbs.roll, movbs.pitch, movbs.heading);
+            FILE* f_heading_txt = get_file("heading.txt");
+			if (f_heading_txt) {
+				fprintf(f_heading_txt, "$GPHEADING,%d,%11.4f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f\n",heading.gps_week, heading.gps_millisecs,
+			heading.length, heading.heading, heading.pitch, heading.hdgstddev, heading.ptchstddev);
+			}
+			//process
+			FILE* f_process = get_file("process");
+			if (f_process) {
+				fprintf(f_process, "$GPHEADING,%d,%11.4f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f\n",heading.gps_week, heading.gps_millisecs,
+			heading.length, heading.heading, heading.pitch, heading.hdgstddev, heading.ptchstddev);
+			}
+
 #endif
 #endif
-	}
+	}    
 
 	void Ins401_decoder::output_check()
 	{
@@ -849,6 +898,14 @@ namespace Ins401_Tool {
 			}
 		}
         break;
+        case em_HEADING_SOL:
+        {
+			size_t packet_size = sizeof(heading_t);
+			if (raw.length == packet_size) {
+				memcpy(&heading, payload, packet_size);
+				output_heading_sol();
+			}            
+        }
 		case em_INS_SOL:
 		{
 			size_t packet_size_20211207 = sizeof(ins_sol_t_20211207);
@@ -902,7 +959,7 @@ namespace Ins401_Tool {
 				output_misa_sol();
 			}
 		}break;
-		case PowerUpDR_MES:
+		case em_PowerUpDR_MES:
 		{
 			size_t packet_size = sizeof(SaveMsg);
 			int ret = 0;
@@ -989,12 +1046,12 @@ namespace Ins401_Tool {
 		if (f_imu_bin) {
 			novatel_rawimu_t raw_imu = {0};
 			raw_imu.seconds = (double)imu.gps_millisecs / 1000.0;
-			raw_imu.x_gyro = imu.gyro_x * Gyro_Scale_Factor / Date_Rate;
-			raw_imu.y_gyro = imu.gyro_y * Gyro_Scale_Factor / Date_Rate;
-			raw_imu.z_gyro = imu.gyro_z * Gyro_Scale_Factor / Date_Rate;
-			raw_imu.x_accel = imu.accel_x * Accel_Scale_Factor / Date_Rate;
-			raw_imu.y_accel = imu.accel_y * Accel_Scale_Factor / Date_Rate;
-			raw_imu.z_accel = imu.accel_z * Accel_Scale_Factor / Date_Rate;
+			raw_imu.x_gyro = (int32_t)(imu.gyro_x * Gyro_Scale_Factor / Date_Rate);
+			raw_imu.z_gyro = (int32_t)(imu.gyro_z * Gyro_Scale_Factor / Date_Rate);
+			raw_imu.y_gyro = (int32_t)(imu.gyro_y * Gyro_Scale_Factor / Date_Rate);
+			raw_imu.x_accel = (int32_t)(imu.accel_x * Accel_Scale_Factor / Date_Rate);
+			raw_imu.y_accel = (int32_t)(imu.accel_y * Accel_Scale_Factor / Date_Rate);
+			raw_imu.z_accel = (int32_t)(imu.accel_z * Accel_Scale_Factor / Date_Rate);
 			fwrite(&raw_imu, 1, sizeof(raw_imu), f_imu_bin);
 		}
 	}
@@ -1086,7 +1143,7 @@ namespace Ins401_Tool {
 	{
 		assert(raw.header_len <= 4);
 		//assert(raw.nbyte <= 112);
-		if (raw.nbyte > 187) {
+		if (raw.nbyte > 221) {
 			printf("error, raw.nbyte = %d\n", raw.nbyte);
 		}
 		int ret = 0;
@@ -1118,6 +1175,11 @@ namespace Ins401_Tool {
 			raw.buff[raw.nbyte++] = data;
 			if (raw.nbyte == 6) {
 				memcpy(&raw.length, &raw.buff[2], sizeof(uint32_t));
+				if (raw.length == 0) {
+					raw.flag = 0;
+					raw.nbyte = 0;
+					raw.length = 0;
+				}
 			}
 			else if (raw.length > 0 && raw.nbyte == raw.length + 8) { //8 = [type1,type2,len(4)] + [crc1,crc2]
 				uint16_t packet_crc = 256 * raw.buff[raw.nbyte - 2] + raw.buff[raw.nbyte - 1];

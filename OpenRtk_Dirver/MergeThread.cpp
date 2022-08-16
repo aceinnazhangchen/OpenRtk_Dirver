@@ -89,7 +89,7 @@ void MergeThread::makeOutFileName()
 {
 	QFileInfo outDir(m_MergeFileName1);
 	if (outDir.isFile()) {
-		QString basename = outDir.baseName();
+		QString basename = outDir.completeBaseName();
 		QString absoluteDir = outDir.absoluteDir().absolutePath();
 		switch (m_MergeFormat)
 		{

@@ -82,6 +82,11 @@
          <string>STRTCM</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>Ublox</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item>

@@ -89,9 +89,6 @@
     <ClCompile Include="..\decoder\mixed_raw.c">
       <Filter>decoder</Filter>
     </ClCompile>
-    <ClCompile Include="..\decoder\openrtk_inceptio.cpp">
-      <Filter>decoder</Filter>
-    </ClCompile>
     <ClCompile Include="..\decoder\openrtk_user.cpp">
       <Filter>decoder</Filter>
     </ClCompile>

@@ -97,8 +97,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\decoder\rtk330la_decoder.cpp" />
+    <ClCompile Include="..\decoder\SplitByTime.cpp" />
     <ClCompile Include="JsonFileLoader.cpp" />
-    <ClCompile Include="SplitByTime.cpp" />
     <QtRcc Include="MountAngleCalculation.qrc" />
     <QtUic Include="MountAngleCalculation.ui" />
     <QtMoc Include="MountAngleCalculation.h" />
@@ -118,10 +119,8 @@
     <ClCompile Include="..\decoder\rtkcmn.c" />
     <ClCompile Include="CalculationCall.cpp" />
     <ClCompile Include="ConfigFile.cpp" />
-    <ClCompile Include="DriveStatus.cpp" />
     <ClCompile Include="LoadInsTextFileThread.cpp" />
     <ClCompile Include="SimpleDecodeThread.cpp" />
-    <ClCompile Include="MountAngle.cpp" />
     <ClCompile Include="MountAngleCalculation.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -143,14 +142,13 @@
     <ClInclude Include="..\decoder\openrtk_user.h" />
     <ClInclude Include="..\decoder\rtcm.h" />
     <ClInclude Include="..\decoder\rtcm_split.h" />
+    <ClInclude Include="..\decoder\rtk330la_decoder.h" />
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
+    <ClInclude Include="..\decoder\SplitByTime.h" />
     <QtMoc Include="JsonFileLoader.h" />
-    <QtMoc Include="SplitByTime.h" />
     <QtMoc Include="LoadInsTextFileThread.h" />
     <QtMoc Include="CalculationCall.h" />
-    <ClInclude Include="DriveStatus.h" />
-    <QtMoc Include="MountAngle.h" />
     <QtMoc Include="SimpleDecodeThread.h" />
   </ItemGroup>
   <ItemGroup>

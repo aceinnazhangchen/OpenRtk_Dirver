@@ -222,7 +222,16 @@ namespace ins401c_Tool {
         printf("INS_Std_LocatHeight:%0.2f\n", to->INS_Std_LocatHeight);
         printf("INS_Std_Heading:%0.2f\n", to->INS_Std_Heading);
 #endif
-		sprintf(ins401c_output_msg, "%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.7f,%u,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%d,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.4f\n",\
+		sprintf(ins401c_output_msg, 
+			"%11.4f,%11.4f,%11.4f,"
+			"%11.4f,%11.4f,%11.4f,"
+			"%11.4f,%11.4f,%11.4f,"
+			"%11.7f,%u,"
+			"%11.7f,%11.7f,"
+			"%11.4f,%11.4f,%11.4f,"
+			"%d,%d,%d,%d,%d,%d,"
+			"%11.4f,%11.4f,%11.4f,%11.4f,"
+			"%6d,%12.4f\n",\
         to->ACC_X, to->ACC_Y, to->ACC_Z,\
         to->GYRO_X, to->GYRO_Y, to->GYRO_Z,\
         to->INS_PitchAngle, to->INS_RollAngle, to->INS_HeadingAngle,\
@@ -233,7 +242,7 @@ namespace ins401c_Tool {
         to->INS_Std_Lat, to->INS_Std_Lon, to->INS_Std_LocatHeight, to->INS_Std_Heading, \
         to->Week, (double)(to->TimeOfWeek) / 1000\
         );
-        sprintf(ins401c_output_msg_imu, "%d,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f\n",to->Week,\
+        sprintf(ins401c_output_msg_imu, "%d,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%d\n",to->Week,\
         (double)(to->TimeOfWeek)/1000,\
         to->ACC_X, to->ACC_Y, to->ACC_Z,\
         to->GYRO_X, to->GYRO_Y, to->GYRO_Z,\
@@ -646,7 +655,7 @@ namespace ins401c_Tool {
         }
         if(can_mess_flag == 0x1ff)
         {
-            sprintf(ins401c_output_msg_imu, "%d,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f\n",imu_mess.week,\
+            sprintf(ins401c_output_msg_imu, "%d,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%d\n",imu_mess.week,\
             (double)(imu_mess.time_of_week),\
             imu_mess.acc_x, imu_mess.acc_y, imu_mess.acc_z,\
             imu_mess.gryo_x, imu_mess.gryo_y, imu_mess.gryo_z,\
@@ -712,7 +721,7 @@ namespace ins401c_Tool {
         uint8_t valid_data[1024];
         uint8_t result[1024];
         uint32_t count = 0;
-        uint32_t data_len = strlen((const char*)data);
+        uint32_t data_len = (uint32_t)strlen((const char*)data);
         char* str = strtok((char*)data, " ");
         char* endptr = NULL;
         static uint8_t data_frame_start_flag = 0;

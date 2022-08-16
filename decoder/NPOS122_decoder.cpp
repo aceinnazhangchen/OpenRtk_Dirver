@@ -105,12 +105,31 @@ namespace NPOS122_Tool {
 		fprintf(f_pva_csv, "%8.3f,%8.3f,%8.3f,", pva.latitude_std, pva.longitude_std, pva.height_std);
 		fprintf(f_pva_csv, "%8.3f,%8.3f,%8.3f,", pva.vel_x_std, pva.vel_y_std, pva.vel_z_std);
 		fprintf(f_pva_csv, "%8.3f,%8.3f,%8.3f,", pva.roll_std, pva.pitch_std, pva.azimuth_std);
-		fprintf(f_pva_csv, "%3d,%3d\n", pva.sol_status, pva.last_update_time);
+		fprintf(f_pva_csv, "%3d\n", pva.last_update_time);
+
+		std::string status_title =
+			"GPS_Week(),GPS_TimeOfWeek(s),b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11,b12,b13,b14,b15,b16,b17,b18-19,b20,b21,b22-23,b24,b25,b26-28,b29-31\n";
+		FILE* f_pva_status = get_file("pva_status.csv", status_title.c_str());
+		if (!f_pva_status) return;
+		fprintf(f_pva_status, "%d,%11.4f,", msg_header.gps_week, (double)msg_header.gps_millisecs / 1000.0);
+		fprintf(f_pva_status, "%x,%x,%x,%x,", pva.sol_status.b_0, pva.sol_status.b_1, pva.sol_status.b_2, pva.sol_status.b_3);
+		fprintf(f_pva_status, "%x,%x,%x,%x,", pva.sol_status.b_4, pva.sol_status.b_5, pva.sol_status.b_6, pva.sol_status.b_7);
+		fprintf(f_pva_status, "%x,%x,%x,%x,", pva.sol_status.b_8, pva.sol_status.b_9, pva.sol_status.b_10, pva.sol_status.b_11);
+		fprintf(f_pva_status, "%x,%x,%x,%x,", pva.sol_status.b_12, pva.sol_status.b_13, pva.sol_status.b_14, pva.sol_status.b_15);
+		fprintf(f_pva_status, "%x,%x,0x%02x,", pva.sol_status.b_16, pva.sol_status.b_17, pva.sol_status.b_18);
+		fprintf(f_pva_status, "%x,%x,0x%02x,", pva.sol_status.b_20, pva.sol_status.b_21, pva.sol_status.b_22);
+		fprintf(f_pva_status, "%x,%x,0x%02x,0x%02x\n", pva.sol_status.b_24, pva.sol_status.b_25, pva.sol_status.b_26, pva.sol_status.b_29);
 	}
 
 	void NPOS122_decoder::output_ins_txt()
 	{
-		FILE* f_ins_txt = get_file("ins.txt", NULL);
+		std::string title_txt =
+			"GPS_Week(),GPS_TimeOfWeek(s)"
+			",latitude(deg),longitude(deg),height(m)"
+			",north_velocity(m/s),east_velocity(m/s),up_velocity(m/s)"
+			",roll(deg),pitch(deg),heading(deg)"
+			",ins_position_type(),ins_status()\n";
+		FILE* f_ins_txt = get_file("ins.txt", title_txt.c_str());
 		if (!f_ins_txt) return;
 		fprintf(f_ins_txt, "%d,%11.4f,", msg_header.gps_week, (double)msg_header.gps_millisecs / 1000.0);
 		fprintf(f_ins_txt, "%14.9f,%14.9f,%10.4f,", pva.latitude, pva.longitude, pva.height + pva.undulation);
@@ -231,6 +250,9 @@ namespace NPOS122_Tool {
 		}
 		else {
 			if (raw.nbyte > NPOS122_BUFFER_LEN) {
+				raw.flag = 0;
+				raw.nbyte = 0;
+				raw.msg_len = 0;
 				return -1;
 			}
 			raw.buff[raw.nbyte++] = data;

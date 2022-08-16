@@ -66,19 +66,15 @@ void decode_rtk330la_interface(char* filename)
 		createDirByFilePath(filename, dirname);
 		rtk330la_decoder->init();
 		rtk330la_decoder->set_base_file_name(dirname);
-		//RTK330LA_Tool::set_base_inceptio_file_name(dirname);
 		while (!feof(file)) {
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
 			read_size += readcount;
 			for (size_t i = 0; i < readcount; i++) {
-				//ret = RTK330LA_Tool::input_inceptio_raw(read_cache[i]);
 				ret = rtk330la_decoder->input_raw(read_cache[i]);
 			}
 			double percent = (double)read_size / (double)file_size * 100;
 			printf("Process : %4.1f %%\r", percent);
 		}
-		//RTK330LA_Tool::write_inceptio_kml_files();
-		//RTK330LA_Tool::close_inceptio_all_log_file();
 		rtk330la_decoder->finish();
 		fclose(file);
 		printf("\nfinished\r\n");

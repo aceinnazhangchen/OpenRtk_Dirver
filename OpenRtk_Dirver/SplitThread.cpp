@@ -78,7 +78,7 @@ void SplitThread::makeOutPath(QString filename)
 {
 	QFileInfo outDir(filename);
 	if (outDir.isFile()) {
-		QString basename = outDir.baseName();
+		QString basename = outDir.completeBaseName();
 		QString absoluteDir = outDir.absoluteDir().absolutePath();
 		QDir outPath = absoluteDir + QDir::separator() + basename + "_s";
 		if (!outPath.exists()) {

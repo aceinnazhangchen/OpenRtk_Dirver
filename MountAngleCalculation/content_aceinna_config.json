@@ -69,18 +69,18 @@
     "odoDataRate": 10,
     "odoFileName": "",
     "odoLeverArm": [
-        0.6,
-        0.13,
+        0.17,
+        -0.11,
         0.21
     ],
     "odoScale": 1,
-    "outputFileName": "F:/data/2022/29/user_2022_01_29_09_18_18_d/user_2022_01_29_09_18_18_process",
+    "outputFileName": "F:/data/2022/178/session_20220627_105149/ins401_log_2209000435_20220627_105208/user_2022_06_27_10_52_19_d/user_2022_06_27_10_52_19_process",
     "priLeverArm": [
-        1.37,
-        -0.17,
-        -0.94
+        0.99,
+        -0.45,
+        -0.99
     ],
-    "procFileName": "F:/data/2022/29/user_2022_01_29_09_18_18_d/user_2022_01_29_09_18_18_process",
+    "procFileName": "F:/data/2022/178/session_20220627_105149/ins401_log_2209000435_20220627_105208/user_2022_06_27_10_52_19_d/user_2022_06_27_10_52_19_process",
     "procType": 0,
     "profiletype": 127,
     "rotationRBV": [
@@ -95,8 +95,8 @@
     ],
     "useGNSSRate": 1,
     "userLeverArm": [
-        1.37,
-        -0.17,
-        -0.94
+        0.99,
+        -0.45,
+        -0.99
     ]
 }

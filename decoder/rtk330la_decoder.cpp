@@ -1,6 +1,8 @@
 #include "rtk330la_decoder.h"
 #include "common.h"
 #include "rtklib_core.h"
+#include <string.h>
+#include <math.h>
 
 namespace RTK330LA_Tool {
 
@@ -292,7 +294,6 @@ namespace RTK330LA_Tool {
 			",pos_hor_pl(m),pos_ver_pl(m),pos_status()"
 			",vel_hor_pl(m/s),vel_ver_pl(m/s),vel_status()\n";
 		FILE* f_gN = get_file("gN.csv",title);
-		FILE* f_gnss_and_integrity = get_file("gnss_and_integrity.csv", title);
 		sprintf(output_msg,
 			"%d,%11.4f,%3d"
 			",%14.9f,%14.9f,%10.4f"
@@ -309,7 +310,6 @@ namespace RTK330LA_Tool {
 			, pos_hor_pl, pos_ver_pl
 			, pak_gN.pos_status, vel_hor_pl, vel_ver_pl, pak_gN.vel_status);
 		if (f_gN) fprintf(f_gN, output_msg);
-		if (f_gnss_and_integrity) fprintf(f_gnss_and_integrity, output_msg);
 		//txt
 		FILE* f_gnssposvel = get_file("gnssposvel.txt");
 		sprintf(output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%10.4f,%10.4f\n",
@@ -353,7 +353,13 @@ namespace RTK330LA_Tool {
 		uint32_t GPS_TimeOfWeek = (uint32_t)(pak_iN.GPS_TimeOfWeek * 100) * 10;
 		if (GPS_TimeOfWeek % 100 == 0) {
 			//txt
-			FILE* f_ins = get_file("ins.txt");			
+			std::string title_txt =
+				"GPS_Week(),GPS_TimeOfWeek(s)"
+				",latitude(deg),longitude(deg),height(m)"
+				",north_velocity(m/s),east_velocity(m/s),up_velocity(m/s)"
+				",roll(deg),pitch(deg),heading(deg)"
+				",ins_position_type(),ins_status()\n";
+			FILE* f_ins = get_file("ins.txt", title_txt);
 			sprintf(output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n", pak_iN.GPS_Week, pak_iN.GPS_TimeOfWeek,
 				(double)pak_iN.latitude*180.0 / MAX_INT, (double)pak_iN.longitude*180.0 / MAX_INT, pak_iN.height,
 				(float)pak_iN.velocityNorth / 100.0, (float)pak_iN.velocityEast / 100.0, (float)pak_iN.velocityUp / 100.0,
@@ -423,7 +429,7 @@ namespace RTK330LA_Tool {
 			pak_sT.status_bit.zupt_det, pak_sT.status_bit.odo_used, pak_sT.status_bit.odo_recv,
 			pak_sT.status_bit.imu_s1_state, pak_sT.status_bit.imu_s2_state, pak_sT.status_bit.imu_s3_state,
 			pak_sT.status_bit.time_valid, pak_sT.status_bit.antenna_sensing, pak_sT.status_bit.gnss_chipset,
-			pak_sT.status_bit.pust_check,
+			pak_sT.status_bit.post,
 			pak_sT.imu_temperature, pak_sT.mcu_temperature);
 		if (f_sT) fprintf(f_sT, output_msg);
 	}
@@ -476,6 +482,46 @@ namespace RTK330LA_Tool {
 		}
 	}
 
+	void Rtk330la_decoder::output_gnss_and_integ()
+	{
+		if (uint32_t(pak_gN.GPS_TimeOfWeek * 1000) != gnss_integ.gps_millisecs) {
+			return;
+		}
+		float north_vel = (float)pak_gN.velocityNorth / 100.0f;
+		float east_vel = (float)pak_gN.velocityEast / 100.0f;
+		float up_vel = (float)pak_gN.velocityUp / 100.0f;
+		float latitude_std = (float)pak_d2.latitude_std / 100.0f;
+		float longitude_std = (float)pak_d2.longitude_std / 100.0f;
+		float height_std = (float)pak_d2.height_std / 100.0f;
+		//csv
+		std::string title =
+			"GPS_Week(),GPS_TimeofWeek(s),positionMode()"
+			",latitude(deg),longitude(deg),height(m)"
+			",numberOfSVs(),hdop(),vdop(),tdop(),diffage(s)"
+			",velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s)"
+			",latitude_std(m),longitude_std(m),height_std(m)"
+			",pos_hor_pl(m),pos_ver_pl(m),pos_status()"
+			",vel_hor_pl(m/s),vel_ver_pl(m/s),vel_status()\n";
+		FILE* f_gnss_and_integrity = get_file("gnss_and_integrity.csv", title);
+		if (f_gnss_and_integrity)
+		{
+			fprintf(f_gnss_and_integrity, "%d,%11.4f,%3d", pak_gN.GPS_Week, pak_gN.GPS_TimeOfWeek, pak_gN.positionMode);
+			fprintf(f_gnss_and_integrity, ",%14.9f,%14.9f,%10.4f", (double)pak_gN.latitude*180.0 / MAX_INT, (double)pak_gN.longitude*180.0 / MAX_INT, pak_gN.height);
+			fprintf(f_gnss_and_integrity, ",%3d,%5.1f,%5.1f,%5.1f,%5.1f", pak_gN.numberOfSVs, pak_gN.hdop, pak_gN.vdop, pak_gN.tdop, (float)pak_gN.diffage);
+			fprintf(f_gnss_and_integrity, ",%10.4f,%10.4f,%10.4f", north_vel, east_vel, up_vel);
+			fprintf(f_gnss_and_integrity, ",%10.4f,%10.4f,%10.4f", latitude_std, longitude_std, height_std);
+			if (pak_gN.positionMode == 1) {
+				fprintf(f_gnss_and_integrity, ",%8.3f,%8.3f,%2d", (float)gnss_integ.spp_hor_pos_pl / 100, (float)gnss_integ.spp_ver_pos_pl / 100, gnss_integ.status_bit.spp_hor_pos_s & gnss_integ.status_bit.spp_ver_pos_s);
+				fprintf(f_gnss_and_integrity, ",%8.3f,%8.3f,%2d", (float)gnss_integ.spp_hor_vel_pl / 100, (float)gnss_integ.spp_ver_vel_pl / 100, gnss_integ.status_bit.spp_hor_vel_s & gnss_integ.status_bit.spp_ver_vel_s);
+			}
+			else {
+				fprintf(f_gnss_and_integrity, ",%8.3f,%8.3f,%2d", (float)gnss_integ.rtk_hor_pos_pl / 100, (float)gnss_integ.rtk_ver_pos_pl / 100, gnss_integ.status_bit.rtk_hor_pos_s & gnss_integ.status_bit.rtk_ver_pos_s);
+				fprintf(f_gnss_and_integrity, ",%8.3f,%8.3f,%2d", (float)gnss_integ.rtk_hor_vel_pl / 100, (float)gnss_integ.rtk_ver_vel_pl / 100, gnss_integ.status_bit.rtk_hor_vel_s & gnss_integ.status_bit.rtk_ver_vel_s);
+			}
+			fprintf(f_gnss_and_integrity, "\n");
+		}
+	}
+
 	void Rtk330la_decoder::output_ins_integ()
 	{
 		std::string title =
@@ -494,6 +540,7 @@ namespace RTK330LA_Tool {
 			fprintf(f_ins_integ, "\n");
 		}
 	}
+
 
 	void Rtk330la_decoder::output_ins_and_integ()
 	{
@@ -745,6 +792,7 @@ namespace RTK330LA_Tool {
 				memcpy(&gnss_integ, payload, psize);
 				if (!m_isOutputFile) break;
 				output_gnss_integ();
+				output_gnss_and_integ();
 			}
 		}break;
 		case em_iI:

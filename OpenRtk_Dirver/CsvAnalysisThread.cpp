@@ -40,7 +40,7 @@ void CsvAnalysisThread::setFileName(QString file)
 
 QString CsvAnalysisThread::getBasePath() {
 	QFileInfo fileinfo(m_FileName);
-	QString basename = fileinfo.baseName();
+	QString basename = fileinfo.completeBaseName();
 	QString absoluteDir = fileinfo.absoluteDir().absolutePath();
 	return absoluteDir + QDir::separator() + basename;
 }

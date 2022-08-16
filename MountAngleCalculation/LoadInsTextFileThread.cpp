@@ -6,7 +6,7 @@ LoadInsTextFileThread::LoadInsTextFileThread(QObject *parent)
 	: QThread(parent)
 	, m_isStop(false)
 {
-	m_SplitByTime = new SplitByTime(this);
+	m_SplitByTime = new SplitByTime();
 }
 
 LoadInsTextFileThread::~LoadInsTextFileThread()
@@ -33,7 +33,7 @@ void LoadInsTextFileThread::setFileName(QString file)
 
 QString LoadInsTextFileThread::getBasePath() {
 	QFileInfo fileinfo(m_InsTextFileName);
-	QString basename = fileinfo.baseName();
+	QString basename = fileinfo.completeBaseName();
 	QString absoluteDir = fileinfo.absoluteDir().absolutePath();
 	return absoluteDir + QDir::separator() + basename;
 }

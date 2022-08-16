@@ -164,7 +164,6 @@
     <ClCompile Include="..\decoder\mixed_raw.c" />
     <ClCompile Include="..\decoder\model.c" />
     <ClCompile Include="..\decoder\NPOS122_decoder.cpp" />
-    <ClCompile Include="..\decoder\openrtk_inceptio.cpp" />
     <ClCompile Include="..\decoder\openrtk_user.cpp" />
     <ClCompile Include="..\decoder\rtcm.c" />
     <ClCompile Include="..\decoder\rtcm_split.cpp" />

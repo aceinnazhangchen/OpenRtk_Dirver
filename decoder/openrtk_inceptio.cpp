@@ -722,7 +722,7 @@ namespace RTK330LA_Tool {
 			inceptio_pak_sT.status_bit.zupt_det, inceptio_pak_sT.status_bit.odo_used, inceptio_pak_sT.status_bit.odo_recv,
 			inceptio_pak_sT.status_bit.imu_s1_state, inceptio_pak_sT.status_bit.imu_s2_state, inceptio_pak_sT.status_bit.imu_s3_state,
 			inceptio_pak_sT.status_bit.time_valid, inceptio_pak_sT.status_bit.antenna_sensing, inceptio_pak_sT.status_bit.gnss_chipset, 
-			inceptio_pak_sT.status_bit.pust_check,
+			inceptio_pak_sT.status_bit.post,
 			inceptio_pak_sT.imu_temperature, inceptio_pak_sT.mcu_temperature);
 		write_inceptio_log_file(inceptio_raw.ntype, inceptio_output_msg);
 	}

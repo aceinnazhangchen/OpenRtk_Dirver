@@ -88,13 +88,7 @@
     <ClCompile Include="..\decoder\rtkcmn.c">
       <Filter>decoder</Filter>
     </ClCompile>
-    <ClCompile Include="MountAngle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SimpleDecodeThread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DriveStatus.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CalculationCall.cpp">
@@ -103,18 +97,18 @@
     <ClCompile Include="LoadInsTextFileThread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SplitByTime.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="JsonFileLoader.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\rtk330la_decoder.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\SplitByTime.cpp">
+      <Filter>decoder</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ConfigFile.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="MountAngle.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="SimpleDecodeThread.h">
@@ -124,9 +118,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="LoadInsTextFileThread.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="SplitByTime.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="JsonFileLoader.h">
@@ -182,8 +173,11 @@
     <ClInclude Include="..\decoder\rtklib_core.h">
       <Filter>decoder</Filter>
     </ClInclude>
-    <ClInclude Include="DriveStatus.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\decoder\rtk330la_decoder.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\SplitByTime.h">
+      <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

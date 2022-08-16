@@ -2,7 +2,7 @@
 #include <QDir>
 #include <math.h>
 #include "common.h"
-#include "DriveStatus.h"
+#include "SplitByTime.h"
 #include "openrtk_user.h"
 #include "openrtk_inceptio.h"
 #include <QProcess>
@@ -15,11 +15,13 @@ SimpleDecodeThread::SimpleDecodeThread(QObject *parent)
 	, ins_kml_frequency(1000)
 {
 	ins401_decoder = new Ins401_Tool::Ins401_decoder();
+	rtk330la_decoder = new RTK330LA_Tool::Rtk330la_decoder();
 }
 
 SimpleDecodeThread::~SimpleDecodeThread()
 {
 	if (ins401_decoder) {delete ins401_decoder; ins401_decoder = NULL;}
+	if (rtk330la_decoder) { delete rtk330la_decoder; rtk330la_decoder = NULL; }
 }
 
 void SimpleDecodeThread::run()
@@ -33,7 +35,8 @@ void SimpleDecodeThread::run()
 			decode_openrtk330li();
 			break;
 		case emDecodeFormat_RTK330LA:
-			decode_openrtk_inceptio();
+			//decode_openrtk_inceptio();
+			decode_rtk330la();
 			break;
 		case emDecodeFormat_Ins401:
 			decode_ins401();
@@ -88,7 +91,7 @@ void SimpleDecodeThread::makeOutPath(QString filename)
 {
 	QFileInfo outDir(filename);
 	if (outDir.isFile()) {
-		QString basename = outDir.baseName();
+		QString basename = outDir.completeBaseName();
 		QString absoluteDir = outDir.absoluteDir().absolutePath();
 		QDir outPath = absoluteDir + QDir::separator() + basename + "_d";
 		if (!outPath.exists()) {
@@ -188,6 +191,52 @@ void SimpleDecodeThread::decode_openrtk_inceptio()
 		}
 		RTK330LA_Tool::write_inceptio_kml_files();
 		RTK330LA_Tool::close_inceptio_all_log_file();
+		fclose(file);
+	}
+}
+
+void SimpleDecodeThread::decode_rtk330la()
+{
+	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
+	if (file && rtk330la_decoder) {
+		int ret = 0;
+		size_t file_size = getFileSize(file);
+		size_t read_size = 0;
+		size_t readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		rtk330la_decoder->init();
+		rtk330la_decoder->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
+		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
+		while (!feof(file)) {
+			if (m_isStop) break;
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (size_t i = 0; i < readcount; i++) {
+				ret = rtk330la_decoder->input_raw(read_cache[i]);
+				if (ret == 1) {
+					if (RTK330LA_Tool::em_iN == rtk330la_decoder->get_current_type()) {
+						ins_sol_data ins_data = { 0 };
+						RTK330LA_Tool::inceptio_iN_t* ins_p = rtk330la_decoder->get_ins_sol();
+						ins_data.gps_week = ins_p->GPS_Week;
+						ins_data.gps_millisecs = uint32_t(ins_p->GPS_TimeOfWeek * 1000);
+						ins_data.ins_status = ins_p->insStatus;
+						ins_data.ins_position_type = ins_p->insPositionType;
+						ins_data.latitude = (double)ins_p->latitude *180.0 / MAX_INT;
+						ins_data.longitude = (double)ins_p->longitude *180.0 / MAX_INT;
+						ins_data.height = ins_p->height;
+						ins_data.north_velocity = (float)ins_p->velocityNorth / 100.0;
+						ins_data.east_velocity = (float)ins_p->velocityEast / 100.0;
+						ins_data.up_velocity = (float)ins_p->velocityUp / 100.0;
+						ins_data.roll = (float)ins_p->roll / 100.0;
+						ins_data.pitch = (float)ins_p->pitch / 100.0;
+						ins_data.heading = (float)ins_p->heading / 100.0;
+					}
+				}
+			}
+			double percent = (double)read_size / (double)file_size * 10000;
+			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		rtk330la_decoder->finish();
 		fclose(file);
 	}
 }

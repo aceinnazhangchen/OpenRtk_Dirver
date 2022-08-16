@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.28307.902
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenRtk_Dirver", "OpenRtk_Dirver\OpenRtk_Dirver.vcxproj", "{3EBD8D3E-15E2-4740-88EE-550240BDA287}"
+	ProjectSection(ProjectDependencies) = postProject
+		{42CC42EC-18BB-4B5D-AF9D-549CD3518779} = {42CC42EC-18BB-4B5D-AF9D-549CD3518779}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "User_Decoder_Console", "User_Decoder_Console\User_Decoder_Console.vcxproj", "{D990C117-9EA5-49D0-988D-3E3748B7CC60}"
 EndProject
@@ -12,6 +15,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RTCM_Spliter", "RTCM_Spliter\RTCM_Spliter.vcxproj", "{799A8AFC-1695-489C-90E0-BD980BC9FBFF}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MountAngleCalculation", "MountAngleCalculation\MountAngleCalculation.vcxproj", "{498AC6D2-3590-47BB-9FF4-7178D803F2C2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "convlib", "convlib\convlib.vcxproj", "{42CC42EC-18BB-4B5D-AF9D-549CD3518779}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +62,14 @@ Global
 		{498AC6D2-3590-47BB-9FF4-7178D803F2C2}.Release|x64.ActiveCfg = Release|x64
 		{498AC6D2-3590-47BB-9FF4-7178D803F2C2}.Release|x64.Build.0 = Release|x64
 		{498AC6D2-3590-47BB-9FF4-7178D803F2C2}.Release|x86.ActiveCfg = Release|x64
+		{42CC42EC-18BB-4B5D-AF9D-549CD3518779}.Debug|x64.ActiveCfg = Debug|x64
+		{42CC42EC-18BB-4B5D-AF9D-549CD3518779}.Debug|x64.Build.0 = Debug|x64
+		{42CC42EC-18BB-4B5D-AF9D-549CD3518779}.Debug|x86.ActiveCfg = Debug|Win32
+		{42CC42EC-18BB-4B5D-AF9D-549CD3518779}.Debug|x86.Build.0 = Debug|Win32
+		{42CC42EC-18BB-4B5D-AF9D-549CD3518779}.Release|x64.ActiveCfg = Release|x64
+		{42CC42EC-18BB-4B5D-AF9D-549CD3518779}.Release|x64.Build.0 = Release|x64
+		{42CC42EC-18BB-4B5D-AF9D-549CD3518779}.Release|x86.ActiveCfg = Release|Win32
+		{42CC42EC-18BB-4B5D-AF9D-549CD3518779}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

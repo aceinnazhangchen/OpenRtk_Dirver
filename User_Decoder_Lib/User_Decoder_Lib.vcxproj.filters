@@ -36,9 +36,6 @@
     <ClCompile Include="..\decoder\imu_raw.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
-    <ClCompile Include="..\decoder\openrtk_inceptio.cpp">
-      <Filter>decoder</Filter>
-    </ClCompile>
     <ClCompile Include="..\decoder\openrtk_user.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
