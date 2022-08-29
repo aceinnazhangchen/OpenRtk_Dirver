@@ -853,7 +853,7 @@ namespace Ins401_Tool {
 
 	void Ins401_decoder::output_rover_rtcm()
 	{
-		FILE* f_rover_rtcm = get_file("rover.rtcm", NULL);
+		FILE* f_rover_rtcm = get_file("rover.rtcm");
 		if (f_rover_rtcm) {
 			fwrite(raw.buff + 6, 1, raw.length, f_rover_rtcm);
 		}

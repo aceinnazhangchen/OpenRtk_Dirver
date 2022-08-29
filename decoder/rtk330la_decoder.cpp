@@ -123,6 +123,11 @@ namespace RTK330LA_Tool {
 		all_type_file_output[em_RM] = 1;
 	}
 
+	void Rtk330la_decoder::set_output_file(bool output)
+	{
+		m_isOutputFile = output;
+	}
+
 	void Rtk330la_decoder::set_base_file_name(char * file_name)
 	{
 		strcpy(base_file_name, file_name);
