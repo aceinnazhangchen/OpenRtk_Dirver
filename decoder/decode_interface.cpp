@@ -141,6 +141,7 @@ void decode_beidou_interface(char* filename)
 			read_size += readcount;
 			for (size_t i = 0; i < readcount; i++) {
 				ret = beidou_Tool::input_beidou_raw(read_cache[i]);
+                ret = beidou_Tool::input_unico_raw(read_cache[i]);
 			}
 			double percent = (double)read_size / (double)file_size * 100;
 			printf("Process : %4.1f %%\r", percent);
