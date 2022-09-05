@@ -47,7 +47,7 @@ namespace Ins401_Tool {
 		memset(&monitor, 0, sizeof(monitor));
 		memset(&gnss_kml, 0, sizeof(gnss_kml));
 		memset(&ins_kml, 0, sizeof(ins_kml));
-		memset(base_file_name, 0, 256);
+		memset(base_file_name, 0, 1024);
 		
 		all_type_pack_num[em_RAW_IMU] = 0;
 		all_type_pack_num[em_GNSS_SOL] = 0;
@@ -99,7 +99,7 @@ namespace Ins401_Tool {
 	void Ins401_decoder::create_file(FILE* &file, const char* suffix, const char* title, bool format_time = false) {
 		if (strlen(base_file_name) == 0) return;
 		if (file == NULL) {
-			char file_name[256] = { 0 };
+			char file_name[1024] = { 0 };
 			sprintf(file_name, "%s_%s", base_file_name, suffix);
 			file = fopen(file_name, "wb");
 			if (file && title) {
@@ -1207,10 +1207,12 @@ namespace Ins401_Tool {
 	{
 		if (!m_isOutputFile) return;
 		FILE* f_log = get_file(".log");
-		for (std::map<uint16_t, int>::iterator it = all_type_pack_num.begin(); it != all_type_pack_num.end(); it++) {
-			fprintf(f_log, "pack_type = 0x%04x, pack_num = %d\n", (uint16_t)it->first, (int)it->second);
+		if (f_log) {
+			for (std::map<uint16_t, int>::iterator it = all_type_pack_num.begin(); it != all_type_pack_num.end(); it++) {
+				fprintf(f_log, "pack_type = 0x%04x, pack_num = %d\n", (uint16_t)it->first, (int)it->second);
+			}
+			fprintf(f_log, "all_pack_num = %d\ncrc_right_num = %d\ncrc_error_num = %d\n", pack_num, crc_right_num, crc_error_num);
 		}
-		fprintf(f_log, "all_pack_num = %d\ncrc_right_num = %d\ncrc_error_num = %d\n", pack_num, crc_right_num, crc_error_num);
 		Kml_Generator::Instance()->open_files(base_file_name);
 		Kml_Generator::Instance()->write_files();
 		Kml_Generator::Instance()->close_files();

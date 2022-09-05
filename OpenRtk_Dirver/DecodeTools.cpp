@@ -105,6 +105,7 @@ void DecodeTools::onDecodeClicked()
 	m_DecodeThread->setDateTime(time);
 	QString time_str = time.toString("yyyy/MM/dd HH:mm:ss");
 	m_DecodeThread->setDateTimeStr(time_str);	
+	m_DecodeThread->setUseShortName(ui.short_name_check->isChecked());
 	m_DecodeThread->start();
 	setOperable(false);
 }

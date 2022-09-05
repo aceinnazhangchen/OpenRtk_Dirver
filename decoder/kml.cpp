@@ -58,7 +58,7 @@ void Kml_Generator::set_status_type_define(emStatusTypeDefine define)
 
 void Kml_Generator::open_files(char * file_base_name)
 {
-	char file_name[256] = { 0 };
+	char file_name[1024] = { 0 };
 	if (gnss_sol_list.size() > 0) {
 		sprintf(file_name, "%s_%s", file_base_name, "gnss.kml");
 		f_gnss_kml = fopen(file_name, "wb");
