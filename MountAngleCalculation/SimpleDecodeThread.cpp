@@ -5,6 +5,7 @@
 #include "SplitByTime.h"
 #include "openrtk_user.h"
 #include "openrtk_inceptio.h"
+#include "beidou.h"
 #include <QProcess>
 
 SimpleDecodeThread::SimpleDecodeThread(QObject *parent)
@@ -40,6 +41,9 @@ void SimpleDecodeThread::run()
 			break;
 		case emDecodeFormat_Ins401:
 			decode_ins401();
+			break;
+		case emDecodeFormat_Beidou:
+			decode_beidou();
 			break;
 		default:
 			break;
@@ -284,6 +288,34 @@ void SimpleDecodeThread::decode_ins401()
 			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
 		}
 		ins401_decoder->finish();
+		fclose(file);
+	}
+}
+
+void SimpleDecodeThread::decode_beidou()
+{
+	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
+	if (file) {
+		char dirname[256] = { 0 };
+		int ret = 0;
+		size_t file_size = getFileSize(file);
+		size_t read_size = 0;
+		size_t readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		beidou_Tool::set_output_beidou_file(1);
+		beidou_Tool::set_base_beidou_file_name(m_OutBaseName.toLocal8Bit().data());
+		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
+		while (!feof(file)) {
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (size_t i = 0; i < readcount; i++) {
+				ret = beidou_Tool::input_beidou_raw(read_cache[i]);
+			}
+			double percent = (double)read_size / (double)file_size * 10000;
+			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		beidou_Tool::write_beidou_kml_files();
+		beidou_Tool::close_beidou_all_log_file();
 		fclose(file);
 	}
 }

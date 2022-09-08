@@ -97,6 +97,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\decoder\beidou.cpp" />
     <ClCompile Include="..\decoder\rtk330la_decoder.cpp" />
     <ClCompile Include="..\decoder\SplitByTime.cpp" />
     <ClCompile Include="JsonFileLoader.cpp" />
@@ -128,6 +129,7 @@
     <QtMoc Include="ConfigFile.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\decoder\beidou.h" />
     <ClInclude Include="..\decoder\common.h" />
     <ClInclude Include="..\decoder\E2E_protocol.h" />
     <ClInclude Include="..\decoder\gnss_datatype.h" />

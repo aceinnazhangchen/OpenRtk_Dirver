@@ -106,6 +106,9 @@
     <ClCompile Include="..\decoder\SplitByTime.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
+    <ClCompile Include="..\decoder\beidou.cpp">
+      <Filter>decoder</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ConfigFile.h">
@@ -177,6 +180,9 @@
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\SplitByTime.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\beidou.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>

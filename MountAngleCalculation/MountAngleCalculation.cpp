@@ -71,10 +71,6 @@ void MountAngleCalculation::dropEvent(QDropEvent * event)
 		QString name = event->mimeData()->urls().first().toLocalFile();
 		LoadConfigureJsonFile(name);
 	}
-	else if (ui.gnss_filepath_edt->isEnabled() && ui.gnss_filepath_edt->geometry().contains(event->pos())) {
-		QString name = event->mimeData()->urls().first().toLocalFile();
-		ui.gnss_filepath_edt->setText(name);
-	}
 	else if (ui.gnssposvel_filepath_edt->isEnabled() && ui.gnssposvel_filepath_edt->geometry().contains(event->pos())) {
 		QString name = event->mimeData()->urls().first().toLocalFile();
 		ui.gnssposvel_filepath_edt->setText(name);
@@ -694,9 +690,9 @@ void MountAngleCalculation::onSplitClicked()
 }
 
 void MountAngleCalculation::onCalculateClicked() {
-	QString GnssFilePath = ui.gnss_filepath_edt->text();
-	if(GnssFilePath.isEmpty()) return;
-	QFileInfo gnss_file(GnssFilePath);
+	QString gnssposvel_file = ui.gnssposvel_filepath_edt->text();
+	if(gnssposvel_file.isEmpty()) return;
+	QFileInfo gnss_file(gnssposvel_file);
 	if (!gnss_file.isFile()) return;
 	m_InsResultFilePath = ui.result_filepath_edt->text();
 	QFileInfo result_file(m_InsResultFilePath);
@@ -710,7 +706,7 @@ void MountAngleCalculation::onCalculateClicked() {
 	if (starttime_str.isEmpty())return;
 	if (endtime_str.isEmpty())return;
 	CalculationCall::call_dr_mountangle_start(m_InsResultFilePath.toLocal8Bit().data(), week_str.toLocal8Bit().data(), starttime_str.toLocal8Bit().data(), endtime_str.toLocal8Bit().data());
-	CalculationCall::call_gnss_calc_heading(GnssFilePath.toLocal8Bit().data(), starttime_str.toLocal8Bit().data(), endtime_str.toLocal8Bit().data());
+	CalculationCall::call_gnss_calc_heading(gnssposvel_file.toLocal8Bit().data(), starttime_str.toLocal8Bit().data(), endtime_str.toLocal8Bit().data());
 	QString out_file_path = "result001_content_misalign.txt";
 	QString gnss_heading_file = "gnss_" + starttime_str + "-" + endtime_str + ".txt";
 	QString gnss_path = gnss_file.absolutePath();
@@ -879,19 +875,11 @@ void MountAngleCalculation::onProcess(int present, int msecs)
 void MountAngleCalculation::onDecodeFinished()
 {
 	m_ProcessFilePath = m_SimpleDecodeThread->getOutBaseName() + "_process";
-	QString Gnss_Csv_Path;
 	QString GnssPosVel_Txt_Path;
 	QString Movbs_Txt_Path;
-	if (ui.fileformat_cmb->currentIndex() == emDecodeFormat_Ins401){
-		Gnss_Csv_Path = m_SimpleDecodeThread->getOutBaseName() + "_gnss.csv";
-	}
-	else if (ui.fileformat_cmb->currentIndex() == emDecodeFormat_RTK330LA) {
-		Gnss_Csv_Path = m_SimpleDecodeThread->getOutBaseName() + "_gN.csv";
-	}	
 	GnssPosVel_Txt_Path = m_SimpleDecodeThread->getOutBaseName() + "_gnssposvel.txt";
 	Movbs_Txt_Path = m_SimpleDecodeThread->getOutBaseName() + "_movbs.txt";
 	ui.process_filepath_edt->setText(m_ProcessFilePath);
-	ui.gnss_filepath_edt->setText(Gnss_Csv_Path);
 	ui.gnssposvel_filepath_edt->setText(GnssPosVel_Txt_Path);
 	ui.movbs_filepath_edt->setText(Movbs_Txt_Path);	
 	setOperable(true);

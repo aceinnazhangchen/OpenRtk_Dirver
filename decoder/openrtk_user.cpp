@@ -154,7 +154,7 @@ namespace OpenRTK330LI_Tool {
 		case USR_OUT_RAWIMU:
 		{
 			if (f_imu == NULL) {
-				sprintf(file_name, "%s-imu.txt", base_user_file_name);
+				sprintf(file_name, "%s_imu.txt", base_user_file_name);
 				f_imu = fopen(file_name, "w");
 			}
 			if (f_imu) fprintf(f_imu, log);
@@ -163,7 +163,7 @@ namespace OpenRTK330LI_Tool {
 		case USR_OUT_BESTGNSS:
 		{
 			if (f_gnssposvel == NULL) {
-				sprintf(file_name, "%s-gnssposvel.txt", base_user_file_name);
+				sprintf(file_name, "%s_gnssposvel.txt", base_user_file_name);
 				f_gnssposvel = fopen(file_name, "w");
 			}
 			if (f_gnssposvel) fprintf(f_gnssposvel, log);
@@ -172,8 +172,9 @@ namespace OpenRTK330LI_Tool {
 		case USR_OUT_INSPVAX:
 		{
 			if (f_ins == NULL) {
-				sprintf(file_name, "%s-ins.txt", base_user_file_name);
+				sprintf(file_name, "%s_ins.txt", base_user_file_name);
 				f_ins = fopen(file_name, "w");
+				if (f_ins) fprintf(f_ins, "GPS_Week(),GPS_TimeOfWeek(s),latitude(deg),longitude(deg),height(m),north_velocity(m/s),east_velocity(m/s),up_velocity(m/s),roll(deg),pitch(deg),heading(deg),ins_status(),ins_position_type()\n");
 				printf("0x%p\n", f_ins);
 			}
 			if (f_ins) fprintf(f_ins, log);
@@ -182,7 +183,7 @@ namespace OpenRTK330LI_Tool {
 		case USR_OUT_ODO:
 		{
 			if (f_odo == NULL) {
-				sprintf(file_name, "%s-odo.txt", base_user_file_name);
+				sprintf(file_name, "%s_odo.txt", base_user_file_name);
 				f_odo = fopen(file_name, "w");
 			}
 			if (f_odo) fprintf(f_odo, log);
@@ -199,7 +200,7 @@ namespace OpenRTK330LI_Tool {
 		case 0:
 		{
 			if (fnmea == NULL) {
-				sprintf(file_name, "%s-nmea", base_user_file_name);
+				sprintf(file_name, "%s_nmea", base_user_file_name);
 				fnmea = fopen(file_name, "w");
 			}
 			if (fnmea) fprintf(fnmea, log);
