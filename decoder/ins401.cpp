@@ -65,7 +65,7 @@ namespace Ins401_Tool {
 		all_type_pack_num[em_PACKAGE_FD] = 0;
 		all_type_pack_num[em_INS_INTERGRITY] = 0;
 		all_type_pack_num[em_G1] = 0;
-		all_type_pack_num[em_RUNSTATUS_MONITOR] = 0;
+		//all_type_pack_num[em_RUNSTATUS_MONITOR] = 0;
 
 		all_type_file_output[em_RAW_IMU] = 1;
 		all_type_file_output[em_GNSS_SOL] = 1;
@@ -1170,7 +1170,13 @@ namespace Ins401_Tool {
 					raw.buff[raw.nbyte++] = raw.header[2];
 					raw.buff[raw.nbyte++] = raw.header[3];
 				}
-				raw.header_len = 0;
+				if (raw.flag == 0 && raw.header[2] == USER_PREAMB) {
+					memmove(raw.header, raw.header + 1, 3);
+					raw.header_len = 3;
+				}
+				else {
+					raw.header_len = 0;
+				}
 			}
 			return parse_nmea(data);
 		}

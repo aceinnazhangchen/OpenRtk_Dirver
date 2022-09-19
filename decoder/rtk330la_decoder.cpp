@@ -910,7 +910,13 @@ namespace RTK330LA_Tool {
 					raw.buff[raw.nbyte++] = raw.header[2];
 					raw.buff[raw.nbyte++] = raw.header[3];
 				}
-				raw.header_len = 0;
+				if (raw.flag == 0 && raw.header[2] == USER_PREAMB) {
+					memmove(raw.header, raw.header + 1, 3);
+					raw.header_len = 3;
+				}
+				else {
+					raw.header_len = 0;
+				}
 			}
 			return parse_nmea(data);
 		}

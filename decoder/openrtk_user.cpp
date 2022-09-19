@@ -494,7 +494,13 @@ namespace OpenRTK330LI_Tool {
 						break;
 					}
 				}
-				user_raw.header_len = 0;
+				if (user_raw.flag == 0 && user_raw.header[2] == USER_PREAMB) {
+					memmove(user_raw.header, user_raw.header + 1, 3);
+					user_raw.header_len = 3;
+				}
+				else {
+					user_raw.header_len = 0;
+				}
 			}
 			return parse_user_nmea(data);
 		}

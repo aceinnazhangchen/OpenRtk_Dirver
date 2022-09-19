@@ -923,7 +923,13 @@ namespace RTK330LA_Tool {
 						break;
 					}
 				}
-				inceptio_raw.header_len = 0;
+				if (inceptio_raw.flag == 0 && inceptio_raw.header[2] == USER_PREAMB) {
+					memmove(inceptio_raw.header, inceptio_raw.header + 1, 3);
+					inceptio_raw.header_len = 3;
+				}
+				else {
+					inceptio_raw.header_len = 0;
+				}
 			}
 			return parse_inceptio_nmea(data);
 		}
