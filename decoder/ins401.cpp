@@ -65,7 +65,7 @@ namespace Ins401_Tool {
 		all_type_pack_num[em_PACKAGE_FD] = 0;
 		all_type_pack_num[em_INS_INTERGRITY] = 0;
 		all_type_pack_num[em_G1] = 0;
-		//all_type_pack_num[em_RUNSTATUS_MONITOR] = 0;
+		all_type_pack_num[em_RUNSTATUS_MONITOR] = 0;
 
 		all_type_file_output[em_RAW_IMU] = 1;
 		all_type_file_output[em_GNSS_SOL] = 1;

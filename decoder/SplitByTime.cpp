@@ -3,10 +3,11 @@
 #include "model.h"
 #include <math.h>
 
-#define MIN_DRING_TIME 10
+#define MIN_DRING_TIME 5
 
 SplitByTime::SplitByTime()
 {
+	m_min_distance_limit = 200;
 	init();
 }
 
@@ -24,6 +25,11 @@ void SplitByTime::init()
 std::vector<stTimeSlice>& SplitByTime::get_time_slices()
 {
 	return time_slices;
+}
+
+void SplitByTime::set_min_distance(int distance)
+{
+	m_min_distance_limit = distance;
 }
 
 void SplitByTime::calc_distance_between_start_end() {
@@ -108,7 +114,7 @@ int SplitByTime::input_sol_data(ins_sol_data & ins_data)
 			m_current_time.end_heading = m_last_ins_data.heading;
 			if (m_current_time.during >= MIN_DRING_TIME * 1000) {
 				// calc_distance_between_start_end();
-				if (m_current_time.speed_distance >= 200) {
+				if (m_current_time.speed_distance >= m_min_distance_limit) {
 					time_slices.push_back(m_current_time);
 					start_or_end = 2;
 				}
@@ -148,17 +154,17 @@ void SplitByTime::filter_section() {
 
 void SplitByTime::finish()
 {
-	if (m_current_time.starttime != 0 && m_current_time.endtime == 0)
-	{
-		if (m_last_ins_data.ins_position_type == 4 && m_last_ins_data.gps_millisecs > 0) {
-			m_current_time.endtime = m_last_ins_data.gps_millisecs;
-			m_current_time.during = m_current_time.endtime - m_current_time.starttime;
-			if (m_current_time.during >= MIN_DRING_TIME * 1000) {
-				time_slices.push_back(m_current_time);
-			}
-			memset(&m_current_time, 0, sizeof(stTimeSlice));
-		}
-	}
+	// if (m_current_time.starttime != 0 && m_current_time.endtime == 0)
+	// {
+	// 	if (m_last_ins_data.ins_position_type == 4 && m_last_ins_data.gps_millisecs > 0) {
+	// 		m_current_time.endtime = m_last_ins_data.gps_millisecs;
+	// 		m_current_time.during = m_current_time.endtime - m_current_time.starttime;
+	// 		if (m_current_time.during >= MIN_DRING_TIME * 1000) {
+	// 			time_slices.push_back(m_current_time);
+	// 		}			
+	// 	}
+	// }
+	memset(&m_current_time, 0, sizeof(stTimeSlice));
 	filter_section();
 }
 

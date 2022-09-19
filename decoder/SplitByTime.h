@@ -44,6 +44,7 @@ public:
 	SplitByTime();
 	~SplitByTime();
 	void init();
+	void set_min_distance(int distance);
 	std::vector<stTimeSlice>& get_time_slices();
 	void calc_distance_between_start_end();
 	int input_sol_data(ins_sol_data& ins_data);
@@ -54,4 +55,5 @@ private:
 	stTimeSlice m_current_time;
 	ins_sol_data m_last_ins_data;
 	std::vector<stTimeSlice> time_slices;
+	int m_min_distance_limit;
 };
