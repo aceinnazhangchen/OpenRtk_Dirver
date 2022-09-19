@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E7223B6F-B313-C999-CC5E-42661D2ADC1A}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>decode_emitter</RootNamespace>
+    <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props"/>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Label="Locals">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props"/>
+  <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props"/>
+  <ImportGroup Label="ExtensionSettings"/>
+  <ImportGroup Label="PropertySheets">
+    <Import Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props"/>
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros"/>
+  <PropertyGroup>
+    <ExecutablePath>$(ExecutablePath);$(MSBuildProjectDirectory)\..\bin\;$(MSBuildProjectDirectory)\..\bin\</ExecutablePath>
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <IntDir>$(Configuration)\obj\$(ProjectName)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.node</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.node</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.node</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.node</TargetExt>
+    <TargetName>$(ProjectName)</TargetName>
+    <TargetPath>$(OutDir)\$(ProjectName).node</TargetPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\include\node;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\src;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\openssl\config;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\openssl\openssl\include;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\uv\include;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\zlib;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\v8\include;F:\OpenRtk_Dirver\node_decode_addon\node_modules\node-addon-api;..\src\decoder;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <DisableSpecificWarnings>4351;4355;4800;4251;4275;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <MinimalRebuild>false</MinimalRebuild>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <OmitFramePointers>false</OmitFramePointers>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions>NODE_GYP_MODULE_NAME=decode_emitter;USING_UV_SHARED=1;USING_V8_SHARED=1;V8_DEPRECATION_WARNINGS=1;V8_DEPRECATION_WARNINGS;V8_IMMINENT_DEPRECATION_WARNINGS;WIN32;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_HAS_EXCEPTIONS=0;OPENSSL_NO_PINSHARED;OPENSSL_THREADS;OUTPUT_INNER_FILE;BUILDING_NODE_EXTENSION;HOST_BINARY=&quot;node.exe&quot;;DEBUG;_DEBUG;V8_ENABLE_CHECKS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <StringPooling>true</StringPooling>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <WarningLevel>Level3</WarningLevel>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+    </ClCompile>
+    <Lib>
+      <AdditionalOptions>/LTCG:INCREMENTAL %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;DelayImp.lib;&quot;C:\\Users\\zhangchen\\AppData\\Local\\node-gyp\\Cache\\14.15.4\\x64\\node.lib&quot;</AdditionalDependencies>
+      <AdditionalOptions>/LTCG:INCREMENTAL /ignore:4199 %(AdditionalOptions)</AdditionalOptions>
+      <DelayLoadDLLs>node.exe;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <OutputFile>$(OutDir)$(ProjectName).node</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetExt>.node</TargetExt>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\include\node;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\src;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\openssl\config;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\openssl\openssl\include;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\uv\include;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\zlib;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\v8\include;F:\OpenRtk_Dirver\node_decode_addon\node_modules\node-addon-api;..\src\decoder;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NODE_GYP_MODULE_NAME=decode_emitter;USING_UV_SHARED=1;USING_V8_SHARED=1;V8_DEPRECATION_WARNINGS=1;V8_DEPRECATION_WARNINGS;V8_IMMINENT_DEPRECATION_WARNINGS;WIN32;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_HAS_EXCEPTIONS=0;OPENSSL_NO_PINSHARED;OPENSSL_THREADS;OUTPUT_INNER_FILE;BUILDING_NODE_EXTENSION;HOST_BINARY=&quot;node.exe&quot;;DEBUG;_DEBUG;V8_ENABLE_CHECKS;%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\include\node;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\src;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\openssl\config;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\openssl\openssl\include;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\uv\include;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\zlib;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\v8\include;F:\OpenRtk_Dirver\node_decode_addon\node_modules\node-addon-api;..\src\decoder;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <DisableSpecificWarnings>4351;4355;4800;4251;4275;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <OmitFramePointers>true</OmitFramePointers>
+      <Optimization>Full</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions>NODE_GYP_MODULE_NAME=decode_emitter;USING_UV_SHARED=1;USING_V8_SHARED=1;V8_DEPRECATION_WARNINGS=1;V8_DEPRECATION_WARNINGS;V8_IMMINENT_DEPRECATION_WARNINGS;WIN32;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_HAS_EXCEPTIONS=0;OPENSSL_NO_PINSHARED;OPENSSL_THREADS;OUTPUT_INNER_FILE;BUILDING_NODE_EXTENSION;HOST_BINARY=&quot;node.exe&quot;;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <StringPooling>true</StringPooling>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <WarningLevel>Level3</WarningLevel>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+    </ClCompile>
+    <Lib>
+      <AdditionalOptions>/LTCG:INCREMENTAL %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;DelayImp.lib;&quot;C:\\Users\\zhangchen\\AppData\\Local\\node-gyp\\Cache\\14.15.4\\x64\\node.lib&quot;</AdditionalDependencies>
+      <AdditionalOptions>/LTCG:INCREMENTAL /ignore:4199 %(AdditionalOptions)</AdditionalOptions>
+      <DelayLoadDLLs>node.exe;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <OutputFile>$(OutDir)$(ProjectName).node</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetExt>.node</TargetExt>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\include\node;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\src;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\openssl\config;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\openssl\openssl\include;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\uv\include;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\zlib;C:\Users\zhangchen\AppData\Local\node-gyp\Cache\14.15.4\deps\v8\include;F:\OpenRtk_Dirver\node_decode_addon\node_modules\node-addon-api;..\src\decoder;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NODE_GYP_MODULE_NAME=decode_emitter;USING_UV_SHARED=1;USING_V8_SHARED=1;V8_DEPRECATION_WARNINGS=1;V8_DEPRECATION_WARNINGS;V8_IMMINENT_DEPRECATION_WARNINGS;WIN32;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_HAS_EXCEPTIONS=0;OPENSSL_NO_PINSHARED;OPENSSL_THREADS;OUTPUT_INNER_FILE;BUILDING_NODE_EXTENSION;HOST_BINARY=&quot;node.exe&quot;;%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="..\binding.gyp"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\binding.cc">
+      <ObjectFileName>$(IntDir)\src\binding.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\common_func.cpp">
+      <ObjectFileName>$(IntDir)\src\common_func.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decode-emitter.cc">
+      <ObjectFileName>$(IntDir)\src\decode-emitter.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\common.c">
+      <ObjectFileName>$(IntDir)\src\decoder\common.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\gnss_math.c">
+      <ObjectFileName>$(IntDir)\src\decoder\gnss_math.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\mixed_raw.c">
+      <ObjectFileName>$(IntDir)\src\decoder\mixed_raw.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\model.c">
+      <ObjectFileName>$(IntDir)\src\decoder\model.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\rtcm.c">
+      <ObjectFileName>$(IntDir)\src\decoder\rtcm.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\rtkcmn.c">
+      <ObjectFileName>$(IntDir)\src\decoder\rtkcmn.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\beidou.cpp">
+      <ObjectFileName>$(IntDir)\src\decoder\beidou.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\decode_interface.cpp">
+      <ObjectFileName>$(IntDir)\src\decoder\decode_interface.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\E2E_protocol.cpp">
+      <ObjectFileName>$(IntDir)\src\decoder\E2E_protocol.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\imu_raw.cpp">
+      <ObjectFileName>$(IntDir)\src\decoder\imu_raw.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\ins_save_parse.cpp">
+      <ObjectFileName>$(IntDir)\src\decoder\ins_save_parse.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\ins401.cpp">
+      <ObjectFileName>$(IntDir)\src\decoder\ins401.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\ins401c.cpp">
+      <ObjectFileName>$(IntDir)\src\decoder\ins401c.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\kml.cpp">
+      <ObjectFileName>$(IntDir)\src\decoder\kml.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\NPOS122_decoder.cpp">
+      <ObjectFileName>$(IntDir)\src\decoder\NPOS122_decoder.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\openrtk_user.cpp">
+      <ObjectFileName>$(IntDir)\src\decoder\openrtk_user.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\rtcm_split.cpp">
+      <ObjectFileName>$(IntDir)\src\decoder\rtcm_split.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\rtk330la_decoder.cpp">
+      <ObjectFileName>$(IntDir)\src\decoder\rtk330la_decoder.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\decoder\SplitByTime.cpp">
+      <ObjectFileName>$(IntDir)\src\decoder\SplitByTime.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="C:\Users\zhangchen\AppData\Roaming\npm\node_modules\node-gyp\src\win_delay_load_hook.cc"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="node_modules\node-addon-api\nothing.vcxproj">
+      <Project>{F697C0A3-4451-D22C-3004-780A2D3A3ADE}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
+  <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets"/>
+  <ImportGroup Label="ExtensionTargets"/>
+</Project>
