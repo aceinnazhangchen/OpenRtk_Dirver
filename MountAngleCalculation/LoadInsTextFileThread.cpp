@@ -14,6 +14,12 @@ LoadInsTextFileThread::~LoadInsTextFileThread()
 	delete m_SplitByTime;
 }
 
+void LoadInsTextFileThread::init()
+{
+	m_SplitByTime->init();
+
+}
+
 void LoadInsTextFileThread::run()
 {
 	m_isStop = false;

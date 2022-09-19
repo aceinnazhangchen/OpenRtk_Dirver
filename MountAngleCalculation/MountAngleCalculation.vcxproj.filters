@@ -109,6 +109,12 @@
     <ClCompile Include="..\decoder\beidou.cpp">
       <Filter>decoder</Filter>
     </ClCompile>
+    <ClCompile Include="CalculationThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoder\calc_heading.c">
+      <Filter>decoder</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ConfigFile.h">
@@ -124,6 +130,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="JsonFileLoader.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="CalculationThread.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -183,6 +192,9 @@
       <Filter>decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\decoder\beidou.h">
+      <Filter>decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoder\calc_heading.h">
       <Filter>decoder</Filter>
     </ClInclude>
   </ItemGroup>

@@ -262,6 +262,9 @@ namespace Ins401_Tool {
 			//process $GPVEL
 			fprintf(f_process, "$GPVEL,%d,%11.4f,%10.4f,%10.4f,%10.4f\n",
 				gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, horizontal_speed, track_over_ground, gnss.up_vel);
+			//process $GPVNED
+			fprintf(f_process, "$GPVNED,%d,%11.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n",
+				gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, gnss.north_vel, gnss.east_vel, -gnss.up_vel, gnss.north_vel_std, gnss.east_vel_std, gnss.up_vel_std);
 		}
 		FILE* f_gnss_time_txt = get_file("gnss_process_time.csv");
 		if (f_gnss_time_txt) {

@@ -262,6 +262,7 @@ namespace RTK330LA_Tool {
 		//process $GPVEL
 		sprintf(output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n", pak_gN_early.GPS_Week, pak_gN_early.GPS_TimeOfWeek, horizontal_speed, track_over_ground, up_vel);
 		if (f_process) fprintf(f_process, "$GPVEL,%s", output_msg);
+
 		//kml
 		append_early_gnss_kml();
 
@@ -332,6 +333,10 @@ namespace RTK330LA_Tool {
 		//process $GPVEL
 		sprintf(output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n", pak_gN.GPS_Week, pak_gN.GPS_TimeOfWeek, horizontal_speed, track_over_ground, up_vel);
 		if (f_process) fprintf(f_process, "$GPVEL,%s", output_msg);
+		//process $GPVNED
+		sprintf(output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n", pak_gN.GPS_Week, pak_gN.GPS_TimeOfWeek, north_vel, east_vel, -up_vel,
+			(float)pak_d2.north_vel_std / 100.0, (float)pak_d2.east_vel_std / 100.0, (float)pak_d2.up_vel_std / 100.0);
+		if (f_process) fprintf(f_process, "$GPVNED,%s", output_msg);
 		//kml
 		append_gnss_kml();
 		//time

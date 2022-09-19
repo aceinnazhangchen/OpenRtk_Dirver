@@ -98,8 +98,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\decoder\beidou.cpp" />
+    <ClCompile Include="..\decoder\calc_heading.c" />
     <ClCompile Include="..\decoder\rtk330la_decoder.cpp" />
     <ClCompile Include="..\decoder\SplitByTime.cpp" />
+    <ClCompile Include="CalculationThread.cpp" />
     <ClCompile Include="JsonFileLoader.cpp" />
     <QtRcc Include="MountAngleCalculation.qrc" />
     <QtUic Include="MountAngleCalculation.ui" />
@@ -130,6 +132,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\decoder\beidou.h" />
+    <ClInclude Include="..\decoder\calc_heading.h" />
     <ClInclude Include="..\decoder\common.h" />
     <ClInclude Include="..\decoder\E2E_protocol.h" />
     <ClInclude Include="..\decoder\gnss_datatype.h" />
@@ -148,6 +151,7 @@
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
     <ClInclude Include="..\decoder\SplitByTime.h" />
+    <QtMoc Include="CalculationThread.h" />
     <QtMoc Include="JsonFileLoader.h" />
     <QtMoc Include="LoadInsTextFileThread.h" />
     <QtMoc Include="CalculationCall.h" />

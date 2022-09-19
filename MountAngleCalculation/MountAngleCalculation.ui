@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>686</width>
-    <height>523</height>
+    <width>756</width>
+    <height>655</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -46,6 +46,61 @@
       </item>
       <item>
        <widget class="QToolButton" name="select_btn">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_14">
+        <property name="text">
+         <string>rover1 rtcm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="rover1_filepath_edt"/>
+      </item>
+      <item row="0" column="2">
+       <widget class="QToolButton" name="rover1_select_btn">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_15">
+        <property name="text">
+         <string>rover2 rtcm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="rover2_filepath_edt"/>
+      </item>
+      <item row="1" column="2">
+       <widget class="QToolButton" name="rover2_select_btn">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_16">
+        <property name="text">
+         <string>base rtcm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="base_filepath_edt"/>
+      </item>
+      <item row="2" column="2">
+       <widget class="QToolButton" name="base_select_btn">
         <property name="text">
          <string>...</string>
         </property>
@@ -93,7 +148,7 @@
       </row>
       <row>
        <property name="text">
-        <string>odoLeverarm</string>
+        <string>odoLeverArm</string>
        </property>
       </row>
       <row>
@@ -104,6 +159,11 @@
       <row>
        <property name="text">
         <string>rotationRBV</string>
+       </property>
+      </row>
+      <row>
+       <property name="text">
+        <string>secLeverArm</string>
        </property>
       </row>
       <column>
@@ -124,7 +184,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QLabel" name="label_9">
+     <widget class="QLabel" name="label_Load_json_name">
       <property name="text">
        <string>You can drag the &quot;configuration.json&quot; file into the table to load parameters.</string>
       </property>
@@ -176,6 +236,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="pushButton_save">
+          <property name="text">
+           <string>save</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="horizontalSpacer">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -193,102 +260,137 @@
      </layout>
     </item>
     <item>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>ins result</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_13">
-        <property name="text">
-         <string>movbs</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLineEdit" name="process_filepath_edt">
-        <property name="dragEnabled">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="result_filepath_edt"/>
-      </item>
-      <item row="2" column="2">
-       <widget class="QToolButton" name="movbs_select_btn">
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QToolButton" name="process_select_btn">
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="movbs_filepath_edt">
-        <property name="dragEnabled">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="3">
-       <widget class="QPushButton" name="pushButton_process">
-        <property name="text">
-         <string>process</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="gnssposvel_filepath_edt">
-        <property name="dragEnabled">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_12">
-        <property name="text">
-         <string>gnssposvel</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>process</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="3">
-       <widget class="QPushButton" name="pushButton_split">
-        <property name="text">
-         <string>split</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QToolButton" name="gnssposvel_select_btn">
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QToolButton" name="result_select_btn">
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QWidget" name="process_files_widget" native="true">
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>movbs</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QToolButton" name="movbs_select_btn">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3">
+          <widget class="QPushButton" name="pushButton_split">
+           <property name="text">
+            <string>split</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="post_ins_filepath_edt"/>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="process_filepath_edt">
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
+          <widget class="QPushButton" name="pushButton_process">
+           <property name="text">
+            <string>process</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QToolButton" name="gnssposvel_select_btn">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QToolButton" name="process_select_btn">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>gnssposvel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="movbs_filepath_edt">
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QToolButton" name="result_select_btn">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="gnssposvel_filepath_edt">
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>process</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>post ins</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_11">
+           <property name="text">
+            <string>post movbs</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="post_movbs_filepath_edt"/>
+         </item>
+         <item row="4" column="2">
+          <widget class="QToolButton" name="pos_movbs_select_btn">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -358,6 +460,16 @@
        <widget class="QLineEdit" name="offset_edt"/>
       </item>
       <item>
+       <widget class="QLabel" name="label_17">
+        <property name="text">
+         <string>dua ant</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="dua_ant_edt"/>
+      </item>
+      <item>
        <widget class="QLabel" name="label_3">
         <property name="text">
          <string>result</string>
@@ -399,6 +511,20 @@
        <widget class="QPushButton" name="pushButton_calculate">
         <property name="text">
          <string>calculate</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_average">
+        <property name="text">
+         <string>Average</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_save_json">
+        <property name="text">
+         <string>save json</string>
         </property>
        </widget>
       </item>

@@ -86,6 +86,11 @@ void SimpleDecodeThread::setDateTime(QString time)
 	m_datatime = time;
 }
 
+QString& SimpleDecodeThread::getOutDir()
+{
+	return m_OutDir;
+}
+
 QString& SimpleDecodeThread::getOutBaseName()
 {
 	return m_OutBaseName;
@@ -101,6 +106,7 @@ void SimpleDecodeThread::makeOutPath(QString filename)
 		if (!outPath.exists()) {
 			outPath.mkpath(outPath.absolutePath());
 		}
+		m_OutDir = outPath.absolutePath();
 		m_OutBaseName = outPath.absolutePath() + QDir::separator() + basename;
 	}
 }

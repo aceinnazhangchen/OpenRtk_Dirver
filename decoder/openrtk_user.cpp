@@ -130,6 +130,9 @@ namespace OpenRTK330LI_Tool {
 			else if (type == 1) {
 				if (f_process) fprintf(f_process, "$GPVEL,%s", log);
 			}
+			else if (type == 2) {
+				if (f_process) fprintf(f_process, "$GPVNED,%s", log);
+			}
 		}
 		break;
 		case USR_OUT_INSPVAX:
@@ -316,6 +319,10 @@ namespace OpenRTK330LI_Tool {
 		sprintf(user_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n",
 			pak_g1.GPS_Week, (double)pak_g1.GPS_TimeOfWeek / 1000.0, horizontal_speed, track_over_ground, pak_g1.up_vel);
 		write_user_process_file(USR_OUT_BESTGNSS, 1, user_output_msg);
+		//process $GPVNED
+		sprintf(user_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n", pak_g1.GPS_Week, (double)pak_g1.GPS_TimeOfWeek/1000.0, pak_g1.north_vel, pak_g1.east_vel, -pak_g1.up_vel,
+			pak_g1.north_vel_standard_deviation, pak_g1.east_vel_standard_deviation, pak_g1.up_vel_standard_deviation);
+		write_user_process_file(USR_OUT_BESTGNSS, 2, user_output_msg);
 		//kml
 		append_gnss_kml();
 	}
