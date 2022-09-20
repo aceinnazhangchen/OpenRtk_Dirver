@@ -42,7 +42,7 @@ void ConfigFile::createInstance()
 
 void ConfigFile::readConfigFile()
 {
-	QFile file("./content_aceinna_config.json");
+	QFile file("./openins.json");
 	file.open(QIODevice::ReadOnly | QIODevice::Text);
 	if (!file.isOpen()) return;
 	QString value = file.readAll();
@@ -67,7 +67,24 @@ void ConfigFile::writeConfigFile()
 	QByteArray byteArray = document.toJson(QJsonDocument::Indented);
 	QString jsonStr = (byteArray);
 
-	QFile file("./content_aceinna_config.json");
+	QFile file("./openins.json");
+	if (!file.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate))
+	{
+		qDebug() << "file error";
+	}
+	QTextStream in(&file);
+	in << jsonStr;
+	file.close();
+}
+
+void ConfigFile::writeNewConfigFile(QString file_path)
+{
+	QJsonDocument document;
+	document.setObject(m_ConfigJson);
+	QByteArray byteArray = document.toJson(QJsonDocument::Indented);
+	QString jsonStr = (byteArray);
+
+	QFile file(file_path);
 	if (!file.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate))
 	{
 		qDebug() << "file error";

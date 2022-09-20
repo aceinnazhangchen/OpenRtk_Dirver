@@ -262,6 +262,7 @@ namespace RTK330LA_Tool {
 		//process $GPVEL
 		sprintf(output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n", pak_gN_early.GPS_Week, pak_gN_early.GPS_TimeOfWeek, horizontal_speed, track_over_ground, up_vel);
 		if (f_process) fprintf(f_process, "$GPVEL,%s", output_msg);
+
 		//kml
 		append_early_gnss_kml();
 
@@ -332,6 +333,10 @@ namespace RTK330LA_Tool {
 		//process $GPVEL
 		sprintf(output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n", pak_gN.GPS_Week, pak_gN.GPS_TimeOfWeek, horizontal_speed, track_over_ground, up_vel);
 		if (f_process) fprintf(f_process, "$GPVEL,%s", output_msg);
+		//process $GPVNED
+		sprintf(output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n", pak_gN.GPS_Week, pak_gN.GPS_TimeOfWeek, north_vel, east_vel, -up_vel,
+			(float)pak_d2.north_vel_std / 100.0, (float)pak_d2.east_vel_std / 100.0, (float)pak_d2.up_vel_std / 100.0);
+		if (f_process) fprintf(f_process, "$GPVNED,%s", output_msg);
 		//kml
 		append_gnss_kml();
 		//time
@@ -905,7 +910,13 @@ namespace RTK330LA_Tool {
 					raw.buff[raw.nbyte++] = raw.header[2];
 					raw.buff[raw.nbyte++] = raw.header[3];
 				}
-				raw.header_len = 0;
+				if (raw.flag == 0 && raw.header[2] == USER_PREAMB) {
+					memmove(raw.header, raw.header + 1, 3);
+					raw.header_len = 3;
+				}
+				else {
+					raw.header_len = 0;
+				}
 			}
 			return parse_nmea(data);
 		}

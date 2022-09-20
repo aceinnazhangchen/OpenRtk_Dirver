@@ -1,0 +1,17 @@
+开始step			StartStep(step)
+结束step 			EndStep()
+
+初始化ins401		InitIns401()
+输入buffer			InputIns401Buffer(buffer)
+解码ins401			DecodeIns401(path)
+
+初始化rtk330la		InitRtk330la()
+输入buffer			InputRtk330laBuffer(buffer)
+解码rtk330la		DecodeRtk330la(path)
+
+计算roll			CalcRoll(path)
+计算pitch&heading	CalcPitchHeading(path)
+
+EventEmitter
+转弯事件触发		onTurn(evt){}
+路程实现触发		onDistance(evt){}

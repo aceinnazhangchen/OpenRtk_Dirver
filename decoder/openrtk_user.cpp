@@ -130,6 +130,9 @@ namespace OpenRTK330LI_Tool {
 			else if (type == 1) {
 				if (f_process) fprintf(f_process, "$GPVEL,%s", log);
 			}
+			else if (type == 2) {
+				if (f_process) fprintf(f_process, "$GPVNED,%s", log);
+			}
 		}
 		break;
 		case USR_OUT_INSPVAX:
@@ -154,7 +157,7 @@ namespace OpenRTK330LI_Tool {
 		case USR_OUT_RAWIMU:
 		{
 			if (f_imu == NULL) {
-				sprintf(file_name, "%s-imu.txt", base_user_file_name);
+				sprintf(file_name, "%s_imu.txt", base_user_file_name);
 				f_imu = fopen(file_name, "w");
 			}
 			if (f_imu) fprintf(f_imu, log);
@@ -163,7 +166,7 @@ namespace OpenRTK330LI_Tool {
 		case USR_OUT_BESTGNSS:
 		{
 			if (f_gnssposvel == NULL) {
-				sprintf(file_name, "%s-gnssposvel.txt", base_user_file_name);
+				sprintf(file_name, "%s_gnssposvel.txt", base_user_file_name);
 				f_gnssposvel = fopen(file_name, "w");
 			}
 			if (f_gnssposvel) fprintf(f_gnssposvel, log);
@@ -172,8 +175,9 @@ namespace OpenRTK330LI_Tool {
 		case USR_OUT_INSPVAX:
 		{
 			if (f_ins == NULL) {
-				sprintf(file_name, "%s-ins.txt", base_user_file_name);
+				sprintf(file_name, "%s_ins.txt", base_user_file_name);
 				f_ins = fopen(file_name, "w");
+				if (f_ins) fprintf(f_ins, "GPS_Week(),GPS_TimeOfWeek(s),latitude(deg),longitude(deg),height(m),north_velocity(m/s),east_velocity(m/s),up_velocity(m/s),roll(deg),pitch(deg),heading(deg),ins_status(),ins_position_type()\n");
 				printf("0x%p\n", f_ins);
 			}
 			if (f_ins) fprintf(f_ins, log);
@@ -182,7 +186,7 @@ namespace OpenRTK330LI_Tool {
 		case USR_OUT_ODO:
 		{
 			if (f_odo == NULL) {
-				sprintf(file_name, "%s-odo.txt", base_user_file_name);
+				sprintf(file_name, "%s_odo.txt", base_user_file_name);
 				f_odo = fopen(file_name, "w");
 			}
 			if (f_odo) fprintf(f_odo, log);
@@ -199,7 +203,7 @@ namespace OpenRTK330LI_Tool {
 		case 0:
 		{
 			if (fnmea == NULL) {
-				sprintf(file_name, "%s-nmea", base_user_file_name);
+				sprintf(file_name, "%s_nmea", base_user_file_name);
 				fnmea = fopen(file_name, "w");
 			}
 			if (fnmea) fprintf(fnmea, log);
@@ -315,6 +319,10 @@ namespace OpenRTK330LI_Tool {
 		sprintf(user_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f\n",
 			pak_g1.GPS_Week, (double)pak_g1.GPS_TimeOfWeek / 1000.0, horizontal_speed, track_over_ground, pak_g1.up_vel);
 		write_user_process_file(USR_OUT_BESTGNSS, 1, user_output_msg);
+		//process $GPVNED
+		sprintf(user_output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n", pak_g1.GPS_Week, (double)pak_g1.GPS_TimeOfWeek/1000.0, pak_g1.north_vel, pak_g1.east_vel, -pak_g1.up_vel,
+			pak_g1.north_vel_standard_deviation, pak_g1.east_vel_standard_deviation, pak_g1.up_vel_standard_deviation);
+		write_user_process_file(USR_OUT_BESTGNSS, 2, user_output_msg);
 		//kml
 		append_gnss_kml();
 	}
@@ -486,7 +494,13 @@ namespace OpenRTK330LI_Tool {
 						break;
 					}
 				}
-				user_raw.header_len = 0;
+				if (user_raw.flag == 0 && user_raw.header[2] == USER_PREAMB) {
+					memmove(user_raw.header, user_raw.header + 1, 3);
+					user_raw.header_len = 3;
+				}
+				else {
+					user_raw.header_len = 0;
+				}
 			}
 			return parse_user_nmea(data);
 		}

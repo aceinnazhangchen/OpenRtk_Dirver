@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include "CalculationCall.h"
+#include <QDebug>
 
 #define DIMENSION	3
 
@@ -12,14 +13,17 @@ MountAngleCalculation::MountAngleCalculation(QWidget *parent)
 {
     ui.setupUi(this);
 	setAcceptDrops(true);
-	m_ProcessFilePath = "";
+	m_DecodeImuFilePath = "";
+	m_DecodeOdoFilePath = "";
+	m_DecodeInsFilePath = "";
 	m_SimpleDecodeThread = new SimpleDecodeThread(this);
 	m_LoadInsTextFileThread = new LoadInsTextFileThread(this);
+	m_CalculationThread = new CalculationThread(this, m_LoadInsTextFileThread->get_time_slices());
 	m_JsonFileLoader = new JsonFileLoader(this);
 	LoadJsonFile();
 	ui.tableWidget_config->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 	ui.tableWidget_config->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-	//connect(ui.pushButton_save, SIGNAL(clicked()), this, SLOT(onSaveClicked()));
+	connect(ui.pushButton_save, SIGNAL(clicked()), this, SLOT(onSaveClicked()));
 	connect(ui.select_btn, SIGNAL(clicked()), this, SLOT(onSelectFileClicked()));
 	connect(ui.novatel_ins_convert_btn, SIGNAL(clicked()), this, SLOT(onConvertClicked()));
 	connect(ui.pushButton_decode, SIGNAL(clicked()), this, SLOT(onDecodeClicked()));
@@ -28,14 +32,17 @@ MountAngleCalculation::MountAngleCalculation(QWidget *parent)
 	connect(ui.novatel_ins_select_btn, SIGNAL(clicked()), this, SLOT(onSelectNovatelInsFileClicked()));
 	connect(ui.process_select_btn, SIGNAL(clicked()), this, SLOT(onSelectProcessFileClicked()));
 	connect(ui.result_select_btn, SIGNAL(clicked()), this, SLOT(onSelectResultFileClicked()));
-	connect(ui.pushButton_calculate, SIGNAL(clicked()), this, SLOT(onCalculateClicked()));
+	connect(ui.pushButton_calculate, SIGNAL(clicked()), this, SLOT(onCalculateOneClicked()));
 	connect(ui.pushButton_calculate_all, SIGNAL(clicked()), this, SLOT(onCalculateAllClicked()));
-	connect(this, SIGNAL(sgnCalculateNext()), this, SLOT(onCalculateNext()));
+	connect(ui.pushButton_average, SIGNAL(clicked()), this, SLOT(onAverageClicked()));
+	connect(ui.pushButton_save_json, SIGNAL(clicked()), this, SLOT(onSaveJsonClicked()));
 	connect(ui.time_slices_comb, SIGNAL(currentIndexChanged(const QString &)), this, SLOT(onTimeSlicesChanged(const QString &)));
-	connect(m_SimpleDecodeThread, SIGNAL(sgnProgress(int, int)), this, SLOT(onProcess(int, int)));
-	connect(m_SimpleDecodeThread, SIGNAL(sgnFinished()), this, SLOT(onDecodeFinished()));
-	
+
+	connect(m_SimpleDecodeThread, SIGNAL(sgnProgress(int, int)), this, SLOT(onDecodingProcess(int, int)));
+	connect(m_SimpleDecodeThread, SIGNAL(sgnFinished()), this, SLOT(onDecodeFinished()));	
 	connect(m_LoadInsTextFileThread, SIGNAL(sgnFinished()), this, SLOT(onSplitFinished()));
+	connect(m_CalculationThread, SIGNAL(sgnFinished()), this, SLOT(onCalculateFinished()));
+
 }
 
 MountAngleCalculation::~MountAngleCalculation()
@@ -62,6 +69,7 @@ void MountAngleCalculation::dropEvent(QDropEvent * event)
 	if (ui.filepath_edt->isEnabled() && ui.filepath_edt->geometry().contains(event->pos())) {
 		QString name = event->mimeData()->urls().first().toLocalFile();
 		ui.filepath_edt->setText(name);
+		FindRtcmFilesInSameDir(name);
 	}
 	else if (ui.novatel_ins_path_edt->isEnabled() && ui.novatel_ins_path_edt->geometry().contains(event->pos())) {
 		QString name = event->mimeData()->urls().first().toLocalFile();
@@ -70,10 +78,6 @@ void MountAngleCalculation::dropEvent(QDropEvent * event)
 	else if (ui.tableWidget_config->isEnabled() && ui.tableWidget_config->geometry().contains(event->pos())) {
 		QString name = event->mimeData()->urls().first().toLocalFile();
 		LoadConfigureJsonFile(name);
-	}
-	else if (ui.gnss_filepath_edt->isEnabled() && ui.gnss_filepath_edt->geometry().contains(event->pos())) {
-		QString name = event->mimeData()->urls().first().toLocalFile();
-		ui.gnss_filepath_edt->setText(name);
 	}
 	else if (ui.gnssposvel_filepath_edt->isEnabled() && ui.gnssposvel_filepath_edt->geometry().contains(event->pos())) {
 		QString name = event->mimeData()->urls().first().toLocalFile();
@@ -87,9 +91,13 @@ void MountAngleCalculation::dropEvent(QDropEvent * event)
 		QString name = event->mimeData()->urls().first().toLocalFile();
 		ui.process_filepath_edt->setText(name);
 	}
-	else if (ui.result_filepath_edt->isEnabled() && ui.result_filepath_edt->geometry().contains(event->pos())) {
+	else if (ui.post_ins_filepath_edt->isEnabled() && ui.post_ins_filepath_edt->geometry().contains(event->pos())) {
 		QString name = event->mimeData()->urls().first().toLocalFile();
-		ui.result_filepath_edt->setText(name);
+		ui.post_ins_filepath_edt->setText(name);
+	}
+	else if (ui.post_movbs_filepath_edt->isEnabled() && ui.post_movbs_filepath_edt->geometry().contains(event->pos())) {
+		QString name = event->mimeData()->urls().first().toLocalFile();
+		ui.post_movbs_filepath_edt->setText(name);
 	}
 }
 
@@ -97,7 +105,7 @@ void MountAngleCalculation::LoadConfigureJsonFile(QString filename)
 {
 	if (m_JsonFileLoader == NULL) return;
 	if (m_JsonFileLoader->readJsonArrayFile(filename) == false) return;
-	ui.label_9->setText(filename);
+	ui.label_Load_json_name->setText("Loaded: " + filename);
 	QJsonObject& configJson = m_JsonFileLoader->getConfig();
 	if (configJson["parameters"].isObject()) {
 		//ui.tableWidget_config->clearContents();
@@ -167,6 +175,31 @@ void MountAngleCalculation::LoadConfigureJsonFile(QString filename)
 			QTableWidgetItem *item = ui.tableWidget_config->item(3, 2);
 			item->setText(QString::number(parameters["rotation rbvz"].toDouble()));
 		}
+		//sec lever arm
+		if (parameters["sec lever arm x"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(4, 0);
+			item->setText(QString::number(parameters["sec lever arm x"].toDouble()));
+		}
+		else {
+			QTableWidgetItem *item = ui.tableWidget_config->item(4, 0);
+			item->setText("0.0");
+		}
+		if (parameters["sec lever arm y"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(4, 1);
+			item->setText(QString::number(parameters["sec lever arm y"].toDouble()));
+		}
+		else {
+			QTableWidgetItem *item = ui.tableWidget_config->item(4, 1);
+			item->setText("0.0");
+		}
+		if (parameters["sec lever arm z"].isDouble()) {
+			QTableWidgetItem *item = ui.tableWidget_config->item(4, 2);
+			item->setText(QString::number(parameters["sec lever arm z"].toDouble()));
+		}
+		else {
+			QTableWidgetItem *item = ui.tableWidget_config->item(4, 2);
+			item->setText("0.0");
+		}
 	}
 	else {
 		QMessageBox::critical(NULL, "Error", "The Json File don't have the key \"parameters\"!");
@@ -214,14 +247,37 @@ void MountAngleCalculation::LoadJsonFile()
 				ui.tableWidget_config->setItem(3, i, item);
 			}
 		}
+		//secLeverArm
+		QJsonArray secLeverArm = configJson["secLeverArm"].toArray();
+		if (secLeverArm.size() == DIMENSION) {
+			for (int i = 0; i < DIMENSION; i++) {
+				double secLeverArm_value = secLeverArm[i].toDouble();
+				QTableWidgetItem *item = new QTableWidgetItem(QString::number(secLeverArm_value));
+				ui.tableWidget_config->setItem(4, i, item);
+			}
+		}
 	}
 }
 
 void MountAngleCalculation::SaveJsonFile()
 {
 	QJsonObject& configJson = ConfigFile::getInstance()->getConfig();
-	configJson["procFileName"] = m_ProcessFilePath;
-	configJson["outputFileName"] = m_ProcessFilePath;
+	QString ProcessFilePath = ui.process_filepath_edt->text();
+	QFileInfo fileinfo(ProcessFilePath);
+	QString file_dir = fileinfo.absoluteDir().absolutePath();
+	QString result_dir = file_dir + QDir::separator() + "resultsodo";
+	QString outputFileName = result_dir + QDir::separator() + "post";
+	configJson["procfileName"] = ProcessFilePath;
+	configJson["outputfileName"] = outputFileName;
+
+	configJson["gnssfileName"] = ui.gnssposvel_filepath_edt->text();
+	configJson["insfileName"] = m_DecodeImuFilePath;
+	configJson["odofileName"] = m_DecodeOdoFilePath;
+	configJson["initfile"] = m_DecodeInsFilePath;
+
+	configJson["rovfileName"] = ui.rover1_filepath_edt->text();
+	configJson["rov2fileName"] = ui.rover2_filepath_edt->text();
+	configJson["reffileName"] = ui.base_filepath_edt->text();
 	//priLeverArm
 	QJsonArray priLeverArm;
 	for (int i = 0; i < DIMENSION; i++) {
@@ -250,7 +306,31 @@ void MountAngleCalculation::SaveJsonFile()
 		rotationRBV.append(item->text().toDouble());
 	}
 	configJson["rotationRBV"] = rotationRBV;
+	//secLeverArm
+	QJsonArray secLeverArm;
+	int isUseDuaAnt = 0;
+	for (int i = 0; i < DIMENSION; i++) {
+		QTableWidgetItem *item = ui.tableWidget_config->item(4, i);
+		if (item->text().toDouble() != 0.0) {
+			isUseDuaAnt = 1;
+		}
+		secLeverArm.append(item->text().toDouble());
+	}
+	configJson["secLeverArm"] = secLeverArm;
+	configJson["isUseDuaAnt"] = isUseDuaAnt;
+	configJson["isDualAntBaselineCalibration"] = 0;
+	configJson["dualAntBaselineLenth"] = 0.0;
+	configJson["gnssHeadingCalibration"] = 0.0;
 	ConfigFile::getInstance()->writeConfigFile();
+}
+
+void MountAngleCalculation::SaveNewJsonFile(QString file_path){
+	QJsonObject& configJson = ConfigFile::getInstance()->getConfig();
+	stAngle& avg_angle = m_CalculationThread->getAvgAngle();
+	configJson["isDualAntBaselineCalibration"] = avg_angle.movbs_length != 0.0? 1:0;
+	configJson["dualAntBaselineLenth"] = avg_angle.movbs_length;
+	configJson["gnssHeadingCalibration"] = avg_angle.gnssposvel_movbs_diff;
+	ConfigFile::getInstance()->writeNewConfigFile(file_path);
 }
 
 void MountAngleCalculation::setOperable(bool enable)
@@ -266,250 +346,133 @@ void MountAngleCalculation::setOperable(bool enable)
 	}
 }
 
-void MountAngleCalculation::setSplitOperable(bool enable) {
-	ui.process_filepath_edt->setEnabled(enable);
-	ui.result_filepath_edt->setEnabled(enable);
-	ui.process_select_btn->setEnabled(enable);
-	ui.pushButton_split->setEnabled(enable);
+void MountAngleCalculation::setProcessOperable(bool enable) {
+	ui.process_files_widget->setEnabled(enable);
 }
 
-void MountAngleCalculation::readAngleFromFile(QString file_path)
+QString MountAngleCalculation::ConvertNovatelPosType(QString novateType)
 {
-	QFileInfo out_file(file_path);
-	if (!out_file.isFile()) return;
-	FILE* f_out = fopen(file_path.toLocal8Bit().data(), "r");
-	if (f_out) {
-		char line[256] = { 0 };
-		stAngle angle = { 0 };
-		int index = 0;
-		while (fgets(line, 256, f_out) != 0){
-			index++;
-			if (index == 2) {
-				QString value = QString(line).trimmed();
-				value = value.left(value.size() - 1);
-				angle.roll = value.toFloat();
-			}
-			if (index == 3) {
-				QString value = QString(line).trimmed();
-				value = value.left(value.size() - 1);
-				angle.pitch = value.toFloat();
-			}
-			if (index == 4) {
-				QString value = QString(line).trimmed();
-				angle.heading = value.toFloat();
-			}
-		}
-		angle_list.push_back(angle);
-		double rotationRBV[DIMENSION] = { 0 };
-		for (int i = 0; i < DIMENSION; i++) {
-			QTableWidgetItem *item = ui.tableWidget_config->item(3, i);
-			rotationRBV[i] = item->text().toDouble();
-		}
-		ui.offset_edt->setText(QString::asprintf("%.3f,%.3f,%.3f", angle.roll, angle.pitch, angle.heading));
-		ui.result_edt->setText(QString::asprintf("%.3f,%.3f,%.3f", rotationRBV[0]-angle.roll, rotationRBV[1]-angle.pitch, rotationRBV[2]-angle.heading));
-		fclose(f_out);
+	QString pos_type = "";
+	if (novateType == "16" || novateType == "53") {
+		pos_type = "1";
 	}
+	else if (novateType == "17" || novateType == "54") {
+		pos_type = "2";
+	}
+	else if (novateType == "50" || novateType == "56") {
+		pos_type = "4";
+	}
+	else if (novateType == "34" || novateType == "55") {
+		pos_type = "5";
+	}
+	return pos_type;
 }
 
-void MountAngleCalculation::readAngleFromFile_1(QString file_path) {
-	QFileInfo out_file(file_path);
-	if (!out_file.isFile()) return;
-	FILE* f_out = fopen(file_path.toLocal8Bit().data(), "r");
-	char line[256] = { 0 };
-	if (f_out) {
-		ui.result_edt->setText(file_path);
-		fgets(line, 256, f_out);//先读一行
-		size_t line_size = strlen(line);//获取一行的长度
-		fseek(f_out, -(line_size + 1), SEEK_END);//定位到文件最后,并且向前偏移一行的长度加1(因为最后有个空行)
-		fgets(line, 256, f_out);//读最后一行
-		fclose(f_out);
-	}
-	QString last_line = QString(line);
-	QStringList items = last_line.split(',');
-	if (items.size() < 8) return;
-	stAngle angle = { 0 };
-	angle.roll = items[5].trimmed().toFloat();
-	angle.pitch = items[6].trimmed().toFloat();
-	angle.heading = items[7].trimmed().toFloat();
-	angle_list.push_back(angle);
-	ui.result_edt->setText(items[5].trimmed() + "," + items[6].trimmed() + "," + items[7].trimmed());
-}
-
-void MountAngleCalculation::readHeadingFromGnss(QString file_path)
+void MountAngleCalculation::FindRtcmFilesInSameDir(QString file_path)
 {
-	QFileInfo out_file(file_path);
-	if (!out_file.isFile()) return;
-	FILE* f_out = fopen(file_path.toLocal8Bit().data(), "r");
-	char line[256] = { 0 };
-	if (f_out) {
-		while (fgets(line, 256, f_out) != NULL) {
+	onClearAll();
+	QString current_path = ".";
+	if (!file_path.isEmpty()) {
+		current_path = QFileInfo(file_path).absoluteDir().absolutePath();
+	}
+	QDir dir(current_path);
+	QFileInfoList fileInfoList = dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
+	ui.base_filepath_edt->setText("");
+	ui.rover2_filepath_edt->setText("");
+	ui.rover1_filepath_edt->setText("");
+	foreach(auto fileInfo, fileInfoList) {
+		if (fileInfo.isFile())
+		{
+			QString current_file_path = fileInfo.absoluteFilePath();
+			QString file_name = fileInfo.fileName();
+			if (file_name.endsWith(".bin")) {
+				if (file_name.startsWith("rtcm_base_")) {
+					ui.base_filepath_edt->setText(current_file_path);
+				}
+				else if (file_name.startsWith("rtcm_rover2_")) {
+					ui.rover2_filepath_edt->setText(current_file_path);
+				}
+				else if (file_name.startsWith("rtcm_rover1_")) {
+					ui.rover1_filepath_edt->setText(current_file_path);
+				}
+				else if (file_name.startsWith("rtcm_rover_")) {
+					ui.rover1_filepath_edt->setText(current_file_path);
+				}
+			}
 		}
-		if (angle_list.size() > 0) {
-			angle_list[angle_list.size()-1].gnss_heading = atof(line);//读取最后一行
+		if (fileInfo.isDir()) {
+			QString current_file_path = fileInfo.absoluteFilePath();
+			QString file_name = fileInfo.fileName();
+			if (file_name.endsWith("_d")) {
+				FindDocodeFiles(current_file_path);
+			}
 		}
-		fclose(f_out);
 	}
 }
 
-void MountAngleCalculation::readHeadingFromIns(QString file_path) {
-	QFileInfo out_file(file_path);
-	if (!out_file.isFile()) return;
-	FILE* f_out = fopen(file_path.toLocal8Bit().data(), "r");
-	if (f_out) {
-		char line[256] = { 0 };
-		int line_num = 0;
-		int time_index = 0;
-		double sum_heading = 0.0;
-		double sum_roll = 0.0;
-		int heading_num = 0;
-		int roll_num = 0;
-		std::vector<stTimeSlice>& time_slices = m_LoadInsTextFileThread->get_time_slices();
-		while (fgets(line, 256, f_out) != NULL) {
-			line_num++;
-			if (line_num == 1) continue;
-			QString q_line(line);
-			QStringList items = q_line.split(",");
-			if (items.size() < 13) continue;
-			uint32_t time = (uint32_t)(items[1].trimmed().toDouble()*1000);
-			if (time < time_slices[time_index].starttime)
-				continue;
-			if (time > time_slices[time_index].endtime) {
-				if (time_index < angle_list.size()) {
-					if (heading_num > 0) {
-						angle_list[time_index].ins_heading = sum_heading / heading_num;
-						if (angle_list[time_index].ins_heading < 0) {
-							angle_list[time_index].ins_heading += 360;
-						}
-					}
-					if (roll_num > 0) {
-						angle_list[time_index].ins_roll = sum_roll / roll_num;
-					}
-				}
-				time_index++;
-				sum_heading = 0.0;
-				sum_roll = 0.0;
-				heading_num = 0;
-				roll_num = 0;
-				if (time_index >= time_slices.size())
-					break;
+void MountAngleCalculation::FindDocodeFiles(QString decoderFilesDir)
+{
+	QDir dir(decoderFilesDir);
+	if (!dir.exists()) {
+		return;
+	}
+	QFileInfoList fileInfoList = dir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot);
+	ui.gnssposvel_filepath_edt->setText("");
+	ui.movbs_filepath_edt->setText("");
+	ui.process_filepath_edt->setText("");
+	m_DecodeImuFilePath = "";
+	m_DecodeOdoFilePath = "";
+	m_DecodeInsFilePath = "";
+	foreach(auto fileInfo, fileInfoList) {
+		if (fileInfo.isFile())
+		{
+			QString current_file_path = fileInfo.absoluteFilePath();
+			QString file_name = fileInfo.fileName();
+			if (file_name.endsWith("_process")) {
+				ui.process_filepath_edt->setText(current_file_path);
 			}
-			if (time % 1000 != 0)
-				continue;
-			if (time >= time_slices[time_index].starttime && time < time_slices[time_index].endtime) {
-				double heading = items[10].trimmed().toDouble();
-				double roll = items[8].trimmed().toDouble();
-				sum_heading += heading;
-				heading_num++;
-				sum_roll += roll;
-				roll_num++;
+			else if (file_name.endsWith("_gnssposvel.txt")) {
+				ui.gnssposvel_filepath_edt->setText(current_file_path);
+			}
+			else if (file_name.endsWith("_movbs.txt")) {
+				ui.movbs_filepath_edt->setText(current_file_path);
+			}
+			else if (file_name.endsWith("_imu.txt")) {
+				m_DecodeImuFilePath = current_file_path;
+			}
+			else if (file_name.endsWith("_odo.txt")) {
+				m_DecodeOdoFilePath = current_file_path;
+			}
+			else if (file_name.endsWith("_ins.txt")) {
+				m_DecodeInsFilePath = current_file_path;
 			}
 		}
-		fclose(f_out);
 	}
+	FindResultFiles();
 }
 
-void MountAngleCalculation::readGnssPosVel() {
-	QString file_path = ui.gnssposvel_filepath_edt->text();
-	QFileInfo file_info(file_path);
-	if (!file_info.isFile()) return;
-	std::vector<stTimeSlice>& time_slices = m_LoadInsTextFileThread->get_time_slices();
-	FILE* f_gnssposvel = fopen(file_path.toLocal8Bit().data(), "r");
-	if (f_gnssposvel) {
-		char line[256] = { 0 };
-		int line_num = 0;
-		int time_index = 0;
-		double sum_heading = 0.0;
-		int heading_num = 0;
-		while (fgets(line, 256, f_gnssposvel) != NULL) {
-			line_num++;
-			QString q_line(line);
-			QStringList items = q_line.split(",");
-			if (items.size() < 13) 
-				continue;
-			uint32_t time = (uint32_t)(items[1].trimmed().toDouble() * 1000);
-			if (time < time_slices[time_index].starttime)
-				continue;
-			if (time > time_slices[time_index].endtime) {
-				if (time_index < angle_list.size()) {
-					if (heading_num > 0) {
-						//统计平均heading
-						angle_list[time_index].gnssposvel_heading = sum_heading / heading_num;
-						if (angle_list[time_index].gnssposvel_heading < 0) {
-							angle_list[time_index].gnssposvel_heading += 360;
-						}
-					}
-				}
-				time_index++;//递增区间id
-				sum_heading = 0.0;
-				heading_num = 0;
-				if (time_index >= time_slices.size())//最后一个区间计算完成
-					break;
-			}
-			if (time % 1000 != 0)
-				continue;
-			if (time >= time_slices[time_index].starttime && time < time_slices[time_index].endtime) {//累计区间内的heading
-				double heading = items[12].trimmed().toDouble();
-				int type = items[8].trimmed().toInt();
-				if (type == 4) {
-					sum_heading += heading;
-					heading_num++;
-				}
-			}
-		}
-		fclose(f_gnssposvel);
+void MountAngleCalculation::FindResultFiles() {
+	QString ProcessFilePath = ui.process_filepath_edt->text();
+	QFileInfo fileinfo(ProcessFilePath);
+	QString file_dir = fileinfo.absoluteDir().absolutePath();
+	QString result_dir = file_dir + QDir::separator() + "resultsodo";
+	QDir dir(result_dir);
+	if (!dir.exists()) {
+		return;
 	}
-}
-
-void MountAngleCalculation::readMovbsTxt() {
-	QString file_path = ui.movbs_filepath_edt->text();
-	QFileInfo file_info(file_path);
-	if (!file_info.isFile()) return;
-	std::vector<stTimeSlice>& time_slices = m_LoadInsTextFileThread->get_time_slices();
-	FILE* f_movbs = fopen(file_path.toLocal8Bit().data(), "r");
-	if (f_movbs) {
-		char line[256] = { 0 };
-		int line_num = 0;
-		int time_index = 0;
-		double sum_heading = 0.0;
-		int heading_num = 0;
-		while (fgets(line, 256, f_movbs) != NULL) {
-			line_num++;
-			QString q_line(line);
-			QStringList items = q_line.split(",");
-			if (items.size() < 10)
-				continue;
-			uint32_t time = (uint32_t)(items[2].trimmed().toDouble() * 1000);
-			if (time < time_slices[time_index].starttime)
-				continue;
-			if (time > time_slices[time_index].endtime) {
-				if (time_index < angle_list.size()) {
-					if (heading_num > 0) {
-						//统计平均heading
-						angle_list[time_index].movbs_heading = sum_heading / heading_num;
-						if (angle_list[time_index].movbs_heading < 0) {
-							angle_list[time_index].movbs_heading += 360;
-						}
-					}
-				}
-				time_index++;//递增区间id
-				sum_heading = 0.0;
-				heading_num = 0;
-				if (time_index >= time_slices.size())//最后一个区间计算完成
-					break;
+	ui.post_ins_filepath_edt->setText("");
+	ui.post_movbs_filepath_edt->setText("");
+	QFileInfoList fileInfoList = dir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot | QDir::Dirs);
+	foreach(auto fileInfo, fileInfoList) {
+		if (fileInfo.isFile())
+		{
+			if (fileInfo.absoluteFilePath().endsWith("_ins_odo.txt")) {
+				ui.post_ins_filepath_edt->setText(fileInfo.absoluteFilePath());
 			}
-			//if (time % 1000 != 0)
-			//	continue;
-			if (time >= time_slices[time_index].starttime && time < time_slices[time_index].endtime) {//累计区间内的heading
-				double heading = items[9].trimmed().toDouble();
-				int type1 = items[5].trimmed().toInt();
-				int type2 = items[6].trimmed().toInt();
-				if (type1 == 4 && type2 == 4) {
-					sum_heading += heading;
-					heading_num++;
-				}
+			else  if (fileInfo.absoluteFilePath().endsWith("_mvb.csv")) {
+				ui.post_movbs_filepath_edt->setText(fileInfo.absoluteFilePath());
 			}
 		}
-		fclose(f_movbs);
 	}
 }
 
@@ -525,6 +488,7 @@ void MountAngleCalculation::onSelectFileClicked()
 		return;
 	}
 	ui.filepath_edt->setText(path);
+	FindRtcmFilesInSameDir(path);
 }
 
 void MountAngleCalculation::onSelectNovatelInsFileClicked()
@@ -558,7 +522,7 @@ void MountAngleCalculation::onSelectProcessFileClicked()
 void MountAngleCalculation::onSelectResultFileClicked()
 {
 	QString current_path = ".";
-	QString file_name = ui.result_filepath_edt->text();
+	QString file_name = ui.post_ins_filepath_edt->text();
 	if (!file_name.isEmpty()) {
 		current_path = QDir(file_name).absolutePath();
 	}
@@ -566,29 +530,11 @@ void MountAngleCalculation::onSelectResultFileClicked()
 	if (path.length() == 0) {
 		return;
 	}
-	ui.result_filepath_edt->setText(path);
+	ui.post_ins_filepath_edt->setText(path);
 }
 
 void MountAngleCalculation::onSaveClicked() {
 	SaveJsonFile();
-}
-
-QString MountAngleCalculation::ConvertNovatelPosType(QString novateType)
-{
-	QString pos_type = "";
-	if (novateType == "16" || novateType == "53") {
-		pos_type = "1";
-	}
-	else if (novateType == "17" || novateType == "54") {
-		pos_type = "2";
-	}
-	else if (novateType == "50" || novateType == "56") {
-		pos_type = "4";
-	}
-	else if (novateType == "34" || novateType == "55") {
-		pos_type = "5";
-	}
-	return pos_type;
 }
 
 void MountAngleCalculation::onConvertClicked()
@@ -637,7 +583,7 @@ void MountAngleCalculation::onConvertClicked()
 					ins_result_file.write(new_line.toLocal8Bit());
 				}
 			}
-			ui.result_filepath_edt->setText(ins_result_filename);
+			ui.post_ins_filepath_edt->setText(ins_result_filename);
 			ins_result_file.close();
 		}
 		novatel_ins_file.close();
@@ -662,25 +608,28 @@ void MountAngleCalculation::onDecodeClicked()
 	m_SimpleDecodeThread->start();
 }
 
+void MountAngleCalculation::onDecodeFinished()
+{
+	QString decoderFilesDir = m_SimpleDecodeThread->getOutDir();
+	FindDocodeFiles(decoderFilesDir);
+	setOperable(true);
+}
+
 void MountAngleCalculation::onProcessClicked()
 {
-	m_ProcessFilePath = ui.process_filepath_edt->text();
-	if (m_ProcessFilePath.isEmpty()) {
+	QString ProcessFilePath = ui.process_filepath_edt->text();
+	if (ProcessFilePath.isEmpty()) {
 		return;
 	}
 	SaveJsonFile();
-	CalculationCall::call_ins_start("./content_aceinna_config.json");
-	m_InsResultFilePath = m_ProcessFilePath + "_ins.txt";
-	QFileInfo file(m_InsResultFilePath);
-	if (file.isFile()) {
-		ui.result_filepath_edt->setText(m_InsResultFilePath);
-	}
+	CalculationCall::call_ins_start("./openins.json");
+	FindResultFiles();
 }
 
 void MountAngleCalculation::onSplitClicked()
 {
-	m_InsResultFilePath = ui.result_filepath_edt->text();
-	if (m_InsResultFilePath.isEmpty()) {
+	QString InsResultFilePath = ui.post_ins_filepath_edt->text();
+	if (InsResultFilePath.isEmpty()) {
 		return;
 	}
 	if (m_LoadInsTextFileThread->isRunning())
@@ -688,174 +637,156 @@ void MountAngleCalculation::onSplitClicked()
 		m_LoadInsTextFileThread->stop();
 		return;
 	}
-	m_LoadInsTextFileThread->setFileName(m_InsResultFilePath);
-	setSplitOperable(false);
+	m_LoadInsTextFileThread->setFileName(InsResultFilePath);
+	setProcessOperable(false);
 	m_LoadInsTextFileThread->start();
 }
 
-void MountAngleCalculation::onCalculateClicked() {
-	QString GnssFilePath = ui.gnss_filepath_edt->text();
-	if(GnssFilePath.isEmpty()) return;
-	QFileInfo gnss_file(GnssFilePath);
-	if (!gnss_file.isFile()) return;
-	m_InsResultFilePath = ui.result_filepath_edt->text();
-	QFileInfo result_file(m_InsResultFilePath);
+void MountAngleCalculation::onSplitFinished()
+{
+	ui.time_slices_comb->clear();
+	std::vector<stTimeSlice>& time_slices = m_LoadInsTextFileThread->get_time_slices();
+	for (int i = 0; i < time_slices.size(); i++) {
+		QString time_str = QString::asprintf("%d:%d:%d:%d", time_slices[i].week, time_slices[i].starttime / 1000, time_slices[i].endtime / 1000, time_slices[i].during / 1000);
+		ui.time_slices_comb->addItem(time_str);
+	}
+	setProcessOperable(true);
+	//输出切割文件
+	QString InsResultFilePath = ui.post_ins_filepath_edt->text();
+	QFileInfo result_file(InsResultFilePath);
 	if (!result_file.isFile()) return;
 	QString basename = result_file.completeBaseName();
 	QString absoluteDir = result_file.absoluteDir().absolutePath();
+	QString file_name = absoluteDir + QDir::separator() + basename + "_split_time.txt";
+	QFile file(file_name);
+	if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+		for (int i = 0; i < time_slices.size(); i++) {
+			file.write(QString::asprintf(
+				"%d,%8d,%8d,%3d,"
+				"%9.3f,%9.3f,%2d,"
+				"%9.3f,%9.3f,%9.3f,%9.3f\n",
+				time_slices[i].week, time_slices[i].starttime / 1000, time_slices[i].endtime / 1000, time_slices[i].during / 1000,
+				time_slices[i].distance, time_slices[i].speed_distance, time_slices[i].used_in_roll,
+				time_slices[i].start_heading, time_slices[i].end_heading, time_slices[i].last_heading, time_slices[i].angle_diff).toLocal8Bit());
+		}
+		file.close();
+	}
+}
+
+void MountAngleCalculation::onCalculateOneClicked() {
+	//check post_ins_filepath
+	QString PostInsFilePath = ui.post_ins_filepath_edt->text();
+	if (PostInsFilePath.isEmpty()) {
+		QMessageBox::warning(NULL, tr("warnning"), tr("Post ins file path is Empty."));
+		return;
+	}
+	QFileInfo post_ins_file(PostInsFilePath);
+	if (!post_ins_file.isFile()) {
+		QMessageBox::warning(NULL, tr("warnning"), tr("Post ins file path is not exists."));
+		return;
+	}
+	//check gnssposvel_filepath
+	QString gnssposvel_file = ui.gnssposvel_filepath_edt->text();
+	if (gnssposvel_file.isEmpty()) {
+		QMessageBox::warning(NULL, tr("warnning"), tr("Gnss posvel file path is Empty."));
+		return;
+	}
+	QFileInfo gnss_file(gnssposvel_file);
+	if (!gnss_file.isFile()) {
+		QMessageBox::warning(NULL, tr("warnning"), tr("Gnss posvel file path is not exists."));
+		return;
+	}
+
 	QString week_str = ui.week_edt->text();
 	QString starttime_str = ui.starttime_edt->text();
 	QString endtime_str = ui.endtime_edt->text();
 	if (week_str.isEmpty())return;
 	if (starttime_str.isEmpty())return;
 	if (endtime_str.isEmpty())return;
-	CalculationCall::call_dr_mountangle_start(m_InsResultFilePath.toLocal8Bit().data(), week_str.toLocal8Bit().data(), starttime_str.toLocal8Bit().data(), endtime_str.toLocal8Bit().data());
-	CalculationCall::call_gnss_calc_heading(GnssFilePath.toLocal8Bit().data(), starttime_str.toLocal8Bit().data(), endtime_str.toLocal8Bit().data());
-	QString out_file_path = "result001_content_misalign.txt";
-	QString gnss_heading_file = "gnss_" + starttime_str + "-" + endtime_str + ".txt";
-	QString gnss_path = gnss_file.absolutePath();
-	QString gnss_basename = gnss_file.completeBaseName();
-	QString gnss_heading_path = gnss_path + "\\" + gnss_basename + "_heading\\" + gnss_heading_file;
-	readAngleFromFile(out_file_path);
-	readHeadingFromGnss(gnss_heading_path);
+
+	//running
+	if (m_CalculationThread->isRunning())
+	{
+		QMessageBox::warning(NULL, tr("warnning"), tr("Calculate is running."));
+		return;
+	}
+	m_CalculationThread->setRunMode(emRunMode_One);
+	m_CalculationThread->setTimeRange(week_str, starttime_str, endtime_str);
+	m_CalculationThread->setPostInsFilePath(ui.post_ins_filepath_edt->text());
+	m_CalculationThread->setGnssposvelFilePath(ui.gnssposvel_filepath_edt->text());
+	m_CalculationThread->setPostMovbsFilePath(ui.post_movbs_filepath_edt->text());
+	m_CalculationThread->start();
+	setProcessOperable(false);
 }
 
 void MountAngleCalculation::onCalculateAllClicked() {
-	if (ui.time_slices_comb->count() > 0) {
-		angle_list.clear();
-		ui.time_slices_comb->setCurrentIndex(0);
-		emit sgnCalculateNext();
+	if (ui.time_slices_comb->count() == 0) {
+		QMessageBox::warning(NULL, tr("warnning"), tr("No time slices."));
+		return;
 	}
+	//check post_ins_filepath
+	QString PostInsFilePath = ui.post_ins_filepath_edt->text();
+	if (PostInsFilePath.isEmpty()) {
+		QMessageBox::warning(NULL, tr("warnning"), tr("Post ins file path is Empty."));
+		return;
+	}
+	QFileInfo post_ins_file(PostInsFilePath);
+	if (!post_ins_file.isFile()) {
+		QMessageBox::warning(NULL, tr("warnning"), tr("Post ins file path is not exists."));
+		return;
+	}
+	//check gnssposvel_filepath
+	QString gnssposvel_file = ui.gnssposvel_filepath_edt->text();
+	if (gnssposvel_file.isEmpty()) {
+		QMessageBox::warning(NULL, tr("warnning"), tr("Gnss posvel file path is Empty."));
+		return;
+	}
+	QFileInfo gnss_file(gnssposvel_file);
+	if (!gnss_file.isFile()) {
+		QMessageBox::warning(NULL, tr("warnning"), tr("Gnss posvel file path is not exists."));
+		return;
+	}
+	//running
+	if (m_CalculationThread->isRunning())
+	{
+		QMessageBox::warning(NULL, tr("warnning"), tr("Calculate is running."));
+		return;
+	}
+	m_CalculationThread->setRunMode(emRunMode_All);
+	m_CalculationThread->setPostInsFilePath(ui.post_ins_filepath_edt->text());
+	m_CalculationThread->setGnssposvelFilePath(ui.gnssposvel_filepath_edt->text());
+	m_CalculationThread->setPostMovbsFilePath(ui.post_movbs_filepath_edt->text());
+	m_CalculationThread->start();
+	setProcessOperable(false);
 }
 
-void MountAngleCalculation::onCalculateNext()
+void MountAngleCalculation::onCalculateFinished()
 {
-	int index = ui.time_slices_comb->currentIndex();
-	onCalculateClicked();
-	if (index+1 < ui.time_slices_comb->count()) {
-		ui.time_slices_comb->setCurrentIndex(index+1);
-		emit sgnCalculateNext();
-	}
-	else {
-		if (!m_InsResultFilePath.isEmpty()) {
-			readHeadingFromIns(m_InsResultFilePath);
-		}
-		readGnssPosVel();
-		readMovbsTxt();
-		//取平均
-		CalculateAverageAngle();
-	}
-}
-
-void MountAngleCalculation::WriteAngleFile() 
-{
-	QFileInfo result_file(m_InsResultFilePath);
-	if (!result_file.isFile()) return;
-	QString basename = result_file.completeBaseName();
-	QString absoluteDir = result_file.absoluteDir().absolutePath();
-	QString file_name = absoluteDir + "/" + basename + "_Angle.txt";
-	QFile file(file_name);
-	if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-		file.write(QString::asprintf(
-			"%4s,%6s,%6s,"
-			"%6s,%8s,%8s,%4s,"
-			"%8s,%8s,"
-			"%7s,%7s,%7s,"
-			"%8s,%8s,%10s,%7s,"
-			"%8s,%8s,%14s\n",
-			"week","start","end",
-			"during","dis", "dis_s","turn",
-			"dst_s","dst_e",
-			"roll","pitch","heading",
-			"gnss_h","ins_h","ins-gnss_h", "diff_h",
-			"posvel_h","movbs_h","posvel-movbs_h").toLocal8Bit());
-		std::vector<stTimeSlice>& time_slices = m_LoadInsTextFileThread->get_time_slices();
-		if (time_slices.size() == angle_list.size()) {
-			for (int i = 0; i < angle_list.size(); i++) {
-				file.write(QString::asprintf(
-					"%4d,%6d,%6d,"
-					"%6d,%8.2f,%8.2f,%4d,"
-					"%8.2f,%8.2f,"
-					"%7.3f,%7.3f,%7.3f,"
-					"%8.3f,%8.3f,%10.3f,%7.3f,"
-					"%8.3f,%8.3f,%14.3f\n",
-					time_slices[i].week, time_slices[i].starttime / 1000, time_slices[i].endtime / 1000, 
-					time_slices[i].during / 1000, time_slices[i].distance, time_slices[i].speed_distance, time_slices[i].used_in_roll,
-					time_slices[i].dst_s, time_slices[i].dst_e,
-					angle_list[i].roll, angle_list[i].pitch, angle_list[i].heading,
-					angle_list[i].gnss_heading, angle_list[i].ins_heading, angle_list[i].ins_gnss_diff,(angle_list[i].heading-angle_list[i].ins_gnss_diff),
-					angle_list[i].gnssposvel_heading, angle_list[i].movbs_heading, angle_list[i].gnssposvel_movbs_diff).toLocal8Bit());
-			}
-		}
-		file.close();
-	}
-}
-
-void MountAngleCalculation::WriteAverageAngleFile(stAngle avg_angle){
-	QFileInfo result_file(m_InsResultFilePath);
-	if (!result_file.isFile()) return;
-	QString basename = result_file.completeBaseName();
-	QString absoluteDir = result_file.absoluteDir().absolutePath();
-	QString file_name = absoluteDir + "/" + basename + "_AverageAngle.txt";
-	QFile file(file_name);
-	if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-		file.write(QString::asprintf("%7.3f,%7.3f,%7.3f,%7.3f",
-			avg_angle.roll, avg_angle.pitch, avg_angle.heading, avg_angle.gnssposvel_movbs_diff).toLocal8Bit());
-		file.close();
-	}
-}
-
-void MountAngleCalculation::CalculateAverageAngle()
-{
-	std::vector<stTimeSlice>& time_slices = m_LoadInsTextFileThread->get_time_slices();
-	for (int i = 0; i < angle_list.size(); i++) {
-		angle_list[i].roll = angle_list[i].ins_roll;
-		angle_list[i].ins_gnss_diff = angle_list[i].ins_heading - angle_list[i].gnss_heading;
-		if (angle_list[i].movbs_heading != 0.0) {
-			angle_list[i].gnssposvel_movbs_diff = angle_list[i].gnssposvel_heading - angle_list[i].movbs_heading;
-		}
-	}
-	stAngle sum_angle = { 0 };
-	stAngle avg_angle = { 0 };
-	int num_in_cal = 0;
-	int num_in_cal_roll = 0;
-	int num_in_gnssposvel_movbs = 0;
-	for (int i = 0; i < angle_list.size(); i++) {
-		if (fabs(angle_list[i].ins_gnss_diff - angle_list[i].heading) > 1.0) continue;
-		sum_angle.heading += angle_list[i].heading;
-		sum_angle.pitch += angle_list[i].pitch;
-		num_in_cal++;
-	}
-	for (int i = 0; i < angle_list.size(); i++) {
-		if (time_slices[i].used_in_roll == 0 || time_slices[i].distance > 300) continue;
-		sum_angle.roll += angle_list[i].roll;
-		num_in_cal_roll++;
-	}
-	for (int i = 0; i < angle_list.size(); i++) {
-		if(angle_list[i].gnssposvel_movbs_diff == 0.0) continue;
-		if(fabs(angle_list[i].gnssposvel_movbs_diff) >= 5.0) continue;
-		sum_angle.gnssposvel_movbs_diff += angle_list[i].gnssposvel_movbs_diff;
-		num_in_gnssposvel_movbs++;
-	}
-	if (num_in_cal > 0) {
-		avg_angle.heading = sum_angle.heading / num_in_cal;
-		avg_angle.pitch = sum_angle.pitch / num_in_cal;
-	}
-	if (num_in_cal_roll > 0) {
-		avg_angle.roll = sum_angle.roll / num_in_cal_roll;
-	}
-	if (num_in_gnssposvel_movbs > 0) {
-		avg_angle.gnssposvel_movbs_diff = sum_angle.gnssposvel_movbs_diff / num_in_gnssposvel_movbs;
-	}
+	setProcessOperable(true);
+	stAngle& avg_angle = m_CalculationThread->getAvgAngle();
 	double rotationRBV[DIMENSION] = { 0 };
 	for (int i = 0; i < DIMENSION; i++) {
 		QTableWidgetItem *item = ui.tableWidget_config->item(3, i);
 		rotationRBV[i] = item->text().toDouble();
 	}
-	WriteAngleFile();
-	ui.offset_edt->setText(QString::asprintf("%.3f,%.3f,%.3f,%.3f", avg_angle.roll, avg_angle.pitch, avg_angle.heading, avg_angle.gnssposvel_movbs_diff));
+	ui.offset_edt->setText(QString::asprintf("%.3f,%.3f,%.3f", avg_angle.roll, avg_angle.pitch, avg_angle.heading));
+	ui.dua_ant_edt->setText(QString::asprintf("%.3f,%.3f", avg_angle.gnssposvel_movbs_diff, avg_angle.movbs_length));
 	ui.result_edt->setText(QString::asprintf("%.3f,%.3f,%.3f", rotationRBV[0] - avg_angle.roll, rotationRBV[1] - avg_angle.pitch, rotationRBV[2] - avg_angle.heading));
-	WriteAverageAngleFile(avg_angle);
+}
+
+void MountAngleCalculation::onAverageClicked() {
+	//running
+	if (m_CalculationThread->isRunning())
+	{
+		QMessageBox::warning(NULL, tr("warnning"), tr("Calculate is running."));
+		return;
+	}
+	m_CalculationThread->setRunMode(emRunMode_Avg);
+	m_CalculationThread->setPostInsFilePath(ui.post_ins_filepath_edt->text());
+	m_CalculationThread->setGnssposvelFilePath(ui.gnssposvel_filepath_edt->text());
+	m_CalculationThread->setPostMovbsFilePath(ui.post_movbs_filepath_edt->text());
+	m_CalculationThread->start();
+	setProcessOperable(false);
 }
 
 void MountAngleCalculation::onTimeSlicesChanged(const QString & time_str) {
@@ -867,7 +798,7 @@ void MountAngleCalculation::onTimeSlicesChanged(const QString & time_str) {
 	}
 }
 
-void MountAngleCalculation::onProcess(int present, int msecs)
+void MountAngleCalculation::onDecodingProcess(int present, int msecs)
 {
 	ui.progressBar->setValue(present);
 	double dProgress = ui.progressBar->value() * 100.0 / ui.progressBar->maximum();
@@ -876,55 +807,52 @@ void MountAngleCalculation::onProcess(int present, int msecs)
 	ui.time_lb->setText(m_TimeShow.addMSecs(msecs).toString("hh:mm:ss:zzz"));
 }
 
-void MountAngleCalculation::onDecodeFinished()
+void MountAngleCalculation::onSaveJsonClicked()
 {
-	m_ProcessFilePath = m_SimpleDecodeThread->getOutBaseName() + "_process";
-	QString Gnss_Csv_Path;
-	QString GnssPosVel_Txt_Path;
-	QString Movbs_Txt_Path;
-	if (ui.fileformat_cmb->currentIndex() == emDecodeFormat_Ins401){
-		Gnss_Csv_Path = m_SimpleDecodeThread->getOutBaseName() + "_gnss.csv";
+	QString user_file_path = ui.filepath_edt->text();
+	QFileInfo file_info(user_file_path);
+	if (!file_info.isFile()) {
+		QMessageBox::warning(NULL, tr("warnning"), tr("Please select a file to calculate."));
+		return;
 	}
-	else if (ui.fileformat_cmb->currentIndex() == emDecodeFormat_RTK330LA) {
-		Gnss_Csv_Path = m_SimpleDecodeThread->getOutBaseName() + "_gN.csv";
-	}	
-	GnssPosVel_Txt_Path = m_SimpleDecodeThread->getOutBaseName() + "_gnssposvel.txt";
-	Movbs_Txt_Path = m_SimpleDecodeThread->getOutBaseName() + "_movbs.txt";
-	ui.process_filepath_edt->setText(m_ProcessFilePath);
-	ui.gnss_filepath_edt->setText(Gnss_Csv_Path);
-	ui.gnssposvel_filepath_edt->setText(GnssPosVel_Txt_Path);
-	ui.movbs_filepath_edt->setText(Movbs_Txt_Path);	
-	setOperable(true);
+	QString file_dir = file_info.absoluteDir().absolutePath();
+	QString new_json_file_path = file_dir + QDir::separator() + "openins.json";
+	new_json_file_path = QFileDialog::getSaveFileName(this,
+		tr("Save Config"),
+		new_json_file_path,
+		tr("Config Files (*.json)"));
+	if (!new_json_file_path.isNull())
+	{
+		SaveNewJsonFile("./temporary.json");
+		CalculationCall::call_json_translate(new_json_file_path);
+	}
 }
 
-
-void MountAngleCalculation::onSplitFinished()
+void MountAngleCalculation::onClearAll()
 {
+	m_DecodeImuFilePath = "";
+	m_DecodeOdoFilePath = "";
+	m_DecodeInsFilePath = "";
+
+	ui.base_filepath_edt->clear();
+	ui.rover2_filepath_edt->clear();
+	ui.rover1_filepath_edt->clear();
+
+	ui.gnssposvel_filepath_edt->clear();
+	ui.movbs_filepath_edt->clear();
+	ui.process_filepath_edt->clear();
+
+	ui.post_ins_filepath_edt->clear();
+	ui.post_movbs_filepath_edt->clear();
+
 	ui.time_slices_comb->clear();
-	std::vector<stTimeSlice>& time_slices = m_LoadInsTextFileThread->get_time_slices();
-	for (int i = 0; i < time_slices.size(); i++) {
-		QString time_str = QString::asprintf("%d:%d:%d:%d", time_slices[i].week, time_slices[i].starttime / 1000, time_slices[i].endtime / 1000,time_slices[i].during / 1000);
-		ui.time_slices_comb->addItem(time_str);
-	}
-	setSplitOperable(true);
-	//输出切割文件
-	QFileInfo result_file(m_InsResultFilePath);
-	if (!result_file.isFile()) return;
-	QString basename = result_file.completeBaseName();
-	QString absoluteDir = result_file.absoluteDir().absolutePath();
-	QString file_name = absoluteDir + "/" + basename + "_split_time.txt";
-	QFile file(file_name);
-	if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-		for (int i = 0; i < time_slices.size(); i++) {
-			file.write(QString::asprintf(
-				"%d,%8d,%8d,%3d,"
-				"%9.3f,%9.3f,%2d,"
-				"%9.3f,%9.3f,%9.3f,%9.3f\n",
-				time_slices[i].week, time_slices[i].starttime / 1000, time_slices[i].endtime / 1000, time_slices[i].during / 1000,
-				time_slices[i].distance, time_slices[i].speed_distance, time_slices[i].used_in_roll,
-				time_slices[i].start_heading, time_slices[i].end_heading,time_slices[i].last_heading, time_slices[i].angle_diff).toLocal8Bit());
-		}
-		file.close();
-	}
+	m_LoadInsTextFileThread->init();
+	ui.week_edt->clear();
+	ui.starttime_edt->clear();
+	ui.endtime_edt->clear();
+
+	ui.offset_edt->clear();
+	ui.dua_ant_edt->clear();
+	ui.result_edt->clear();
 
 }

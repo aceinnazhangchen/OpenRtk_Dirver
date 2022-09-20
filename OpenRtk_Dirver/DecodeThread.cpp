@@ -18,6 +18,7 @@ DecodeThread::DecodeThread(QObject *parent)
 	, m_FileFormat(emDecodeFormat_OpenRTK330LI)
 	, ins_kml_frequency(1000)
 {
+	m_use_short_name = false;
 	m_static_point_ecp = true;
 	ins401_decoder = new Ins401_Tool::Ins401_decoder();
 	rtk330la_decoder = new RTK330LA_Tool::Rtk330la_decoder();
@@ -129,17 +130,33 @@ void DecodeThread::setMIFileSwitch(bool write)
 	ins401_decoder->set_MI_file_switch(write);
 }
 
+void DecodeThread::setUseShortName(bool useshort)
+{
+	m_use_short_name = useshort;
+}
+
 void DecodeThread::makeOutPath(QString filename)
 {
 	QFileInfo outDir(filename);
 	if (outDir.isFile()) {
 		QString basename = outDir.completeBaseName();
 		QString absoluteDir = outDir.absoluteDir().absolutePath();
-		QDir outPath = absoluteDir + QDir::separator() + basename + "_d";
+		QDir outPath;
+		if (m_use_short_name) {
+			outPath = absoluteDir + QDir::separator() + "user" + "_d";
+		}
+		else {
+			outPath = absoluteDir + QDir::separator() + basename + "_d";
+		}
 		if (!outPath.exists()) {
 			outPath.mkpath(outPath.absolutePath());
 		}
-		m_OutBaseName = outPath.absolutePath() + QDir::separator() + basename;
+		if (m_use_short_name) {
+			m_OutBaseName = outPath.absolutePath() + QDir::separator() + "user";
+		}
+		else {
+			m_OutBaseName = outPath.absolutePath() + QDir::separator() + basename;
+		}
 	}
 }
 

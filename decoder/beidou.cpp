@@ -197,7 +197,7 @@ namespace beidou_Tool {
 		case 0:
 		{
 			if (fnmea == NULL) {
-				sprintf(file_name, "%s-nmea", base_beidou_file_name);
+				sprintf(file_name, "%s_nmea", base_beidou_file_name);
 				fnmea = fopen(file_name, "w");
 			}
 			if (fnmea) fprintf(fnmea, log);
@@ -264,7 +264,7 @@ namespace beidou_Tool {
 		case beidou_OUT_SCALED1:
 		{
 			if (f_imu == NULL) {
-				sprintf(file_name, "%s-imu.txt", base_beidou_file_name);
+				sprintf(file_name, "%s_imu.txt", base_beidou_file_name);
 				f_imu = fopen(file_name, "w");
 			}
 			if (f_imu) fprintf(f_imu, log);
@@ -273,7 +273,7 @@ namespace beidou_Tool {
 		case beidou_OUT_GNSS:
 		{
 			if (f_gnssposvel == NULL) {
-				sprintf(file_name, "%s-gnssposvel.txt", base_beidou_file_name);
+				sprintf(file_name, "%s_gnssposvel.txt", base_beidou_file_name);
 				f_gnssposvel = fopen(file_name, "w");
 			}
 			if (f_gnssposvel) fprintf(f_gnssposvel, log);
@@ -282,7 +282,7 @@ namespace beidou_Tool {
 		case beidou_OUT_INSPVA:
 		{
 			if (f_ins == NULL) {
-				sprintf(file_name, "%s-ins.txt", base_beidou_file_name);
+				sprintf(file_name, "%s_ins.txt", base_beidou_file_name);
 				f_ins = fopen(file_name, "w");
 				if (f_ins) fprintf(f_ins, 
 					"GPS_Week(),GPS_TimeOfWeek(s)"
@@ -297,7 +297,7 @@ namespace beidou_Tool {
 		case beidou_OUT_ODO:
 		{
 			if (f_odo == NULL) {
-				sprintf(file_name, "%s-odo.txt", base_beidou_file_name);
+				sprintf(file_name, "%s_odo.txt", base_beidou_file_name);
 				f_odo = fopen(file_name, "w");
 			}
 			if (f_odo) fprintf(f_odo, log);
@@ -306,7 +306,7 @@ namespace beidou_Tool {
 		case beidou_OUT_HEADING:
 		{
 			if (f_heading == NULL) {
-				sprintf(file_name, "%s-heading.txt", base_beidou_file_name);
+				sprintf(file_name, "%s_heading.txt", base_beidou_file_name);
 				f_heading = fopen(file_name, "w");
 			}
 			if (f_heading) fprintf(f_heading, log);
@@ -319,7 +319,7 @@ namespace beidou_Tool {
 		if (strlen(base_beidou_file_name) == 0) return;
 		char file_name[256] = { 0 };
 		if (f_process == NULL) {
-			sprintf(file_name, "%s-process", base_beidou_file_name);
+			sprintf(file_name, "%s_process", base_beidou_file_name);
 			f_process = fopen(file_name, "w");
 		}
 		switch (index)
@@ -407,7 +407,7 @@ namespace beidou_Tool {
 			beidou_pak_s1.accel_g[0], beidou_pak_s1.accel_g[1], beidou_pak_s1.accel_g[2], beidou_pak_s1.rate_dps[0], beidou_pak_s1.rate_dps[1], beidou_pak_s1.rate_dps[2]);
 		write_beidou_log_file(beidou_raw.ntype, beidou_output_msg);
 		
-		sprintf(beidou_output_process, "%d,%11.4f,   %14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", beidou_pak_s1.week, beidou_pak_s1.timeOfWeek,
+		sprintf(beidou_output_process, "%d,%11.4f,   ,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", beidou_pak_s1.week, beidou_pak_s1.timeOfWeek,
 			beidou_pak_s1.accel_g[0], beidou_pak_s1.accel_g[1], beidou_pak_s1.accel_g[2], beidou_pak_s1.rate_dps[0], beidou_pak_s1.rate_dps[1], beidou_pak_s1.rate_dps[2]);
 		////txt
 		//sprintf(beidou_output_msg, "%d,%11.4f,    ,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n", beidou_pak_s1.GPS_Week, beidou_pak_s1.GPS_TimeOfWeek,

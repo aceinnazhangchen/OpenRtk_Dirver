@@ -1,0 +1,23 @@
+{
+  "name": "aceinna-decoder",
+  "version": "0.0.17",
+  "description": "Node.js Addons - aceinna decoder",
+  "main": "index.js",
+  "private": false,
+  "gypfile": true,
+  "scripts": {
+    "configure":"node-gyp configure",
+    "rebuild": "node-gyp rebuild",
+    "install": "npm run configure && npm run rebuild",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "bindings": "*",
+    "node-addon-api": "*",
+    "ref-napi": "^3.0.3",
+    "ref-struct-di": "^1.1.1"
+  },
+  "devDependencies": {
+    "node-gyp": "^9.1.0"
+  }
+}
