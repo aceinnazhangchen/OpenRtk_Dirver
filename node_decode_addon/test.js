@@ -41,13 +41,14 @@ function calc_heading(file_name){
     console.log(heading)
 }
 
-const ins401_filename = "F:\\data\\user_2022_08_30_11_13_29.bin"
+const ins401_filename = "F:\\data\\2022\\435_20220922_134101\\ins401_log_2209000435_20220922_134101\\user_2022_09_22_13_41_05.bin"
+const ins401_porcess_ins = "F:\\data\\2022\\435_20220922_134101\\ins401_log_2209000435_20220922_134101\\user_2022_09_22_13_41_05_d\\user_2022_09_22_13_41_05_process_ins.txt"
 
 function test_file_ins401(){
     emitter.SetExePath("F:\\OpenRtk_Dirver\\node_decode_addon\\");
     emitter.InitIns401();
     emitter.StartStep(1);
-    emitter.SetMinDistanceLimit(150);
+    emitter.SetMinDistanceLimit(200);
     const reader = fs.createReadStream(ins401_filename, {
         highWaterMark: 100
       });
@@ -59,9 +60,9 @@ function test_file_ins401(){
     reader.on('close', () => {
         console.log('user.bin close');
         emitter.EndStep();
-        DecodeIns401(ins401_filename);
+        // DecodeIns401(ins401_filename);
         // calc_roll(ins401_ins_txt);
-        // calc_heading(ins401_porcess_ins);
+        calc_heading(ins401_porcess_ins);
     });
 }
 

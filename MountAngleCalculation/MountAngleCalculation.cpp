@@ -57,6 +57,7 @@ MountAngleCalculation::~MountAngleCalculation()
 	}	
 	delete m_SimpleDecodeThread;
 	delete m_LoadInsTextFileThread;
+	delete m_CalculationThread;
 }
 
 void MountAngleCalculation::dragEnterEvent(QDragEnterEvent * event)

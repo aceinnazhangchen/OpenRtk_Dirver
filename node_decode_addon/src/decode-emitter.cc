@@ -1,10 +1,12 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <string.h>
 #include "decode_interface.h"
 #include "decode-emitter.h"
 #include "common_func.h"
 #include "common.h"
+
 
 #define MI_OUTPUT_FILE
 
@@ -388,7 +390,7 @@ void findNumStr(char*dst, char* src,int len){
   }
 }
 
-void readAngleFromFile(const char* file_path,stAngle& angle)
+int readAngleFromFile(const char* file_path,stAngle& angle)
 {
 	FILE* f_out = fopen(file_path, "r");
 	if (f_out) {
@@ -413,7 +415,9 @@ void readAngleFromFile(const char* file_path,stAngle& angle)
 			}
 		}
 		fclose(f_out);
+    return 0;
 	}
+  return 1;
 }
 
 Napi::Value decodeEmitter::CalcPitchHeading(const Napi::CallbackInfo& info)
@@ -425,8 +429,11 @@ Napi::Value decodeEmitter::CalcPitchHeading(const Napi::CallbackInfo& info)
       return info.Env().Undefined();
   }
   char file_name[1024] = {0};
+  char file_dir[1024] = {0};
   std::string filename = info[0].As<Napi::String>().ToString();
   strcpy(file_name,filename.c_str());
+  char* p = strrchr(file_name,'\\');
+  strncpy(file_dir,file_name,p-file_name);
 
   std::vector<stTimeSlice>& time_slices = m_SplitByTime->get_time_slices();
   for(int i = 0; i < time_slices.size();i++){
@@ -434,13 +441,22 @@ Napi::Value decodeEmitter::CalcPitchHeading(const Napi::CallbackInfo& info)
     int  end_time = time_slices[i].endtime/1000;
     int week = time_slices[i].week;
     char cmd[1024] = {0};
+    char outprefix[1024] = {0};
+    char resultfilePath[1024] = {0};
     std::string exefilePath = m_ExePath + "\\solveMisalign.exe";
-    std::string outprefix =  m_ExePath + "\\result";
-    sprintf(cmd,"%s -t \"%s\" -o \"%s\"  -rng %d %d %d", exefilePath.c_str(), file_name, outprefix.c_str(), start_time, end_time, week);
+    sprintf(outprefix,"%s\\misalign_%d-%d",file_dir,start_time,end_time);
+    sprintf(cmd,"%s -t \"%s\" -o \"%s\"  -rng %d %d %d", exefilePath.c_str(), file_name, outprefix, start_time, end_time, week);
     system(cmd);
-    std::string resultfilePath = m_ExePath + "\\result_content_misalign.txt";
+    sprintf(resultfilePath,"%s%s",outprefix,"_content_misalign.txt");
     stAngle angle = { 0 };
-    readAngleFromFile(resultfilePath.c_str(),angle);    
+    int try_count = 0;
+    while(readAngleFromFile(resultfilePath,angle)){
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      try_count++;
+      if(try_count >= 10){
+        break;
+      }
+    }
     angle_list.push_back(angle);
   }
   //calculate average angle
