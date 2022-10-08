@@ -27,6 +27,7 @@ Napi::Object decodeEmitter::Init(Napi::Env env, Napi::Object exports) {
                   InstanceMethod("InitRtk330la", &decodeEmitter::InitRtk330la),
                   InstanceMethod("InputRtk330laBuffer", &decodeEmitter::InputRtk330laBuffer),
                   InstanceMethod("DecodeRtk330la", &decodeEmitter::DecodeRtk330la),
+                  InstanceMethod("SplitPostInsByTime", &decodeEmitter::SplitPostInsByTime),
                   InstanceMethod("CalcRoll", &decodeEmitter::CalcRoll),
                   InstanceMethod("CalcPitchHeading", &decodeEmitter::CalcPitchHeading)});
 
@@ -349,6 +350,50 @@ void readRollFromIns(FILE* f_ins,std::vector<stTimeSlice>& time_slices,std::vect
 			}
 		}
 	}
+}
+
+Napi::Value decodeEmitter::SplitPostInsByTime(const Napi::CallbackInfo& info)
+{
+  Napi::Env env = info.Env();
+  if (!info[0].IsString()) 
+  {
+      Napi::Error::New(info.Env(), "Expected an Buffer").ThrowAsJavaScriptException();
+      return info.Env().Undefined();
+  }
+  char file_name[1024] = {0};
+  string filename = info[0].As<Napi::String>().ToString();
+  strcpy(file_name,filename.c_str());
+  FILE* f_post_ins = fopen(filename.c_str(), "r");
+  char delim[] = ",";//分隔符字符串
+  char line[512] = {0};
+  if(f_post_ins){
+    m_SplitByTime->init();
+    while(fgets(line,512,f_post_ins) != NULL){
+      // while(line[strlen(line)-1] == '\n' || line[strlen(line)-1] == '\r'){
+      //   line[strlen(line)-1] == 0;
+      // }
+      double value_list[23] = { 0 };
+      split2double(line,delim,value_list,23);
+      ins_sol_data ins_data = { 0 };
+      ins_data.gps_week = (uint16_t)value_list[0];
+      ins_data.gps_millisecs = (uint32_t)(value_list[1]*1000);
+      ins_data.ins_status = (uint8_t)value_list[19];
+      ins_data.ins_position_type = (uint8_t)value_list[20];
+      ins_data.latitude = value_list[2];
+      ins_data.longitude = value_list[3];
+      ins_data.height = value_list[4];
+      ins_data.north_velocity = value_list[5];
+      ins_data.east_velocity = value_list[6];
+      ins_data.up_velocity = value_list[7];
+      ins_data.roll = value_list[8];
+      ins_data.pitch = value_list[9];
+      ins_data.heading = value_list[10];
+      m_SplitByTime->input_sol_data(ins_data);
+    }
+    m_SplitByTime->finish();
+    fclose(f_post_ins);
+  }
+  return Napi::String::New(env, "OK");
 }
 
 Napi::Value decodeEmitter::CalcRoll(const Napi::CallbackInfo& info)

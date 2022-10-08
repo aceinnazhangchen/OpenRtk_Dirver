@@ -106,6 +106,11 @@ class DecoderEmitter extends EventEmitter {
         this.emitter.DecodeRtk330la(filename);
     } 
 
+    SplitPostInsByTime(filename){
+        console.log("SplitPostInsByTime:",filename);
+        this.emitter.SplitPostInsByTime(filename);
+    }
+
     CalcPitchHeading(process_ins_txt){
         var result = this.emitter.CalcPitchHeading(process_ins_txt);
         var angle = new Angle_t(result)

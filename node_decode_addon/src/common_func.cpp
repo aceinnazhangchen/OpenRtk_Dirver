@@ -17,3 +17,13 @@ vector<string> split(const string& s, const string& sep)
         v.push_back(s.substr(pos1));
     return v;
 }
+
+void split2double(char* string,char* delim,double* value_array,size_t array_len) {
+	size_t i = 0;
+	char* p = strtok(string, delim);
+	while (p != NULL && i < array_len) {//当返回值不为NULL时，继续循环
+		value_array[i] = atof(p);
+		p = strtok(NULL, delim);//继续调用strtok，分解剩下的字符串
+		i++;
+	}
+}

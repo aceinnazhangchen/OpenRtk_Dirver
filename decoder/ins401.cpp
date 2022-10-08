@@ -727,15 +727,27 @@ namespace Ins401_Tool {
 
 	void Ins401_decoder::output_system_fault_detection()
 	{
-		std::string title = "err_out_pin(),rf_err_pin(),ant_err_pin(),handshake_flag(),reset_pin()\n";
+		std::string title = 
+			"week,tow,adc_voltin,adc_core,adc_vdd,adc_gnd,"
+			"err_out_pin(),rf_err_pin(),ant_err_pin(),handshake_flag(),reset_pin()\n";
 		FILE* f_fd = get_file("fd.csv", title);
 		if (f_fd) {
-			fprintf(f_fd, "%d,%d,%d,%d,%d\n",
-				system_fault_detection.gnss_err_out_pin,
-				system_fault_detection.gnss_rf_err_pin,
-				system_fault_detection.gnss_ant_err_pin,
-				system_fault_detection.gnss_handshake_flag,
-				system_fault_detection.gnss_reset_pin);
+			fprintf(f_fd, 
+				"%d,%11.4f,"
+				"%6.3f,%6.3f,%6.3f,%6.3f,"
+				"%d,%d,%d,%d,%d,%d\n",
+				system_fault_detection.gps_week,
+				(double)system_fault_detection.gps_millisecs / 1000.0,
+				(double)system_fault_detection.adc_voltin / 4096.0*3.3 * 2,
+				(double)system_fault_detection.adc_core / 4096.0*3.3,
+				(double)system_fault_detection.adc_vdd / 4096.0*3.3 * 11,
+				(double)system_fault_detection.adc_gnd / 4096.0*3.3,
+				system_fault_detection.status.gnss_err_out_pin,
+				system_fault_detection.status.gnss_rf_err_pin,
+				system_fault_detection.status.gnss_ant_err_pin,
+				system_fault_detection.status.gnss_handshake_flag,
+				system_fault_detection.status.gnss_reset_pin,
+				system_fault_detection.ttff);
 		}
 	}
 
@@ -1006,7 +1018,7 @@ namespace Ins401_Tool {
 		case em_PACKAGE_FD:
 		{
 			size_t packet_size = sizeof(system_fault_detection_t);
-			if (raw.length == packet_size) {
+			if (raw.length == packet_size || raw.length == sizeof(system_fault_detection_t_20220930)) {
 				memcpy(&system_fault_detection, payload, packet_size);
 				if (!m_isOutputFile) break;
 				output_system_fault_detection();

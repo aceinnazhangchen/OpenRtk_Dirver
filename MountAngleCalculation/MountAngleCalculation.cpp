@@ -279,6 +279,15 @@ void MountAngleCalculation::SaveJsonFile()
 	configJson["rovfileName"] = ui.rover1_filepath_edt->text();
 	configJson["rov2fileName"] = ui.rover2_filepath_edt->text();
 	configJson["reffileName"] = ui.base_filepath_edt->text();
+
+	if (ui.rover2_filepath_edt->text().isEmpty()) {
+		configJson["procType"] = 0;
+		configJson["profiletype"] = 127;
+	}
+	else {
+		configJson["procType"] = 8;
+		configJson["profiletype"] = 1736;
+	}
 	//priLeverArm
 	QJsonArray priLeverArm;
 	for (int i = 0; i < DIMENSION; i++) {
