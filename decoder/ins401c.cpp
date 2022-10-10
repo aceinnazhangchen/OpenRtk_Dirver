@@ -121,13 +121,13 @@ namespace ins401c_Tool {
         to->GYRO_Z = ((raw * 0.0076293) + (-250));
         raw  = ((uint32_t)((bytes[12]))) << 8;    //< 8 bit(s) from B103
         raw |= ((uint32_t)((bytes[13])));    //< 8 bit(s) from B111
-        to->INS_PitchAngle = ((raw * 0.010986) + (-250));
+        to->INS_PitchAngle = ((raw * 0.0054932479) + (0));
         raw  = ((uint32_t)((bytes[14]))) << 8;    //< 8 bit(s) from B119
         raw |= ((uint32_t)((bytes[15])));    //< 8 bit(s) from B127
-        to->INS_RollAngle = ((raw * 0.010986) + (-250));
+        to->INS_RollAngle = ((raw * 0.0054932479) + (0));
         raw  = ((uint32_t)((bytes[16]))) << 8;    //< 8 bit(s) from B135
         raw |= ((uint32_t)((bytes[17])));    //< 8 bit(s) from B143
-        to->INS_HeadingAngle = ((raw * 0.010986) + (-250));
+        to->INS_HeadingAngle = ((raw * 0.0054932479) + (0));
         raw  = ((uint32_t)((bytes[18]))) << 24;    //< 8 bit(s) from B87
         raw |= ((uint32_t)((bytes[19]))) << 16;    //< 8 bit(s) from B95
         raw |= ((uint32_t)((bytes[20]))) << 8;    //< 8 bit(s) from B103
@@ -379,13 +379,13 @@ namespace ins401c_Tool {
 
         raw  = ((uint32_t)((bytes[0]))) << 8;    //< 8 bit(s) from B7
         raw |= ((uint32_t)((bytes[1])));    //< 8 bit(s) from B15
-        to->INS_PitchAngle = ((raw * 0.010986) + (-250));
+        to->INS_PitchAngle = ((raw * 0.0054932479) + (0));
         raw  = ((uint32_t)((bytes[2]))) << 8;    //< 8 bit(s) from B23
         raw |= ((uint32_t)((bytes[3])));    //< 8 bit(s) from B31
-        to->INS_RollAngle = ((raw * 0.010986) + (-250));
+        to->INS_RollAngle = ((raw * 0.0054932479) + (0));
         raw  = ((uint32_t)((bytes[4]))) << 8;    //< 8 bit(s) from B39
         raw |= ((uint32_t)((bytes[5])));    //< 8 bit(s) from B47
-        to->INS_HeadingAngle = ((raw * 0.010986) + (-250));
+        to->INS_HeadingAngle = ((raw * 0.0054932479) + (0));
 
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
         // printf("INS_PitchAngle:%0.2f\n", to->INS_PitchAngle);
