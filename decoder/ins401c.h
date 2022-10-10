@@ -73,6 +73,61 @@ namespace ins401c_Tool {
         dbc_mia_info_t mia_info;
     } INSPVAX_t;
 
+
+    /*
+    * Message: Gnss_Message from 'Vector__XXX* DLC: 64 byte(s), MID: 385
+    */
+    typedef struct {
+    //Comment:comment//< B8:16  Min: 0 Max: 65535   Unit: GpsWeekNum   Destination: Vector__XXX
+        uint16_t Gnss_Gps_Week;                  
+    //Comment:comment//< B40:32  Min: 0 Max: 4294967295   Unit: MillisecondsIntoWeek   Destination: Vector__XXX
+        uint32_t Gnss_Gps_Milliseconds;          
+    //Comment:comment//< B72:32  Min: 0 Max: 4294967295   Unit: hhmmss   Destination: Vector__XXX
+        uint32_t Gnss_UTC;                       
+    //Comment:comment//< B80:8  Min: 0 Max: 255   Unit: s   Destination: Vector__XXX
+        uint8_t Gnss_Leap_Second;                
+    //Comment:comment//< B112:32  Min: 0 Max: 4294967295   Unit: ms   Destination: Vector__XXX
+        uint32_t Gnss_MCU_Time_Stamp;            
+    //Comment:comment//< B120:8  Min: 0 Max: 255   Unit:    Destination: Vector__XXX
+        uint8_t Gnss_Position_Type;              
+    //Comment:comment//< B128:8  Min: 0 Max: 255   Unit: count   Destination: Vector__XXX
+        uint8_t Gnss_NumberOfSVs;                
+    //Comment:comment//< B144:16  Min: 0 Max: 99.9999941235   Unit:    Destination: Vector__XXX
+        float Gnss_Hdop;                         
+    //Comment:comment//< B160:16  Min: 0 Max: 119.9998278   Unit: m/s   Destination: Vector__XXX
+        float Gnss_Speed_Over_Ground;            
+    //Comment:comment//< B176:16  Min: 0 Max: 6553.5   Unit: deg   Destination: Vector__XXX
+        float Gnss_GPS_Course;                   
+    //Comment:comment//< B208:32  Min: -180 Max: 249.4967295   Unit: deg   Destination: Vector__XXX
+        float Gnss_Latitude;                   
+    //Comment:comment//< B240:32  Min: -180 Max: 249.4967295   Unit: deg   Destination: Vector__XXX
+        float Gnss_Longitude;                  
+    //Comment:comment//< B272:32  Min: -10000 Max: 4284967.295   Unit: m   Destination: Vector__XXX
+        float Gnss_Height;                       
+
+        dbc_mia_info_t mia_info;
+    } Gnss_Message_t;
+
+    /*
+    * Message: Diagnostic_Message from 'Vector__XXX* DLC: 64 byte(s), MID: 642
+    */
+    typedef struct {
+    //Comment:comment//< B8:16  Min: 0 Max: 65535   Unit: GpsWeekNum   Destination: Vector__XXX
+        uint16_t Gnss_Gps_Week;                  
+    //Comment:comment//< B40:32  Min: 0 Max: 4294967295   Unit: MillisecondsIntoWeek   Destination: Vector__XXX
+        uint32_t Gnss_Gps_Milliseconds;          
+    //Comment:comment//< B72:32  Min: 0 Max: 4294967295   Unit:    Destination: Vector__XXX
+        uint32_t Diagnostic_Device_Status_Bit;   
+    //Comment:comment//< B88:16  Min: -100 Max: 555.35   Unit: ??   Destination: Vector__XXX
+        float Diagnostic_IMU_Temperature;        
+    //Comment:comment//< B104:16  Min: -100 Max: 555.35   Unit: ??   Destination: Vector__XXX
+        float Diagnostic_MCU_Temperature;        
+    //Comment:comment//< B120:16  Min: -100 Max: 555.35   Unit: ??   Destination: Vector__XXX
+        float Diagnostic_STA_Temperature;        
+
+        dbc_mia_info_t mia_info;
+    } Diagnostic_Message_t;
+
     /*
     * Message: INS_ACC from 'Vector__XXX* DLC: 6 byte(s), MID: 384
     */
@@ -245,12 +300,16 @@ namespace ins401c_Tool {
 
     /* CAN message decode extern function */
     bool dbc_decode_INSPVAX(uint8_t *pstu, const uint8_t *bytes);
+    bool dbc_decode_Gnss_Message(uint8_t *pstu, const uint8_t *bytes);
+    bool dbc_decode_Diagnostic_Message(uint8_t *pstu, const uint8_t *bytes);
 
     void set_base_ins401c_file_name(char* file_name);
     int input_ins401c_line(uint8_t* data);
     void write_ins401c_log_file(char* log);
     void write_ins401c_imu_file(char* log);
     void write_ins401c_ins_file(char* log);
+    void write_ins401c_gnss_file(char* log);
+	void write_ins401c_diagnostic_file(char* log);
 
     bool dbc_decode_INS_ACC(uint8_t *pstu, const uint8_t *bytes);    
     bool dbc_decode_INS_GYRO(uint8_t *pstu, const uint8_t *bytes);
