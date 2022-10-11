@@ -25,8 +25,10 @@ namespace ins401c_Tool {
     static char ins401c_output_msg_diagnostic[1024] = { 0 };
     static can_imu_t imu_mess = {0};
     static can_ins_t ins_mess = {0};
+    static can_gnss_t gnss_mess = {0};
     FILE* f_ins_txt = NULL;
     kml_ins_t ins_kml;
+    kml_gnss_t gnss_kml;
 
     static const dbc_msg_hdr_t list_canfd_dbc_msgs[] = {
         {0x180, 53,           dbc_decode_INSPVAX},
@@ -49,6 +51,7 @@ namespace ins401c_Tool {
 	extern void init_ins401c_data() {
 		memset(&imu_mess, 0, sizeof(imu_mess));
 		memset(&ins_mess, 0, sizeof(ins_mess));
+        memset(&gnss_mess, 0, sizeof(gnss_mess));
 		Kml_Generator::Instance()->init();
 	}
 
@@ -83,6 +86,21 @@ namespace ins401c_Tool {
 		ins_kml.heading = ins_mess.heading;
 		Kml_Generator::Instance()->append_ins(ins_kml);
 	}
+
+	void append_gnss_kml()
+	{
+		gnss_kml.gps_week = gnss_mess.gps_week;
+		gnss_kml.gps_secs = (double)gnss_mess.gps_millisecs / 1000.0;
+		gnss_kml.position_type = gnss_mess.position_type;
+		gnss_kml.latitude = gnss_mess.latitude;
+		gnss_kml.longitude = gnss_mess.longitude;
+		gnss_kml.height = gnss_mess.height;
+		gnss_kml.north_vel = gnss_mess.north_vel;
+		gnss_kml.east_vel = gnss_mess.east_vel;
+		gnss_kml.up_vel = gnss_mess.up_vel;
+		Kml_Generator::Instance()->append_gnss(gnss_kml);
+	}
+
 
 	void set_base_ins401c_file_name(char* file_name)
 	{
@@ -283,6 +301,8 @@ namespace ins401c_Tool {
         write_ins401c_log_file(ins401c_output_msg_inspva);
         write_ins401c_imu_file(ins401c_output_msg_imu);
         write_ins401c_ins_file(ins401c_output_msg_ins);
+		append_ins_kml();
+
 #if 1
 		if ((uint32_t)(ins_mess.time_of_week) % 100 < 10) {
 			create_file(f_ins_txt, "ins.txt", NULL);
@@ -293,7 +313,6 @@ namespace ins401c_Tool {
 		}
 #endif
 
-        append_ins_kml();
         return success;
     }
 
@@ -367,6 +386,18 @@ namespace ins401c_Tool {
 
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
         write_ins401c_gnss_file(ins401c_output_msg_gnss);
+
+        gnss_mess.gps_week = to->Gnss_Gps_Week;
+        gnss_mess.gps_millisecs = to->Gnss_Gps_Milliseconds;
+        gnss_mess.position_type = to->Gnss_Position_Type;
+        gnss_mess.latitude = to->Gnss_Latitude;
+        gnss_mess.longitude = to->Gnss_Longitude;
+        gnss_mess.height = to->Gnss_Height;
+        gnss_mess.north_vel = 0;
+        gnss_mess.east_vel = 0;
+        gnss_mess.up_vel = 0;
+
+		append_gnss_kml();
         return success;
     }
 
@@ -953,4 +984,5 @@ namespace ins401c_Tool {
 		Kml_Generator::Instance()->write_files();
 		Kml_Generator::Instance()->close_files();
 	}
+
 }
