@@ -34,6 +34,7 @@ namespace Ins401_Tool {
 		last_gnss_integ_millisecs = 0;
 		memset(&raw, 0, sizeof(raw));
 		memset(&imu, 0, sizeof(imu));
+		memset(&cor_imu, 0, sizeof(cor_imu));
 		memset(&gnss, 0, sizeof(gnss));
 		memset(&ins, 0, sizeof(ins));
 		memset(&odo, 0, sizeof(odo));
@@ -58,6 +59,7 @@ namespace Ins401_Tool {
 		all_type_pack_num[em_DIAGNOSTIC_MSG] = 0;
 		all_type_pack_num[em_ROVER_RTCM] = 0;
 		all_type_pack_num[em_MISALIGN] = 0;
+		all_type_pack_num[em_COR_IMU] = 0;
 		all_type_pack_num[em_PowerUpDR_MES] = 0;
 		all_type_pack_num[em_CHECK] = 0;
 		all_type_pack_num[em_GNSS_SOL_INTEGEITY] = 0;
@@ -76,6 +78,7 @@ namespace Ins401_Tool {
 		all_type_file_output[em_DIAGNOSTIC_MSG] = 1;
 		all_type_file_output[em_ROVER_RTCM] = 1;
 		all_type_file_output[em_MISALIGN] = 1;
+		all_type_file_output[em_COR_IMU] = 1;
 		all_type_file_output[em_PowerUpDR_MES] = 1;
 		all_type_file_output[em_CHECK] = 1;
 		all_type_file_output[em_GNSS_SOL_INTEGEITY] = 1;
@@ -198,6 +201,27 @@ namespace Ins401_Tool {
 				, imu.gyro_x, imu.gyro_y, imu.gyro_z);
 		}
 #endif
+	}
+
+	void Ins401_decoder::output_cor_imu_raw()
+	{
+		//csv
+		std::string title =
+			"GPS_Week(),GPS_TimeOfWeek(s)"
+			",x_accel(m/s^2),y_accel(m/s^2),z_accel(m/s^2)"
+			",x_gyro(deg/s),y_gyro(deg/s),z_gyro(deg/s)\n";
+		FILE* f_imu_csv = get_file("cor_imu.csv", title, show_format_time);
+		if (f_imu_csv) {
+			if (show_format_time) {
+				fprintf(f_imu_csv, "%s,", week_2_time_str(cor_imu.gps_week, cor_imu.gps_millisecs));
+			}
+			fprintf(f_imu_csv, "%d,%11.4f"
+				",%14.10f,%14.10f,%14.10f"
+				",%14.10f,%14.10f,%14.10f\n"
+				, cor_imu.gps_week, (double)cor_imu.gps_millisecs / 1000.0
+				, cor_imu.accel_x, cor_imu.accel_y, cor_imu.accel_z
+				, cor_imu.gyro_x, cor_imu.gyro_y, cor_imu.gyro_z);
+	}
 	}
 
 	void Ins401_decoder::MI_output_imu_raw()
@@ -891,6 +915,15 @@ namespace Ins401_Tool {
 #ifdef OUTPUT_INNER_FILE
 				save_novatel_raw_imu();
 #endif
+			}
+		}break;
+		case em_COR_IMU:
+		{
+			size_t packet_size = sizeof(raw_imu_t);
+			if (raw.length == packet_size) {
+				memcpy(&cor_imu, payload, packet_size);
+				if (!m_isOutputFile) break;
+				output_cor_imu_raw();
 			}
 		}break;
 		case em_GNSS_SOL:

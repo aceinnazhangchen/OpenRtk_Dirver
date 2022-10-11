@@ -985,4 +985,14 @@ namespace ins401c_Tool {
 		Kml_Generator::Instance()->close_files();
 	}
 
+	void close_ins401c_all_log_file()
+	{
+		if (fs_canfd) { fclose(fs_canfd); fs_canfd = NULL; }
+		if (fs_imu) { fclose(fs_imu); fs_imu = NULL; }
+		if (fs_ins) { fclose(fs_ins); fs_ins = NULL; }
+		if (f_log) { fclose(f_log); f_log = NULL; }
+		if (fs_gnss) { fclose(fs_gnss); fs_gnss = NULL; }
+		if (fs_dia) { fclose(fs_dia); fs_dia = NULL; }
+	}
+
 }
