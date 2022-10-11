@@ -1,6 +1,6 @@
 {
   "name": "aceinna-decoder",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "Node.js Addons - aceinna decoder",
   "main": "index.js",
   "private": false,

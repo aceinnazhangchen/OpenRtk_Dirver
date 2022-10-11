@@ -34,6 +34,7 @@ namespace Ins401_Tool {
 		last_gnss_integ_millisecs = 0;
 		memset(&raw, 0, sizeof(raw));
 		memset(&imu, 0, sizeof(imu));
+		memset(&cor_imu, 0, sizeof(cor_imu));
 		memset(&gnss, 0, sizeof(gnss));
 		memset(&ins, 0, sizeof(ins));
 		memset(&odo, 0, sizeof(odo));
@@ -58,6 +59,7 @@ namespace Ins401_Tool {
 		all_type_pack_num[em_DIAGNOSTIC_MSG] = 0;
 		all_type_pack_num[em_ROVER_RTCM] = 0;
 		all_type_pack_num[em_MISALIGN] = 0;
+		all_type_pack_num[em_COR_IMU] = 0;
 		all_type_pack_num[em_PowerUpDR_MES] = 0;
 		all_type_pack_num[em_CHECK] = 0;
 		all_type_pack_num[em_GNSS_SOL_INTEGEITY] = 0;
@@ -76,6 +78,7 @@ namespace Ins401_Tool {
 		all_type_file_output[em_DIAGNOSTIC_MSG] = 1;
 		all_type_file_output[em_ROVER_RTCM] = 1;
 		all_type_file_output[em_MISALIGN] = 1;
+		all_type_file_output[em_COR_IMU] = 1;
 		all_type_file_output[em_PowerUpDR_MES] = 1;
 		all_type_file_output[em_CHECK] = 1;
 		all_type_file_output[em_GNSS_SOL_INTEGEITY] = 1;
@@ -198,6 +201,27 @@ namespace Ins401_Tool {
 				, imu.gyro_x, imu.gyro_y, imu.gyro_z);
 		}
 #endif
+	}
+
+	void Ins401_decoder::output_cor_imu_raw()
+	{
+		//csv
+		std::string title =
+			"GPS_Week(),GPS_TimeOfWeek(s)"
+			",x_accel(m/s^2),y_accel(m/s^2),z_accel(m/s^2)"
+			",x_gyro(deg/s),y_gyro(deg/s),z_gyro(deg/s)\n";
+		FILE* f_imu_csv = get_file("cor_imu.csv", title, show_format_time);
+		if (f_imu_csv) {
+			if (show_format_time) {
+				fprintf(f_imu_csv, "%s,", week_2_time_str(cor_imu.gps_week, cor_imu.gps_millisecs));
+			}
+			fprintf(f_imu_csv, "%d,%11.4f"
+				",%14.10f,%14.10f,%14.10f"
+				",%14.10f,%14.10f,%14.10f\n"
+				, cor_imu.gps_week, (double)cor_imu.gps_millisecs / 1000.0
+				, cor_imu.accel_x, cor_imu.accel_y, cor_imu.accel_z
+				, cor_imu.gyro_x, cor_imu.gyro_y, cor_imu.gyro_z);
+	}
 	}
 
 	void Ins401_decoder::MI_output_imu_raw()
@@ -727,15 +751,27 @@ namespace Ins401_Tool {
 
 	void Ins401_decoder::output_system_fault_detection()
 	{
-		std::string title = "err_out_pin(),rf_err_pin(),ant_err_pin(),handshake_flag(),reset_pin()\n";
+		std::string title = 
+			"week,tow,adc_voltin,adc_core,adc_vdd,adc_gnd,"
+			"err_out_pin(),rf_err_pin(),ant_err_pin(),handshake_flag(),reset_pin()\n";
 		FILE* f_fd = get_file("fd.csv", title);
 		if (f_fd) {
-			fprintf(f_fd, "%d,%d,%d,%d,%d\n",
-				system_fault_detection.gnss_err_out_pin,
-				system_fault_detection.gnss_rf_err_pin,
-				system_fault_detection.gnss_ant_err_pin,
-				system_fault_detection.gnss_handshake_flag,
-				system_fault_detection.gnss_reset_pin);
+			fprintf(f_fd, 
+				"%d,%11.4f,"
+				"%6.3f,%6.3f,%6.3f,%6.3f,"
+				"%d,%d,%d,%d,%d,%d\n",
+				system_fault_detection.gps_week,
+				(double)system_fault_detection.gps_millisecs / 1000.0,
+				(double)system_fault_detection.adc_voltin / 4096.0*3.3 * 2,
+				(double)system_fault_detection.adc_core / 4096.0*3.3,
+				(double)system_fault_detection.adc_vdd / 4096.0*3.3 * 11,
+				(double)system_fault_detection.adc_gnd / 4096.0*3.3,
+				system_fault_detection.status.gnss_err_out_pin,
+				system_fault_detection.status.gnss_rf_err_pin,
+				system_fault_detection.status.gnss_ant_err_pin,
+				system_fault_detection.status.gnss_handshake_flag,
+				system_fault_detection.status.gnss_reset_pin,
+				system_fault_detection.ttff);
 		}
 	}
 
@@ -881,6 +917,15 @@ namespace Ins401_Tool {
 #endif
 			}
 		}break;
+		case em_COR_IMU:
+		{
+			size_t packet_size = sizeof(raw_imu_t);
+			if (raw.length == packet_size) {
+				memcpy(&cor_imu, payload, packet_size);
+				if (!m_isOutputFile) break;
+				output_cor_imu_raw();
+			}
+		}break;
 		case em_GNSS_SOL:
 		{
 			size_t packet_size = sizeof(gnss_sol_t);
@@ -1006,7 +1051,7 @@ namespace Ins401_Tool {
 		case em_PACKAGE_FD:
 		{
 			size_t packet_size = sizeof(system_fault_detection_t);
-			if (raw.length == packet_size) {
+			if (raw.length == packet_size || raw.length == sizeof(system_fault_detection_t_20220930)) {
 				memcpy(&system_fault_detection, payload, packet_size);
 				if (!m_isOutputFile) break;
 				output_system_fault_detection();

@@ -1,10 +1,12 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <string.h>
 #include "decode_interface.h"
 #include "decode-emitter.h"
 #include "common_func.h"
 #include "common.h"
+
 
 #define MI_OUTPUT_FILE
 
@@ -25,6 +27,7 @@ Napi::Object decodeEmitter::Init(Napi::Env env, Napi::Object exports) {
                   InstanceMethod("InitRtk330la", &decodeEmitter::InitRtk330la),
                   InstanceMethod("InputRtk330laBuffer", &decodeEmitter::InputRtk330laBuffer),
                   InstanceMethod("DecodeRtk330la", &decodeEmitter::DecodeRtk330la),
+                  InstanceMethod("SplitPostInsByTime", &decodeEmitter::SplitPostInsByTime),
                   InstanceMethod("CalcRoll", &decodeEmitter::CalcRoll),
                   InstanceMethod("CalcPitchHeading", &decodeEmitter::CalcPitchHeading)});
 
@@ -349,6 +352,50 @@ void readRollFromIns(FILE* f_ins,std::vector<stTimeSlice>& time_slices,std::vect
 	}
 }
 
+Napi::Value decodeEmitter::SplitPostInsByTime(const Napi::CallbackInfo& info)
+{
+  Napi::Env env = info.Env();
+  if (!info[0].IsString()) 
+  {
+      Napi::Error::New(info.Env(), "Expected an Buffer").ThrowAsJavaScriptException();
+      return info.Env().Undefined();
+  }
+  char file_name[1024] = {0};
+  string filename = info[0].As<Napi::String>().ToString();
+  strcpy(file_name,filename.c_str());
+  FILE* f_post_ins = fopen(filename.c_str(), "r");
+  char delim[] = ",";//分隔符字符串
+  char line[512] = {0};
+  if(f_post_ins){
+    m_SplitByTime->init();
+    while(fgets(line,512,f_post_ins) != NULL){
+      // while(line[strlen(line)-1] == '\n' || line[strlen(line)-1] == '\r'){
+      //   line[strlen(line)-1] == 0;
+      // }
+      double value_list[23] = { 0 };
+      split2double(line,delim,value_list,23);
+      ins_sol_data ins_data = { 0 };
+      ins_data.gps_week = (uint16_t)value_list[0];
+      ins_data.gps_millisecs = (uint32_t)(value_list[1]*1000);
+      ins_data.ins_status = (uint8_t)value_list[19];
+      ins_data.ins_position_type = (uint8_t)value_list[20];
+      ins_data.latitude = value_list[2];
+      ins_data.longitude = value_list[3];
+      ins_data.height = value_list[4];
+      ins_data.north_velocity = value_list[5];
+      ins_data.east_velocity = value_list[6];
+      ins_data.up_velocity = value_list[7];
+      ins_data.roll = value_list[8];
+      ins_data.pitch = value_list[9];
+      ins_data.heading = value_list[10];
+      m_SplitByTime->input_sol_data(ins_data);
+    }
+    m_SplitByTime->finish();
+    fclose(f_post_ins);
+  }
+  return Napi::String::New(env, "OK");
+}
+
 Napi::Value decodeEmitter::CalcRoll(const Napi::CallbackInfo& info)
 {
   Napi::Env env = info.Env();
@@ -388,7 +435,7 @@ void findNumStr(char*dst, char* src,int len){
   }
 }
 
-void readAngleFromFile(const char* file_path,stAngle& angle)
+int readAngleFromFile(const char* file_path,stAngle& angle)
 {
 	FILE* f_out = fopen(file_path, "r");
 	if (f_out) {
@@ -413,7 +460,9 @@ void readAngleFromFile(const char* file_path,stAngle& angle)
 			}
 		}
 		fclose(f_out);
+    return 0;
 	}
+  return 1;
 }
 
 Napi::Value decodeEmitter::CalcPitchHeading(const Napi::CallbackInfo& info)
@@ -425,8 +474,11 @@ Napi::Value decodeEmitter::CalcPitchHeading(const Napi::CallbackInfo& info)
       return info.Env().Undefined();
   }
   char file_name[1024] = {0};
+  char file_dir[1024] = {0};
   std::string filename = info[0].As<Napi::String>().ToString();
   strcpy(file_name,filename.c_str());
+  char* p = strrchr(file_name,'\\');
+  strncpy(file_dir,file_name,p-file_name);
 
   std::vector<stTimeSlice>& time_slices = m_SplitByTime->get_time_slices();
   for(int i = 0; i < time_slices.size();i++){
@@ -434,13 +486,22 @@ Napi::Value decodeEmitter::CalcPitchHeading(const Napi::CallbackInfo& info)
     int  end_time = time_slices[i].endtime/1000;
     int week = time_slices[i].week;
     char cmd[1024] = {0};
+    char outprefix[1024] = {0};
+    char resultfilePath[1024] = {0};
     std::string exefilePath = m_ExePath + "\\solveMisalign.exe";
-    std::string outprefix =  m_ExePath + "\\result";
-    sprintf(cmd,"%s -t \"%s\" -o \"%s\"  -rng %d %d %d", exefilePath.c_str(), file_name, outprefix.c_str(), start_time, end_time, week);
+    sprintf(outprefix,"%s\\misalign_%d-%d",file_dir,start_time,end_time);
+    sprintf(cmd,"%s -t \"%s\" -o \"%s\"  -rng %d %d %d", exefilePath.c_str(), file_name, outprefix, start_time, end_time, week);
     system(cmd);
-    std::string resultfilePath = m_ExePath + "\\result_content_misalign.txt";
+    sprintf(resultfilePath,"%s%s",outprefix,"_content_misalign.txt");
     stAngle angle = { 0 };
-    readAngleFromFile(resultfilePath.c_str(),angle);    
+    int try_count = 0;
+    while(readAngleFromFile(resultfilePath,angle)){
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      try_count++;
+      if(try_count >= 10){
+        break;
+      }
+    }
     angle_list.push_back(angle);
   }
   //calculate average angle

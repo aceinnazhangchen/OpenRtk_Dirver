@@ -11,7 +11,7 @@ LoadInsTextFileThread::LoadInsTextFileThread(QObject *parent)
 
 LoadInsTextFileThread::~LoadInsTextFileThread()
 {
-	delete m_SplitByTime;
+	if(m_SplitByTime) delete m_SplitByTime;
 }
 
 void LoadInsTextFileThread::init()

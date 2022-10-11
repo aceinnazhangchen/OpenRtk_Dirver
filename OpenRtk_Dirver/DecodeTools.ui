@@ -39,6 +39,11 @@
        </item>
        <item>
         <property name="text">
+         <string>INS401c</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>Mixed_Raw</string>
         </property>
        </item>

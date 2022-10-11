@@ -10,6 +10,7 @@
 #include "mixed_raw.h"
 #include "imu_raw.h"
 #include "beidou.h"
+#include "ins401c.h"
 
 DecodeThread::DecodeThread(QObject *parent)
 	: QThread(parent)
@@ -56,6 +57,9 @@ void DecodeThread::run()
 			break;
 		case emDecodeFormat_Ins401:
 			decode_ins401();
+			break;
+		case emDecodeFormat_Ins401c:
+			decode_ins401c();
 			break;
 		case emDecodeFormat_E2E_Protocol:
 			decode_e2e_protocol();
@@ -363,6 +367,30 @@ void DecodeThread::decode_ins401()
 			//m_Ins401_Analysis->summary();
 			m_StaticAnalysis->summary();
 		}
+		fclose(file);
+	}
+}
+
+void DecodeThread::decode_ins401c()
+{
+	FILE* file = fopen(m_FileName.toLocal8Bit().data(), "rb");
+	if (file) {
+		int ret = 0;
+		int64_t file_size = getFileSize(file);
+		size_t read_size = 0;
+		size_t readcount = 0;
+		uint8_t read_cache[1024] = { 0 };
+		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
+		ins401c_Tool::set_base_ins401c_file_name(m_OutBaseName.toLocal8Bit().data());
+		while (fgets((char*)read_cache, 1024, file)) {
+			readcount = strlen((char*)read_cache);
+			read_size += readcount;
+			ret = ins401c_Tool::input_ins401c_line(read_cache);
+			double percent = (double)read_size / (double)file_size * 10000;
+			emit sgnProgress((int)percent, m_TimeCounter.elapsed());
+		}
+		ins401c_Tool::write_ins401c_kml_files();
+		ins401c_Tool::close_ins401c_all_log_file();
 		fclose(file);
 	}
 }

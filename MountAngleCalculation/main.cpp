@@ -2,7 +2,7 @@
 #include <QtWidgets/QApplication>
 
 #define PROGRAM "MountAngle Calculation"
-#define VERSION "v1.5.1"
+#define VERSION "v1.5.3"
 
 int main(int argc, char *argv[])
 {

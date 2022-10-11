@@ -2,7 +2,7 @@
 #include <QtWidgets/QApplication>
 
 #define PROGRAM "OpenRTK Driver"
-#define VERSION "v1.22.9"
+#define VERSION "v1.22.14"
 
 int main(int argc, char *argv[])
 {
