@@ -145,13 +145,13 @@ namespace ins401c_Tool {
         to->GYRO_Z = ((raw * 0.0076293) + (-250));
         raw  = ((uint32_t)((bytes[12]))) << 8;    //< 8 bit(s) from B103
         raw |= ((uint32_t)((bytes[13])));    //< 8 bit(s) from B111
-        to->INS_PitchAngle = ((raw * 0.010986) + (-360));
+        to->INS_PitchAngle = ((raw * 0.01098649576) + (-360));
         raw  = ((uint32_t)((bytes[14]))) << 8;    //< 8 bit(s) from B119
         raw |= ((uint32_t)((bytes[15])));    //< 8 bit(s) from B127
-        to->INS_RollAngle = ((raw * 0.010986) + (-360));
+        to->INS_RollAngle = ((raw * 0.01098649576) + (-360));
         raw  = ((uint32_t)((bytes[16]))) << 8;    //< 8 bit(s) from B135
         raw |= ((uint32_t)((bytes[17])));    //< 8 bit(s) from B143
-        to->INS_HeadingAngle = ((raw * 0.010986) + (-360));
+        to->INS_HeadingAngle = ((raw * 0.01098649576) + (-360));
         raw  = ((uint32_t)((bytes[18]))) << 24;    //< 8 bit(s) from B87
         raw |= ((uint32_t)((bytes[19]))) << 16;    //< 8 bit(s) from B95
         raw |= ((uint32_t)((bytes[20]))) << 8;    //< 8 bit(s) from B103
@@ -377,9 +377,9 @@ namespace ins401c_Tool {
         raw |= ((uint32_t)((bytes[34])));    //< 8 bit(s) from B279
         to->Gnss_Height = ((raw * 0.001) + (-10000));
 
-        sprintf(ins401c_output_msg_gnss, "%d,%11.4f,%11.4f,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.7f,%11.7f,%11.7f\n",to->Gnss_Gps_Week,\
+        sprintf(ins401c_output_msg_gnss, "%d,%11.4f,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.7f,%11.7f,%11.7f\n",to->Gnss_Gps_Week,\
         (double)(to->Gnss_Gps_Milliseconds)/1000,\
-        (to->Gnss_UTC)/1000, to->Gnss_Leap_Second,\
+        (to->Gnss_UTC), to->Gnss_Leap_Second,\
         to->Gnss_MCU_Time_Stamp, to->Gnss_Position_Type, to->Gnss_NumberOfSVs,\
         to->Gnss_Hdop, to->Gnss_Speed_Over_Ground, to->Gnss_GPS_Course, to->Gnss_Latitude, to->Gnss_Longitude, to->Gnss_Height\
         );
@@ -534,13 +534,13 @@ namespace ins401c_Tool {
 
         raw  = ((uint32_t)((bytes[0]))) << 8;    //< 8 bit(s) from B7
         raw |= ((uint32_t)((bytes[1])));    //< 8 bit(s) from B15
-        to->INS_PitchAngle = ((raw * 0.010986) + (-360));
+        to->INS_PitchAngle = ((raw * 0.01098649576) + (-360));
         raw  = ((uint32_t)((bytes[2]))) << 8;    //< 8 bit(s) from B23
         raw |= ((uint32_t)((bytes[3])));    //< 8 bit(s) from B31
-        to->INS_RollAngle = ((raw * 0.010986) + (-360));
+        to->INS_RollAngle = ((raw * 0.01098649576) + (-360));
         raw  = ((uint32_t)((bytes[4]))) << 8;    //< 8 bit(s) from B39
         raw |= ((uint32_t)((bytes[5])));    //< 8 bit(s) from B47
-        to->INS_HeadingAngle = ((raw * 0.010986) + (-360));
+        to->INS_HeadingAngle = ((raw * 0.01098649576) + (-360));
 
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
         // printf("INS_PitchAngle:%0.2f\n", to->INS_PitchAngle);
@@ -962,7 +962,7 @@ namespace ins401c_Tool {
         if (fs_gnss == NULL) {
             sprintf(file_name, "%s_gnss.csv", base_ins401c_file_name);
             fs_gnss = fopen(file_name, "w");
-            if (fs_gnss) fprintf(fs_gnss, "Gnss_Gps_Week(),Gnss_Gps_Milliseconds(ms),Gnss_UTC(ms)),Gnss_Leap_Second(),Gnss_MCU_Time_Stamp(s),Gnss_Position_Type(),Gnss_NumberOfSVs(),Gnss_Hdop(), Gnss_Speed_Over_Ground(), Gnss_GPS_Course(), Gnss_Latitude(), Gnss_Longitude(), Gnss_Height(ms)\n");
+            if (fs_gnss) fprintf(fs_gnss, "Gnss_Gps_Week(),Gnss_Gps_Milliseconds(ms),Gnss_UTC(hhmmss),Gnss_Leap_Second(),Gnss_MCU_Time_Stamp(s),Gnss_Position_Type(),Gnss_NumberOfSVs(),Gnss_Hdop(), Gnss_Speed_Over_Ground(), Gnss_GPS_Course(), Gnss_Latitude(), Gnss_Longitude(), Gnss_Height(ms)\n");
         }
         if (fs_gnss) fprintf(fs_gnss, log);
 	}
