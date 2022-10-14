@@ -376,12 +376,21 @@ namespace ins401c_Tool {
         raw |= ((uint32_t)((bytes[33]))) << 8;    //< 8 bit(s) from B271
         raw |= ((uint32_t)((bytes[34])));    //< 8 bit(s) from B279
         to->Gnss_Height = ((raw * 0.001) + (-10000));
+        raw  = ((uint32_t)((bytes[35]))) << 8;    //< 8 bit(s) from B287
+        raw |= ((uint32_t)((bytes[36])));    //< 8 bit(s) from B295
+        to->Gnss_Latitude_Std = ((raw * 0.001));
+        raw  = ((uint32_t)((bytes[37]))) << 8;    //< 8 bit(s) from B303
+        raw |= ((uint32_t)((bytes[38])));    //< 8 bit(s) from B311
+        to->Gnss_Longitude_Std = ((raw * 0.001));
+        raw  = ((uint32_t)((bytes[39]))) << 8;    //< 8 bit(s) from B319
+        raw |= ((uint32_t)((bytes[40])));    //< 8 bit(s) from B327
+        to->Gnss_Height_Std = ((raw * 0.001));
 
-        sprintf(ins401c_output_msg_gnss, "%d,%11.4f,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.7f,%11.7f,%11.7f\n",to->Gnss_Gps_Week,\
+        sprintf(ins401c_output_msg_gnss, "%d,%11.4f,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.7f,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f\n",to->Gnss_Gps_Week,\
         (double)(to->Gnss_Gps_Milliseconds)/1000,\
         (to->Gnss_UTC), to->Gnss_Leap_Second,\
         to->Gnss_MCU_Time_Stamp, to->Gnss_Position_Type, to->Gnss_NumberOfSVs,\
-        to->Gnss_Hdop, to->Gnss_Speed_Over_Ground, to->Gnss_GPS_Course, to->Gnss_Latitude, to->Gnss_Longitude, to->Gnss_Height\
+        to->Gnss_Hdop, to->Gnss_Speed_Over_Ground, to->Gnss_GPS_Course, to->Gnss_Latitude, to->Gnss_Longitude, to->Gnss_Height, to->Gnss_Latitude_Std, to->Gnss_Longitude_Std, to->Gnss_Height_Std\
         );
 
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
@@ -393,8 +402,8 @@ namespace ins401c_Tool {
         gnss_mess.latitude = to->Gnss_Latitude;
         gnss_mess.longitude = to->Gnss_Longitude;
         gnss_mess.height = to->Gnss_Height;
-        gnss_mess.north_vel = 0;
-        gnss_mess.east_vel = 0;
+        gnss_mess.north_vel = cos(to->Gnss_GPS_Course * D2R);
+        gnss_mess.east_vel = sin(to->Gnss_GPS_Course * D2R);
         gnss_mess.up_vel = 0;
 
 		append_gnss_kml();
