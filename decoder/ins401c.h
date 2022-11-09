@@ -105,7 +105,12 @@ namespace ins401c_Tool {
         float Gnss_Longitude;                  
     //Comment:comment//< B272:32  Min: -10000 Max: 4284967.295   Unit: m   Destination: Vector__XXX
         float Gnss_Height;                       
-
+    //Comment:comment//< B288:16  Min: 0 Max: 65.535   Unit: m   Destination: Vector__XXX
+        float Gnss_Latitude_Std;                 
+    //Comment:comment//< B304:16  Min: 0 Max: 65.535   Unit: m   Destination: Vector__XXX
+        float Gnss_Longitude_Std;                
+    //Comment:comment//< B320:16  Min: 0 Max: 65.535   Unit: m   Destination: Vector__XXX
+        float Gnss_Height_Std;         
         dbc_mia_info_t mia_info;
     } Gnss_Message_t;
 
