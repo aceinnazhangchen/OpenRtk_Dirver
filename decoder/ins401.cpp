@@ -652,7 +652,7 @@ namespace Ins401_Tool {
 			",solAge()"
 			",masterLon(deg),masterLat(deg), masterHg(m)"
 			",slaveLon(deg),slaveLat(deg),slaveHg(m)"
-			",roll(deg),pitch(deg),heading(deg),geoSep(m)"
+			",roll(deg),pitch(deg),heading(deg),std_heading(deg), geoSep(m)"
 			",masterVelN(m/s),masterVelE(m/s),masterVelU(m/s)"
 			",slaveVelN(m/s),slaveVelE(m/s),slaveVelU(m/s)"
             ",lonStd(),latStd(),hgStd()"
@@ -674,7 +674,7 @@ namespace Ins401_Tool {
             fprintf(f_movbs_csv, "%4.2f,", movbs.solAge);
             fprintf(f_movbs_csv, "%14.9f,%14.9f,%14.9f,", movbs.masterLon, movbs.masterLat, movbs.masterHg);
             fprintf(f_movbs_csv, "%14.9f,%14.9f,%14.9f,", movbs.slaveLon, movbs.slaveLat, movbs.slaveHg);
-            fprintf(f_movbs_csv, "%8.4f,%8.4f,%8.4f,%8.4f,", movbs.roll, movbs.pitch, movbs.heading, movbs.geoSep);
+            fprintf(f_movbs_csv, "%8.4f,%8.4f,%8.4f,%8.4f,%8.4f,", movbs.roll, movbs.pitch, movbs.heading, movbs.std_heading, movbs.geoSep);
             fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.masterVelN, movbs.masterVelE, movbs.masterVelU);
             fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.slaveVelN, movbs.slaveVelE, movbs.slaveVelU);
             fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.lonStd, movbs.latStd, movbs.hgStd);
@@ -1191,7 +1191,7 @@ namespace Ins401_Tool {
 	{
 		assert(raw.header_len <= 4);
 		//assert(raw.nbyte <= 112);
-		if (raw.nbyte > 221) {
+		if (raw.nbyte > 229) {
 			printf("error, raw.nbyte = %d\n", raw.nbyte);
 		}
 		int ret = 0;

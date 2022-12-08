@@ -431,6 +431,7 @@ namespace Ins401_Tool {
         double roll;	                 /* roll (degrees), -180.0~+180.0 */
         double pitch;	                 /* pitch (degrees), -90.0~+90.0 */
         double heading;	                 /* heading (degrees), 0.0-360.0 */
+    	double std_heading;	             /* std of heading (degrees), 0.0-360.0 */
         float geoSep;                    /* Geoidal separation (m),-3600.0~+3600.0 */
         float masterVelN;	             /* master north velocity (m/s), 0.0-500.0 */
         float masterVelE;	             /* master east velocity (m/s), 0.0-500.0 */
