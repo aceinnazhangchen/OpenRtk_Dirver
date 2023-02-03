@@ -331,66 +331,97 @@ namespace ins401c_Tool {
         raw  = ((uint32_t)((bytes[0]))) << 8;    //< 8 bit(s) from B7
         raw |= ((uint32_t)((bytes[1])));    //< 8 bit(s) from B15
         to->Gnss_Gps_Week = ((raw));
+
         raw  = ((uint32_t)((bytes[2]))) << 24;    //< 8 bit(s) from B23
         raw |= ((uint32_t)((bytes[3]))) << 16;    //< 8 bit(s) from B31
         raw |= ((uint32_t)((bytes[4]))) << 8;    //< 8 bit(s) from B39
         raw |= ((uint32_t)((bytes[5])));    //< 8 bit(s) from B47
         to->Gnss_Gps_Milliseconds = ((raw));
+
+        /* utc: hhmmss */
         raw  = ((uint32_t)((bytes[6]))) << 24;    //< 8 bit(s) from B55
         raw |= ((uint32_t)((bytes[7]))) << 16;    //< 8 bit(s) from B63
         raw |= ((uint32_t)((bytes[8]))) << 8;    //< 8 bit(s) from B71
         raw |= ((uint32_t)((bytes[9])));    //< 8 bit(s) from B79
         to->Gnss_UTC = ((raw));
+
         raw  = ((uint32_t)((bytes[10])));    //< 8 bit(s) from B87
         to->Gnss_Leap_Second = ((raw));
+
         raw  = ((uint32_t)((bytes[11]))) << 24;    //< 8 bit(s) from B95
         raw |= ((uint32_t)((bytes[12]))) << 16;    //< 8 bit(s) from B103
         raw |= ((uint32_t)((bytes[13]))) << 8;    //< 8 bit(s) from B111
         raw |= ((uint32_t)((bytes[14])));    //< 8 bit(s) from B119
         to->Gnss_MCU_Time_Stamp = ((raw));
+
         raw  = ((uint32_t)((bytes[15])));    //< 8 bit(s) from B127
         to->Gnss_Position_Type = ((raw));
+
         raw  = ((uint32_t)((bytes[16])));    //< 8 bit(s) from B135
         to->Gnss_NumberOfSVs = ((raw));
+
         raw  = ((uint32_t)((bytes[17]))) << 8;    //< 8 bit(s) from B143
         raw |= ((uint32_t)((bytes[18])));    //< 8 bit(s) from B151
         to->Gnss_Hdop = ((raw * 0.0015259021));
+
         raw  = ((uint32_t)((bytes[19]))) << 8;    //< 8 bit(s) from B159
         raw |= ((uint32_t)((bytes[20])));    //< 8 bit(s) from B167
         to->Gnss_Speed_Over_Ground = ((raw * 0.00183108));
+
         raw  = ((uint32_t)((bytes[21]))) << 8;    //< 8 bit(s) from B175
         raw |= ((uint32_t)((bytes[22])));    //< 8 bit(s) from B183
         to->Gnss_GPS_Course = ((raw * 0.1));
+
         raw  = ((uint32_t)((bytes[23]))) << 24;    //< 8 bit(s) from B191
         raw |= ((uint32_t)((bytes[24]))) << 16;    //< 8 bit(s) from B199
         raw |= ((uint32_t)((bytes[25]))) << 8;    //< 8 bit(s) from B207
         raw |= ((uint32_t)((bytes[26])));    //< 8 bit(s) from B215
         to->Gnss_Latitude = ((raw * 1e-07) + (-180));
+
         raw  = ((uint32_t)((bytes[27]))) << 24;    //< 8 bit(s) from B223
         raw |= ((uint32_t)((bytes[28]))) << 16;    //< 8 bit(s) from B231
         raw |= ((uint32_t)((bytes[29]))) << 8;    //< 8 bit(s) from B239
         raw |= ((uint32_t)((bytes[30])));    //< 8 bit(s) from B247
         to->Gnss_Longitude = ((raw * 1e-07) + (-180));
+
         raw  = ((uint32_t)((bytes[31]))) << 24;    //< 8 bit(s) from B255
         raw |= ((uint32_t)((bytes[32]))) << 16;    //< 8 bit(s) from B263
         raw |= ((uint32_t)((bytes[33]))) << 8;    //< 8 bit(s) from B271
         raw |= ((uint32_t)((bytes[34])));    //< 8 bit(s) from B279
         to->Gnss_Height = ((raw * 0.001) + (-10000));
+
         raw  = ((uint32_t)((bytes[35]))) << 8;    //< 8 bit(s) from B287
         raw |= ((uint32_t)((bytes[36])));    //< 8 bit(s) from B295
         to->Gnss_Latitude_Std = ((raw * 0.001));
+
         raw  = ((uint32_t)((bytes[37]))) << 8;    //< 8 bit(s) from B303
         raw |= ((uint32_t)((bytes[38])));    //< 8 bit(s) from B311
         to->Gnss_Longitude_Std = ((raw * 0.001));
+
         raw  = ((uint32_t)((bytes[39]))) << 8;    //< 8 bit(s) from B319
         raw |= ((uint32_t)((bytes[40])));    //< 8 bit(s) from B327
         to->Gnss_Height_Std = ((raw * 0.001));
 
-        sprintf(ins401c_output_msg_gnss, "%d,%11.4f,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.7f,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f\n",to->Gnss_Gps_Week,\
+        /* sep in gga */
+        raw  = (uint32_t)(bytes[41] << 24);
+        raw |= (uint32_t)(bytes[42] << 16);
+        raw |= (uint32_t)(bytes[43] << 8);
+        raw |= (uint32_t)(bytes[44] << 0);
+        to->sep = raw * 0.001 + (-10000);
+
+        /* utc: year mouth day */
+        raw  = (uint32_t)(bytes[45] << 24);
+        raw |= (uint32_t)(bytes[46] << 16);
+        raw |= (uint32_t)(bytes[47] << 8);
+        raw |= (uint32_t)(bytes[48] << 0);
+        to->Gnss_UTC_YMD = raw;
+
+        sprintf(ins401c_output_msg_gnss, "%d,%11.4f,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.7f,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%11.4f,%d\n",to->Gnss_Gps_Week,\
         (double)(to->Gnss_Gps_Milliseconds)/1000,\
         (to->Gnss_UTC), to->Gnss_Leap_Second,\
         to->Gnss_MCU_Time_Stamp, to->Gnss_Position_Type, to->Gnss_NumberOfSVs,\
-        to->Gnss_Hdop, to->Gnss_Speed_Over_Ground, to->Gnss_GPS_Course, to->Gnss_Latitude, to->Gnss_Longitude, to->Gnss_Height, to->Gnss_Latitude_Std, to->Gnss_Longitude_Std, to->Gnss_Height_Std\
+        to->Gnss_Hdop, to->Gnss_Speed_Over_Ground, to->Gnss_GPS_Course, to->Gnss_Latitude, to->Gnss_Longitude, to->Gnss_Height, to->Gnss_Latitude_Std, to->Gnss_Longitude_Std, to->Gnss_Height_Std,\
+        to->sep, to->Gnss_UTC_YMD\
         );
 
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
@@ -960,7 +991,8 @@ namespace ins401c_Tool {
         if (fs_ins == NULL) {
             sprintf(file_name, "%s_ins.csv", base_ins401c_file_name);
             fs_ins = fopen(file_name, "w");
-            if (fs_ins) fprintf(fs_ins, "GPS_Week(),GPS_TimeofWeek(s),insCarStatus(),insPositionType(),latitude(deg),longitude(deg),height(m),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),roll(deg),pitch(deg),heading(deg),latitude_std(m),longitude_std(m),height_std(m)\n");
+            /* Tag20230118 modiy by wrj, change insPositionType() to ins_status() */
+            if (fs_ins) fprintf(fs_ins, "GPS_Week(),GPS_TimeofWeek(s),insCarStatus(),ins_status(),latitude(deg),longitude(deg),height(m),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),roll(deg),pitch(deg),heading(deg),latitude_std(m),longitude_std(m),height_std(m)\n");
         }
         if (fs_ins) fprintf(fs_ins, log);
 	}
@@ -971,7 +1003,7 @@ namespace ins401c_Tool {
         if (fs_gnss == NULL) {
             sprintf(file_name, "%s_gnss.csv", base_ins401c_file_name);
             fs_gnss = fopen(file_name, "w");
-            if (fs_gnss) fprintf(fs_gnss, "Gnss_Gps_Week(),Gnss_Gps_Milliseconds(ms),Gnss_UTC(hhmmss),Gnss_Leap_Second(),Gnss_MCU_Time_Stamp(s),Gnss_Position_Type(),Gnss_NumberOfSVs(),Gnss_Hdop(), Gnss_Speed_Over_Ground(), Gnss_GPS_Course(), Gnss_Latitude(), Gnss_Longitude(), Gnss_Height(ms)\n");
+            if (fs_gnss) fprintf(fs_gnss, "Gnss_Gps_Week(),Gnss_Gps_Milliseconds(ms),Gnss_UTC(hhmmss),Gnss_Leap_Second(),Gnss_MCU_Time_Stamp(s),Gnss_Position_Type(),Gnss_NumberOfSVs(),Gnss_Hdop(), Gnss_Speed_Over_Ground(m/s), Gnss_GPS_Course(deg), Gnss_Latitude(deg), Gnss_Longitude(deg), Gnss_Height(m), Gnss_Latitude_Std(m), Gnss_Longitude_Std(m), Gnss_Height_Std(m), Gnss_sep(m), Gnss_UTC_YMD(YYYYMMDD)\n");
         }
         if (fs_gnss) fprintf(fs_gnss, log);
 	}
