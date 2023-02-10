@@ -315,9 +315,14 @@ namespace Ins401_Tool {
 		gnss_pin_bit status;
 	} system_fault_detection_t_20220930;
 
-	typedef struct : system_fault_detection_t_20220930 {
+	// typedef struct : system_fault_detection_t_20220930 {
+	// 	uint32_t ttff;
+	// } system_fault_detection_t;
+
+	/* Tag20230203 modify by wrj, to solve: VS2009 use SDK10.0 complie error */
+	struct system_fault_detection_t: system_fault_detection_t_20220930 {
 		uint32_t ttff;
-	} system_fault_detection_t;
+	} ;
 
 	typedef struct {
 		uint16_t gps_week;
