@@ -284,6 +284,8 @@ namespace ins401c_Tool {
         uint16_t week;
         double time_of_week;
         uint8_t ins_car_status;
+        /* Tag20230118 add by wrj, add ins status */
+        uint8_t ins_status;
         uint8_t ins_position_status;
         double latitude;
         double longitude;

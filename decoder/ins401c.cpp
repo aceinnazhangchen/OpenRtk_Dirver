@@ -76,7 +76,9 @@ namespace ins401c_Tool {
 	{
 		ins_kml.gps_week = ins_mess.week;
 		ins_kml.gps_secs = (double)ins_mess.time_of_week / 1000 ;
-		ins_kml.ins_status = ins_mess.ins_position_status;
+        /* Tag20230118 modify by wrj, change ins pos type to ins status, to show ins status on kml */
+		// ins_kml.ins_status = ins_mess.ins_position_status;
+        ins_kml.ins_status = ins_mess.ins_status;
 		ins_kml.ins_position_type = ins_mess.ins_position_status;
 		ins_kml.latitude = ins_mess.latitude;
 		ins_kml.longitude = ins_mess.longitude;
@@ -281,7 +283,7 @@ namespace ins401c_Tool {
 			"%11.4f,%11.4f,%11.4f,"
 			"%d,%d,%d,%d,%d,%d,"
 			"%11.4f,%11.4f,%11.4f,%11.4f,"
-			"%6d,%12.4f\n",\
+			"%6d,%d\n",\
         to->ACC_X, to->ACC_Y, to->ACC_Z,\
         to->GYRO_X, to->GYRO_Y, to->GYRO_Z,\
         to->INS_PitchAngle, to->INS_RollAngle, to->INS_HeadingAngle,\
@@ -290,17 +292,17 @@ namespace ins401c_Tool {
         to->INS_NorthSpd, to->INS_EastSpd, to->INS_ToGroundSpd,\
         to->INS_GpsFlag_Pos, to->INS_NumSV, to->INS_GpsFlag_Heading, to->INS_Gps_Age, to->INS_Car_Status, to->INS_Status,\
         to->INS_Std_Lat, to->INS_Std_Lon, to->INS_Std_LocatHeight, to->INS_Std_Heading, \
-        to->Week, (double)(to->TimeOfWeek) / 1000\
+        to->Week, to->TimeOfWeek\
         );
-        sprintf(ins401c_output_msg_imu, "%d,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%d\n",to->Week,\
-        (double)(to->TimeOfWeek)/1000,\
+        sprintf(ins401c_output_msg_imu, "%d,%d,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%d\n",to->Week,\
+        to->TimeOfWeek,\
         to->ACC_X, to->ACC_Y, to->ACC_Z,\
         to->GYRO_X, to->GYRO_Y, to->GYRO_Z,\
         to->IMU_Status\
         );
 
-        sprintf(ins401c_output_msg_ins, "%d,%11.4f,%d,%d,%11.7f,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f\n",
-        to->Week, (double)(to->TimeOfWeek)/1000,\
+        sprintf(ins401c_output_msg_ins, "%d,%d,%d,%d,%11.7f,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f\n",
+        to->Week, to->TimeOfWeek,\
         to->INS_GpsFlag_Pos, to->INS_Status,\
         to->INS_Latitude, to->INS_Longitude, to->INS_LocatHeight,\
         to->INS_NorthSpd, to->INS_EastSpd, to->INS_ToGroundSpd,\
@@ -309,8 +311,10 @@ namespace ins401c_Tool {
         );
         ins_mess.week = to->Week;
         ins_mess.time_of_week = to->TimeOfWeek;
-        ins_mess.ins_car_status = to->INS_Car_Status;
-        ins_mess.ins_position_status = to->INS_GpsFlag_Pos;
+        ins_mess.ins_car_status = to->INS_Car_Status; // odo used or not
+        /* Tag20230118 add by wrj, add ins status */
+        ins_mess.ins_status = to->INS_Status;
+        ins_mess.ins_position_status = to->INS_GpsFlag_Pos; // ins gps position type
         ins_mess.latitude = to->INS_Latitude;
         ins_mess.longitude = to->INS_Longitude;
         ins_mess.height = to->INS_LocatHeight;
@@ -452,8 +456,8 @@ namespace ins401c_Tool {
         raw |= (uint32_t)(bytes[52] << 0);
         to->Gnss_East_Spd = raw * 0.0030518 + (-100);
 
-        sprintf(ins401c_output_msg_gnss, "%d,%11.4f,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.7f,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%11.4f,%d,%11.4f,%11.4f\n",to->Gnss_Gps_Week,\
-        (double)(to->Gnss_Gps_Milliseconds)/1000,\
+        sprintf(ins401c_output_msg_gnss, "%d,%d,%d,%d,%d,%d,%d,%11.4f,%11.4f,%11.4f,%11.7f,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%11.4f,%d,%11.4f,%11.4f\n",to->Gnss_Gps_Week,\
+        to->Gnss_Gps_Milliseconds,\
         (to->Gnss_UTC), to->Gnss_Leap_Second,\
         to->Gnss_MCU_Time_Stamp, to->Gnss_Position_Type, to->Gnss_NumberOfSVs,\
         to->Gnss_Hdop, to->Gnss_Speed_Over_Ground, to->Gnss_GPS_Course, to->Gnss_Latitude, to->Gnss_Longitude, to->Gnss_Height, to->Gnss_Latitude_Std, to->Gnss_Longitude_Std, to->Gnss_Height_Std,\
@@ -469,8 +473,11 @@ namespace ins401c_Tool {
         gnss_mess.latitude = to->Gnss_Latitude;
         gnss_mess.longitude = to->Gnss_Longitude;
         gnss_mess.height = to->Gnss_Height;
-        gnss_mess.north_vel = cos(to->Gnss_GPS_Course * D2R);
-        gnss_mess.east_vel = sin(to->Gnss_GPS_Course * D2R);
+        /* Tag20230118 modify by wrj */
+        // gnss_mess.north_vel = cos(to->Gnss_GPS_Course * D2R) * to->Gnss_Speed_Over_Ground;
+        // gnss_mess.east_vel = sin(to->Gnss_GPS_Course * D2R) * to->Gnss_Speed_Over_Ground;
+        gnss_mess.north_vel = to->Gnss_North_Spd;
+        gnss_mess.east_vel = to->Gnss_East_Spd;
         gnss_mess.up_vel = 0;
 
 		append_gnss_kml();
@@ -1050,7 +1057,7 @@ namespace ins401c_Tool {
         if (fs_canfd == NULL) {
             sprintf(file_name, "%s_INSPVA.csv", base_ins401c_file_name);
             fs_canfd = fopen(file_name, "w");
-            if (fs_canfd) fprintf(fs_canfd, "ACC_X(s),ACC_Y(s),ACC_Z(s),GYRO_X(s),GYRO_Y(s),GYRO_Z(s),INS_PitchAngle(s),INS_RollAngle(s),INS_HeadingAngle(s),INS_LocatHeight(s),IMU_Status(s),INS_Latitude(s),INS_Longitude(s),INS_NorthSpd(s),INS_EastSpd(s),INS_ToGroundSpd(s),INS_GpsFlag_Pos(s),INS_NumSV(s),INS_GpsFlag_Heading(s),INS_Gps_Age(s),INS_Car_Status(s),INS_Status(s),INS_Std_Lat(s),INS_Std_Lon(s),INS_Std_LocatHeight(s),INS_Std_Heading(s),Week(s),TimeOfWeek(s)\n");
+            if (fs_canfd) fprintf(fs_canfd, "ACC_X(s),ACC_Y(s),ACC_Z(s),GYRO_X(s),GYRO_Y(s),GYRO_Z(s),INS_PitchAngle(s),INS_RollAngle(s),INS_HeadingAngle(s),INS_LocatHeight(s),IMU_Status(s),INS_Latitude(s),INS_Longitude(s),INS_NorthSpd(s),INS_EastSpd(s),INS_ToGroundSpd(s),INS_GpsFlag_Pos(s),INS_NumSV(s),INS_GpsFlag_Heading(s),INS_Gps_Age(s),INS_Car_Status(s),INS_Status(s),INS_Std_Lat(s),INS_Std_Lon(s),INS_Std_LocatHeight(s),INS_Std_Heading(s),Week(s),TimeOfWeek(ms)\n");
         }
         if (fs_canfd) fprintf(fs_canfd, log);
 	}
@@ -1060,7 +1067,7 @@ namespace ins401c_Tool {
         if (fs_imu == NULL) {
             sprintf(file_name, "%s_imu.csv", base_ins401c_file_name);
             fs_imu = fopen(file_name, "w");
-            if (fs_imu) fprintf(fs_imu, "GPS_Week(),GPS_TimeofWeek(s),x_accel(m/s^2),y_accel(m/s^2),z_accel(m/s^2),x_rate(deg/s),y_rate(deg/s),z_rate(deg/s)\n");
+            if (fs_imu) fprintf(fs_imu, "GPS_Week(),GPS_TimeofWeek(ms),x_accel(m/s^2),y_accel(m/s^2),z_accel(m/s^2),x_rate(deg/s),y_rate(deg/s),z_rate(deg/s)\n");
         }
         if (fs_imu) fprintf(fs_imu, log);
 	}
@@ -1071,7 +1078,7 @@ namespace ins401c_Tool {
             sprintf(file_name, "%s_ins.csv", base_ins401c_file_name);
             fs_ins = fopen(file_name, "w");
             /* Tag20230118 modiy by wrj, change insPositionType() to ins_status() */
-            if (fs_ins) fprintf(fs_ins, "GPS_Week(),GPS_TimeofWeek(s),INS_GpsFlag_Pos(),INS_Status(),latitude(deg),longitude(deg),height(m),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),roll(deg),pitch(deg),heading(deg),latitude_std(m),longitude_std(m),height_std(m)\n");
+            if (fs_ins) fprintf(fs_ins, "GPS_Week(),GPS_TimeofWeek(ms),INS_GpsFlag_Pos(),INS_Status(),latitude(deg),longitude(deg),height(m),velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s),roll(deg),pitch(deg),heading(deg),latitude_std(m),longitude_std(m),height_std(m)\n");
         }
         if (fs_ins) fprintf(fs_ins, log);
 	}
