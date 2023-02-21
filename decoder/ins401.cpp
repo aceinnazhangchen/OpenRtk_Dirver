@@ -52,6 +52,7 @@ namespace Ins401_Tool {
 		
 		all_type_pack_num[em_RAW_IMU] = 0;
 		all_type_pack_num[em_GNSS_SOL] = 0;
+        all_type_pack_num[em_GNSS_PVT] = 0;
 		all_type_pack_num[em_MOVBS_SOL] = 0;
         all_type_pack_num[em_HEADING_SOL] = 0;
 		all_type_pack_num[em_INS_SOL] = 0;
@@ -71,6 +72,7 @@ namespace Ins401_Tool {
 
 		all_type_file_output[em_RAW_IMU] = 1;
 		all_type_file_output[em_GNSS_SOL] = 1;
+        all_type_file_output[em_GNSS_PVT] = 1;
 		all_type_file_output[em_MOVBS_SOL] = 1;
         all_type_file_output[em_HEADING_SOL] = 1;
 		all_type_file_output[em_INS_SOL] = 1;
@@ -296,6 +298,28 @@ namespace Ins401_Tool {
 		}		
 #endif
 		append_gnss_kml();
+	}
+
+
+	void Ins401_decoder::output_pvt_sol()
+	{
+		//csv
+		std::string title =
+			"GPS_Week(),GPS_TimeOfWeek(s)"
+			",nspp_use(), pvt_time(s)"
+			",position_x(cm),position_y(cm),position_z(cm)"
+            ",velocity_x(cm/s),velocity_y(cm/s),velocity_z(cm/s)\n";
+		FILE* f_gnss_csv = get_file("pvt.csv", title);
+		if (f_gnss_csv) {
+			if (show_format_time) {
+				fprintf(f_gnss_csv, "%s,", week_2_time_str(mtk_pvt.gps_week, mtk_pvt.gps_tow));
+			}
+			fprintf(f_gnss_csv, "%d,%11.4f", mtk_pvt.gps_week, (double)mtk_pvt.gps_tow / 1000);
+			fprintf(f_gnss_csv, ",%5d, %11.1f", mtk_pvt.nspp_use, mtk_pvt.pvt_time);
+			fprintf(f_gnss_csv, ",%11.7f,%11.7f,%11.7f", mtk_pvt.pvt_pos[0], mtk_pvt.pvt_pos[1], mtk_pvt.pvt_pos[2]);
+			fprintf(f_gnss_csv, ",%11.7f,%11.7f,%11.7f", mtk_pvt.pvt_pos[3], mtk_pvt.pvt_pos[4], mtk_pvt.pvt_pos[5]);
+			fprintf(f_gnss_csv, "\n");
+		}
 	}
 
 	void Ins401_decoder::MI_output_gnss_sol()
@@ -937,6 +961,18 @@ namespace Ins401_Tool {
 				output_gnss_and_integ();
 			}
 		}break;
+        case em_GNSS_PVT:
+        {
+            size_t packet_size = sizeof(gnss_pvt_t);
+            if(raw.length == packet_size)
+            {
+                memcpy(&mtk_pvt, payload, packet_size);
+				if (!m_isOutputFile) break;
+				output_pvt_sol();
+            }
+
+        }
+        break;
         case em_MOVBS_SOL:
 		{
 			size_t packet_size = sizeof(movbs_sol_t);
