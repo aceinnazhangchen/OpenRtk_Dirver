@@ -308,7 +308,10 @@ namespace Ins401_Tool {
 			"GPS_Week(),GPS_TimeOfWeek(s)"
 			",nspp_use(), pvt_time(s)"
 			",position_x(cm),position_y(cm),position_z(cm)"
-            ",velocity_x(cm/s),velocity_y(cm/s),velocity_z(cm/s)\n";
+            ",velocity_x(cm/s),velocity_y(cm/s),velocity_z(cm/s)"
+            ",pos_acc_east(mm),pos_acc_north(mm),pos_acc_down(mm)"
+            ",vel_acc_east(mm),vel_acc_north(mm),vel_acc_down(mm)\n";
+
 		FILE* f_gnss_csv = get_file("pvt.csv", title);
 		if (f_gnss_csv) {
 			if (show_format_time) {
@@ -318,6 +321,8 @@ namespace Ins401_Tool {
 			fprintf(f_gnss_csv, ",%5d, %11.1f", mtk_pvt.nspp_use, mtk_pvt.pvt_time);
 			fprintf(f_gnss_csv, ",%11.7f,%11.7f,%11.7f", mtk_pvt.pvt_pos[0], mtk_pvt.pvt_pos[1], mtk_pvt.pvt_pos[2]);
 			fprintf(f_gnss_csv, ",%11.7f,%11.7f,%11.7f", mtk_pvt.pvt_pos[3], mtk_pvt.pvt_pos[4], mtk_pvt.pvt_pos[5]);
+			fprintf(f_gnss_csv, ",%11.7f,%11.7f,%11.7f", mtk_pvt.pvt_std[0], mtk_pvt.pvt_std[1], mtk_pvt.pvt_std[2]);
+			fprintf(f_gnss_csv, ",%11.7f,%11.7f,%11.7f", mtk_pvt.pvt_std[3], mtk_pvt.pvt_std[4], mtk_pvt.pvt_std[5]);
 			fprintf(f_gnss_csv, "\n");
 		}
 	}
