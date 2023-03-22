@@ -162,6 +162,7 @@
     <ClInclude Include="..\decoder\rtk330la_decoder.h" />
     <ClInclude Include="..\decoder\rtkcmn.h" />
     <ClInclude Include="..\decoder\rtklib_core.h" />
+    <ClInclude Include="getopt.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\decoder\beidou.cpp" />
@@ -182,6 +183,7 @@
     <ClCompile Include="..\decoder\rtcm_split.cpp" />
     <ClCompile Include="..\decoder\rtk330la_decoder.cpp" />
     <ClCompile Include="..\decoder\rtkcmn.c" />
+    <ClCompile Include="getopt.c" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

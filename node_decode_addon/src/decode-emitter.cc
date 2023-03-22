@@ -6,9 +6,29 @@
 #include "decode-emitter.h"
 #include "common_func.h"
 #include "common.h"
-
+#include <windows.h>
 
 #define MI_OUTPUT_FILE
+
+int run_process(char* cmd_line)
+{
+    STARTUPINFO si = { sizeof(si) };
+    PROCESS_INFORMATION pi;
+    si.cb = sizeof(STARTUPINFO);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    // TCHAR command[] = TEXT(cmd_line);
+    BOOL success = CreateProcess(NULL, cmd_line, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
+    if (success)
+    {
+        // 等待程序执行完成
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        // 关闭进程和线程句柄
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    }
+    return 0;
+}
 
 Napi::FunctionReference decodeEmitter::constructor;
 
@@ -491,7 +511,8 @@ Napi::Value decodeEmitter::CalcPitchHeading(const Napi::CallbackInfo& info)
     std::string exefilePath = m_ExePath + "\\solveMisalign.exe";
     sprintf(outprefix,"%s\\misalign_%d-%d",file_dir,start_time,end_time);
     sprintf(cmd,"%s -t \"%s\" -o \"%s\"  -rng %d %d %d", exefilePath.c_str(), file_name, outprefix, start_time, end_time, week);
-    system(cmd);
+    run_process(cmd);
+    // system(cmd);
     sprintf(resultfilePath,"%s%s",outprefix,"_content_misalign.txt");
     stAngle angle = { 0 };
     int try_count = 0;

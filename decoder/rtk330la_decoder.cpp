@@ -59,6 +59,7 @@ namespace RTK330LA_Tool {
 
 	void Rtk330la_decoder::init()
 	{
+		is_pruned = false;
 		m_isOutputFile = true;
 		data_version = 0;
 		pack_num = 0;
@@ -131,6 +132,11 @@ namespace RTK330LA_Tool {
 	void Rtk330la_decoder::set_base_file_name(char * file_name)
 	{
 		strcpy(base_file_name, file_name);
+	}
+
+	void Rtk330la_decoder::set_pruned(bool pruned)
+	{
+		is_pruned = pruned;
 	}
 
 	void Rtk330la_decoder::append_early_gnss_kml() {
@@ -208,7 +214,13 @@ namespace RTK330LA_Tool {
 			pak_s2.x_gyro, pak_s2.y_gyro, pak_s2.z_gyro);
 		if (fp_csv) fprintf(fp_csv, output_msg);
 		//txt
-		FILE* fp_txt = get_file("imu.txt");
+		//FILE* fp_txt = get_file("imu.txt");
+
+		//if (fp_txt) fprintf(fp_txt, output_msg);
+
+	}
+
+	void Rtk330la_decoder::output_s2_process() {
 		sprintf(output_msg,
 			"%d,%11.4f,    "
 			",%14.10f,%14.10f,%14.10f"
@@ -216,12 +228,9 @@ namespace RTK330LA_Tool {
 			pak_s2.GPS_Week, pak_s2.GPS_TimeOfWeek,
 			pak_s2.x_accel, pak_s2.y_accel, pak_s2.z_accel,
 			pak_s2.x_gyro, pak_s2.y_gyro, pak_s2.z_gyro);
-		if (fp_txt) fprintf(fp_txt, output_msg);
-		//process
 		FILE* fp_process = get_file("process");
-		if (fp_process) fprintf(fp_process, "$GPIMU,%s",output_msg);
+		if (fp_process) fprintf(fp_process, "$GPIMU,%s", output_msg);
 	}
-
 	void Rtk330la_decoder::output_gN_early() {
 		float north_vel = (float)pak_gN_early.velocityNorth / 100.0f;
 		float east_vel = (float)pak_gN_early.velocityEast / 100.0f;
@@ -316,12 +325,7 @@ namespace RTK330LA_Tool {
 			, pos_hor_pl, pos_ver_pl
 			, pak_gN.pos_status, vel_hor_pl, vel_ver_pl, pak_gN.vel_status);
 		if (f_gN) fprintf(f_gN, output_msg);
-		//txt
-		FILE* f_gnssposvel = get_file("gnssposvel.txt");
-		sprintf(output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%10.4f,%10.4f\n",
-			pak_gN.GPS_Week, pak_gN.GPS_TimeOfWeek, pak_gN.latitude*180.0 / MAX_INT, pak_gN.longitude*180.0 / MAX_INT, pak_gN.height,
-			latitude_std, longitude_std, height_std, pak_gN.positionMode, north_vel, east_vel, up_vel, track_over_ground);
-		if (f_gnssposvel) fprintf(f_gnssposvel, output_msg);
+
 		//process $GPGNSS
 		FILE* f_process = get_file("process");
 		sprintf(output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%3d\n"
@@ -337,6 +341,13 @@ namespace RTK330LA_Tool {
 		sprintf(output_msg, "%d,%11.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n", pak_gN.GPS_Week, pak_gN.GPS_TimeOfWeek, north_vel, east_vel, -up_vel,
 			(float)pak_d2.north_vel_std / 100.0, (float)pak_d2.east_vel_std / 100.0, (float)pak_d2.up_vel_std / 100.0);
 		if (f_process) fprintf(f_process, "$GPVNED,%s", output_msg);
+		if (is_pruned)return;
+		//txt
+		FILE* f_gnssposvel = get_file("gnssposvel.txt");
+		sprintf(output_msg, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%3d,%10.4f,%10.4f,%10.4f,%10.4f\n",
+			pak_gN.GPS_Week, pak_gN.GPS_TimeOfWeek, pak_gN.latitude*180.0 / MAX_INT, pak_gN.longitude*180.0 / MAX_INT, pak_gN.height,
+			latitude_std, longitude_std, height_std, pak_gN.positionMode, north_vel, east_vel, up_vel, track_over_ground);
+		if (f_gnssposvel) fprintf(f_gnssposvel, output_msg);
 		//kml
 		append_gnss_kml();
 		//time
@@ -346,20 +357,6 @@ namespace RTK330LA_Tool {
 	}
 
 	void Rtk330la_decoder::output_iN() {
-		//csv
-		std::string title = 
-			"GPS_Week(),GPS_TimeofWeek(s)"
-			",insStatus(),insPositionType()"
-			",latitude(deg),longitude(deg),height(m)"
-			",velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s)"
-			",roll(deg),pitch(deg),heading(deg)\n";
-		FILE* f_iN = get_file("iN.csv", title);
-		sprintf(output_msg, "%d,%11.4f,%3d,%3d,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f\n", pak_iN.GPS_Week, pak_iN.GPS_TimeOfWeek,
-			pak_iN.insStatus, pak_iN.insPositionType,
-			(double)pak_iN.latitude*180.0 / MAX_INT, (double)pak_iN.longitude*180.0 / MAX_INT, pak_iN.height,
-			(float)pak_iN.velocityNorth / 100.0, (float)pak_iN.velocityEast / 100.0, (float)pak_iN.velocityUp / 100.0,
-			(float)pak_iN.roll / 100.0, (float)pak_iN.pitch / 100.0, (float)pak_iN.heading / 100.0);
-		if (f_iN) fprintf(f_iN, output_msg);
 		uint32_t GPS_TimeOfWeek = (uint32_t)(pak_iN.GPS_TimeOfWeek * 100) * 10;
 		if (GPS_TimeOfWeek % 100 == 0) {
 			//txt
@@ -383,6 +380,21 @@ namespace RTK330LA_Tool {
 				(float)pak_iN.roll / 100.0, (float)pak_iN.pitch / 100.0, (float)pak_iN.heading / 100.0, pak_iN.insPositionType);
 			if (f_process) fprintf(f_process, "$GPINS,%s", output_msg);
 		}
+		if (is_pruned)return;
+		//csv
+		std::string title =
+			"GPS_Week(),GPS_TimeofWeek(s)"
+			",insStatus(),insPositionType()"
+			",latitude(deg),longitude(deg),height(m)"
+			",velocityNorth(m/s),velocityEast(m/s),velocityUp(m/s)"
+			",roll(deg),pitch(deg),heading(deg)\n";
+		FILE* f_iN = get_file("iN.csv", title);
+		sprintf(output_msg, "%d,%11.4f,%3d,%3d,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f\n", pak_iN.GPS_Week, pak_iN.GPS_TimeOfWeek,
+			pak_iN.insStatus, pak_iN.insPositionType,
+			(double)pak_iN.latitude*180.0 / MAX_INT, (double)pak_iN.longitude*180.0 / MAX_INT, pak_iN.height,
+			(float)pak_iN.velocityNorth / 100.0, (float)pak_iN.velocityEast / 100.0, (float)pak_iN.velocityUp / 100.0,
+			(float)pak_iN.roll / 100.0, (float)pak_iN.pitch / 100.0, (float)pak_iN.heading / 100.0);
+		if (f_iN) fprintf(f_iN, output_msg);
 		//kml
 		append_ins_kml();
 	}
@@ -457,10 +469,10 @@ namespace RTK330LA_Tool {
 		std::string title = 
 			"GPS_Week(),GPS_TimeOfWeek(s)"
 			",mode(),speed(m/s),fwd(),wheel_tick()\n";
-		FILE* f_o1 = get_file("o1.csv", title);
 		sprintf(output_msg, "%d,%11.4f,%3d,%10.4f,%3d,%16I64d\n", pak_o1.GPS_Week, (double)pak_o1.GPS_TimeOfWeek / 1000.0, pak_o1.mode,
 			pak_o1.speed, pak_o1.fwd, pak_o1.wheel_tick);
-		if (f_o1) fprintf(f_o1, output_msg);
+		//FILE* f_o1 = get_file("o1.csv", title);
+		//if (f_o1) fprintf(f_o1, output_msg);
 		//txt
 		FILE* f_odo = get_file("odo.txt", title);
 		if (f_odo) fprintf(f_odo, output_msg);
@@ -709,6 +721,7 @@ namespace RTK330LA_Tool {
 			if (raw.length == packet_size) {
 				memcpy(&pak_s1, payload, sizeof(inceptio_s1_t));
 				if (!m_isOutputFile) break;
+				if (is_pruned)break;
 				output_s1();
 			}
 
@@ -720,7 +733,9 @@ namespace RTK330LA_Tool {
 				memcpy(&pak_s2, payload, sizeof(inceptio_s1_t));
 				if (!m_isOutputFile) break;
 				output_s2();
+				output_s2_process();
 #ifdef OUTPUT_INNER_FILE
+				if (is_pruned)break;
 				save_novatel_raw_imu();
 #endif
 			}
@@ -754,6 +769,7 @@ namespace RTK330LA_Tool {
 			if (raw.length == sizeof(inceptio_d1_t)) {
 				memcpy(&pak_d1, payload, sizeof(inceptio_d1_t));
 				if (!m_isOutputFile) break;
+				if (is_pruned)break;
 				output_d1();
 			}
 		}break;
@@ -762,8 +778,9 @@ namespace RTK330LA_Tool {
 			if (raw.length == sizeof(inceptio_d2_t)) {
 				memcpy(&pak_d2, payload, sizeof(inceptio_d2_t));
 				if (!m_isOutputFile) break;
-				output_d2();
 				output_gN();
+				if (is_pruned)break;
+				output_d2();				
 			}
 		}break;
 		case em_sT:
@@ -771,6 +788,7 @@ namespace RTK330LA_Tool {
 			if (raw.length == sizeof(inceptio_sT_t)) {
 				memcpy(&pak_sT, payload, sizeof(inceptio_sT_t));
 				if (!m_isOutputFile) break;
+				if (is_pruned)break;
 				output_sT();
 			}
 		}break;
@@ -779,6 +797,7 @@ namespace RTK330LA_Tool {
 			if (raw.length == sizeof(inceptio_o1_t)) {
 				memcpy(&pak_o1, payload, sizeof(inceptio_o1_t));
 				if (!m_isOutputFile) break;
+				//if (is_pruned)break;
 				output_o1();
 			}
 		}break;
@@ -791,6 +810,7 @@ namespace RTK330LA_Tool {
 			if (raw.length == sizeof(rtk_debug1_t)) {
 				memcpy(&rtk_debug1, payload, sizeof(rtk_debug1_t));
 				if (!m_isOutputFile) break;
+				if (is_pruned)break;
 				output_debug1();
 			}
 		}break;
@@ -801,8 +821,9 @@ namespace RTK330LA_Tool {
 			if (raw.length == psize) {
 				memcpy(&gnss_integ, payload, psize);
 				if (!m_isOutputFile) break;
-				output_gnss_integ();
 				output_gnss_and_integ();
+				if (is_pruned)break;
+				output_gnss_integ();				
 			}
 		}break;
 		case em_iI:
@@ -811,17 +832,21 @@ namespace RTK330LA_Tool {
 			if (raw.length == psize) {
 				memcpy(&ins_integ, payload, psize);
 				if (!m_isOutputFile) break;
-				output_ins_integ();
 				output_ins_and_integ();
+				if (is_pruned)break;
+				output_ins_integ();
+				
 			}
 		}break;
 		case em_g1: {
 			if (!m_isOutputFile) break;
+			if (is_pruned)break;
 			output_g1();
 		}break;
 		case em_RM:
 		{
 			if (!m_isOutputFile) break;
+			if (is_pruned)break;
 			output_runstatus_monitor();
 		}break;
 		default:
@@ -877,7 +902,7 @@ namespace RTK330LA_Tool {
 				raw.nmea[raw.nmeabyte++] = 0x0A;
 				raw.nmea[raw.nmeabyte++] = 0;
 				raw.nmea_flag = 0;
-				if (m_isOutputFile) {
+				if (m_isOutputFile && !is_pruned) {
 					FILE* f_nmea = get_file("nmea.txt");
 					fprintf(f_nmea, (char*)raw.nmea);
 				}
@@ -955,9 +980,11 @@ namespace RTK330LA_Tool {
 			fprintf(f_log, "pack_type = 0x%04x, pack_num = %d\n", (uint16_t)it->first, (int)it->second);
 		}
 		fprintf(f_log, "all_pack_num = %d\ncrc_right_num = %d\ncrc_error_num = %d\n", pack_num, crc_right_num, crc_error_num);
-		Kml_Generator::Instance()->open_files(base_file_name);
-		Kml_Generator::Instance()->write_files();
-		Kml_Generator::Instance()->close_files();
+		if (!is_pruned) {
+			Kml_Generator::Instance()->open_files(base_file_name);
+			Kml_Generator::Instance()->write_files();
+			Kml_Generator::Instance()->close_files();
+		}
 		close_all_files();
 	}
 

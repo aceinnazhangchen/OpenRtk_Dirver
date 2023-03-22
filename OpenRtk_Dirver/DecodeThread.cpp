@@ -244,6 +244,7 @@ void DecodeThread::decode_rtk330la()
 		size_t readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
 		rtk330la_decoder->init();
+		//rtk330la_decoder->set_pruned(true);
 		rtk330la_decoder->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
 		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
 		m_StaticAnalysis->init();
@@ -339,6 +340,7 @@ void DecodeThread::decode_ins401()
 		int readcount = 0;
 		char read_cache[READ_CACHE_SIZE] = { 0 };
 		ins401_decoder->init();
+		//ins401_decoder->set_pruned(true);
 		ins401_decoder->set_show_format_time(m_show_time);
 		ins401_decoder->set_base_file_name(m_OutBaseName.toLocal8Bit().data());
 		Kml_Generator::Instance()->set_kml_frequency(ins_kml_frequency);
