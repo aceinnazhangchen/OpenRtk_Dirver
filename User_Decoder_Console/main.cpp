@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 			decode_ins401c(filename);
 		}
 		else {
-			printf("User_Decoder_Console.exe -u(OpenRTK330LI)|i(RTK330LA)|ins401|beidou|npos122 <filename> \n");
+			printf("User_Decoder_Console.exe -u(OpenRTK330LI)|i(RTK330LA)|ins401|ins401c|beidou|npos122 <filename> \n");
 		}
 	}
 	else if (argc > 3) {

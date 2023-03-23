@@ -84,7 +84,9 @@ namespace ins401c_Tool {
     //Comment:comment//< B40:32  Min: 0 Max: 4294967295   Unit: MillisecondsIntoWeek   Destination: Vector__XXX
         uint32_t Gnss_Gps_Milliseconds;          
     //Comment:comment//< B72:32  Min: 0 Max: 4294967295   Unit: hhmmss   Destination: Vector__XXX
-        uint32_t Gnss_UTC;                       
+        uint32_t Gnss_UTC;
+        /* Tag20230118 add by wrj, utc year mouth day */
+        uint32_t Gnss_UTC_YMD;
     //Comment:comment//< B80:8  Min: 0 Max: 255   Unit: s   Destination: Vector__XXX
         uint8_t Gnss_Leap_Second;                
     //Comment:comment//< B112:32  Min: 0 Max: 4294967295   Unit: ms   Destination: Vector__XXX
@@ -110,7 +112,11 @@ namespace ins401c_Tool {
     //Comment:comment//< B304:16  Min: 0 Max: 65.535   Unit: m   Destination: Vector__XXX
         float Gnss_Longitude_Std;                
     //Comment:comment//< B320:16  Min: 0 Max: 65.535   Unit: m   Destination: Vector__XXX
-        float Gnss_Height_Std;         
+        float Gnss_Height_Std;       
+        /* Tag20230118 add by wrj, sep in gga */
+        double sep;
+        double Gnss_North_Spd;
+        double Gnss_East_Spd;
         dbc_mia_info_t mia_info;
     } Gnss_Message_t;
 
@@ -305,6 +311,17 @@ namespace ins401c_Tool {
 		float		up_vel;
     }can_gnss_t;
 
+    /* Tag20230118 copy from ins401.h namespace */
+    typedef struct
+	{
+		uint16_t GPS_Week;
+		uint32_t GPS_TimeOfWeek;
+		uint8_t	 mode;
+		double	 speed;
+		uint8_t	 fwd;
+		uint64_t wheel_tick;
+	} odo_t;
+
     #define MAX_CANFD_MESSAGE_COUNT  1
     typedef struct { 
         uint32_t mid;  //< Message ID of the message
@@ -319,6 +336,7 @@ namespace ins401c_Tool {
     bool dbc_decode_INSPVAX(uint8_t *pstu, const uint8_t *bytes);
     bool dbc_decode_Gnss_Message(uint8_t *pstu, const uint8_t *bytes);
     bool dbc_decode_Diagnostic_Message(uint8_t *pstu, const uint8_t *bytes);
+    bool dbc_decode_odo_Message(uint8_t *pstu, const uint8_t *bytes);
 
     void set_base_ins401c_file_name(char* file_name);
     int input_ins401c_line(uint8_t* data);
@@ -327,6 +345,7 @@ namespace ins401c_Tool {
     void write_ins401c_ins_file(char* log);
     void write_ins401c_gnss_file(char* log);
 	void write_ins401c_diagnostic_file(char* log);
+    void write_ins401c_odo_file(char* log);
 
     bool dbc_decode_INS_ACC(uint8_t *pstu, const uint8_t *bytes);    
     bool dbc_decode_INS_GYRO(uint8_t *pstu, const uint8_t *bytes);
