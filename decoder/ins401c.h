@@ -189,7 +189,9 @@ namespace ins401c_Tool {
     //Comment:comment//< B24:32  Min: -10000 Max: 10000   Unit: m   Destination: Vector__XXX
         float INS_LocatHeight;                   
     //Comment:comment//< B56:32  Min: 0 Max: 4.29497e9   Unit:    Destination: Vector__XXX
-        uint32_t IMU_Status;                     
+       /* Tag20230229 modify by wrj, change to second in week */
+        // uint32_t IMU_Status;
+        uint32_t TimeOfWeek; // unit: ms, second in week
 
         dbc_mia_info_t mia_info;
     } INS_HeightAndIMUStatus_t;
@@ -236,6 +238,9 @@ namespace ins401c_Tool {
         uint8_t INS_Car_Status;                  
     //Comment:comment//< B40:8  Min: 0 Max: 255   Unit:    Destination: Vector__XXX
         uint8_t INS_Status;                      
+
+        /* Tag20230229 add by wrj */
+        uint16_t INS_week_no;
 
         dbc_mia_info_t mia_info;
     } INS_DataInfo_t;
@@ -284,6 +289,8 @@ namespace ins401c_Tool {
         uint16_t week;
         double time_of_week;
         uint8_t ins_car_status;
+        /* Tag20230118 add by wrj, add ins status */
+        uint8_t ins_status;
         uint8_t ins_position_status;
         double latitude;
         double longitude;
