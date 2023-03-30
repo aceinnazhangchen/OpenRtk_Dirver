@@ -70,6 +70,7 @@ namespace Ins401_Tool {
 		all_type_pack_num[em_GNSS_SOL_INTEGEITY] = 0;
 		all_type_pack_num[em_RTK_DEBUG1] = 0;
 		all_type_pack_num[em_PACKAGE_FD] = 0;
+		all_type_pack_num[em_MTK_DEBUG] = 0;
 		all_type_pack_num[em_INS_INTEGRITY] = 0;
 		all_type_pack_num[em_G1] = 0;
 		all_type_pack_num[em_RUNSTATUS_MONITOR] = 0;
@@ -93,6 +94,7 @@ namespace Ins401_Tool {
 		all_type_file_output[em_GNSS_SOL_INTEGEITY] = 1;
 		all_type_file_output[em_RTK_DEBUG1] = 1;
 		all_type_file_output[em_PACKAGE_FD] = 1;
+        all_type_file_output[em_MTK_DEBUG] = 1;
 		all_type_file_output[em_INS_INTEGRITY] = 1;
 		all_type_file_output[em_G1] = 1;
 		all_type_file_output[em_RUNSTATUS_MONITOR] = 1;
@@ -1198,6 +1200,10 @@ namespace Ins401_Tool {
 				output_system_fault_detection();
 			}
 		}break;
+        case em_MTK_DEBUG:
+        {
+            save_mtk_debug_bin(payload, raw.length);
+        }
 		case em_G1:
 		{
 			if (!m_isOutputFile) break;
@@ -1518,5 +1524,12 @@ namespace Ins401_Tool {
 	raw_imu_t * Ins401_decoder::get_imu_raw()
 	{
 		return &imu;
+	}
+	void Ins401_decoder::save_mtk_debug_bin(uint8_t* buff, uint16_t len)
+	{
+		FILE* f_mtk_debug_bin = get_file("mtk_debug.bin");
+		if (f_mtk_debug_bin) {
+			fwrite(buff, 1, len, f_mtk_debug_bin);
+		}
 	}
 };
