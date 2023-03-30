@@ -9,6 +9,24 @@
 #include "kml.h"
 #include "ins401c.h"
 
+/* Tag20230229 add by wrj, add micro to control */
+#define CAN_J1939   1
+
+/********************** Tag20230229 add by wrj *************************/
+#if (CAN_J1939 == 1)
+#define INS_SA      0x64
+/* CAN ID, send out: 50hz */
+#define CAN_ID_SEND_INS_ACC                     ((0x0CFF02ul << 8) + INS_SA)
+#define CAN_ID_SEND_INS_GYRO                    ((0x0CFF03ul << 8) + INS_SA)
+#define CAN_ID_SEND_INS_PITCH_ROLL_HEADING      ((0x0CFF04ul << 8) + INS_SA)
+#define CAN_ID_SEND_INS_HEIGHT_AND_TIME         ((0x0CFF05ul << 8) + INS_SA)
+#define CAN_ID_SEND_INS_LATITUDE_AND_LONGITUDE  ((0x0CFF06ul << 8) + INS_SA)
+#define CAN_ID_SEND_INS_SPEED                   ((0x0CFF07ul << 8) + INS_SA)
+#define CAN_ID_SEND_INS_DATA_INFO               ((0x0CFF08ul << 8) + INS_SA)
+#define CAN_ID_SEND_INS_STD                     ((0x0CFF09ul << 8) + INS_SA)
+// #define CAN_ID_LEVER_ARM_FEEDBACK               ((0x18FF50ul << 8) + INS_SA) // event, not cycle
+#endif
+/***********************************************************************/
 
 namespace ins401c_Tool {
 	static FILE* fs_canfd = NULL;
@@ -39,6 +57,17 @@ namespace ins401c_Tool {
         {0x600, 53,           dbc_decode_odo_Message},
     };
     static const dbc_msg_hdr_t list_can_dbc_msgs[] = {
+        #if (CAN_J1939 == 1)
+        { CAN_ID_SEND_INS_ACC, 6,           dbc_decode_INS_ACC},
+        { CAN_ID_SEND_INS_GYRO, 6,          dbc_decode_INS_GYRO},
+        { CAN_ID_SEND_INS_PITCH_ROLL_HEADING, 6, dbc_decode_INS_HeadingPitchRoll},
+        { CAN_ID_SEND_INS_HEIGHT_AND_TIME, 4, dbc_decode_INS_HeightAndIMUStatus},
+        { CAN_ID_SEND_INS_LATITUDE_AND_LONGITUDE, 4, dbc_decode_INS_LatitudeLongitude},
+        { CAN_ID_SEND_INS_SPEED, 6,         dbc_decode_INS_Speed},
+        { CAN_ID_SEND_INS_DATA_INFO, 6,      dbc_decode_INS_DataInfo},
+        { CAN_ID_SEND_INS_STD, 8,           dbc_decode_INS_Std},
+        // { 0x188, 4,          dbc_decode_INS_Time}, // acenav call this ??????????????
+        #else
         { 0x180, 6,           dbc_decode_INS_ACC},
         { 0x181, 6,          dbc_decode_INS_GYRO},
         { 0x182, 6, dbc_decode_INS_HeadingPitchRoll},
@@ -48,6 +77,7 @@ namespace ins401c_Tool {
         { 0x186, 6,      dbc_decode_INS_DataInfo},
         { 0x187, 8,           dbc_decode_INS_Std},
         { 0x188, 4,          dbc_decode_INS_Time},
+        #endif
     };
 	static char base_ins401c_file_name[256] = { 0 };
 
@@ -574,6 +604,7 @@ namespace ins401c_Tool {
 
     /* Decode Vector__XXX* INS_ACC message
     * @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check */
+   /* PGN: 0xFF02 */
     bool dbc_decode_INS_ACC(uint8_t *pstu, const uint8_t *bytes)
     {
         const bool success = true;
@@ -584,16 +615,32 @@ namespace ins401c_Tool {
 
         uint32_t raw;
         INS_ACC_t *to = (INS_ACC_t *)pstu;
+        #if (CAN_J1939 == 1)
+        raw  = bytes[1] << 8;
+        raw |= bytes[0];
+        #else
+        raw  = bytes[0] << 8;
+        raw |= bytes[1];
+        #endif
+        to->ACC_X = ((raw * 0.0001220722) + (-4));
 
-        raw  = ((uint32_t)((bytes[0]))) << 8;    //< 8 bit(s) from B7
-        raw |= ((uint32_t)((bytes[1])));    //< 8 bit(s) from B15
-        to->ACC_X = ((raw * 0.0001220703125) + (-4));
-        raw  = ((uint32_t)((bytes[2]))) << 8;    //< 8 bit(s) from B23
-        raw |= ((uint32_t)((bytes[3])));    //< 8 bit(s) from B31
-        to->ACC_Y = ((raw * 0.0001220703125) + (-4));
-        raw  = ((uint32_t)((bytes[4]))) << 8;    //< 8 bit(s) from B39
-        raw |= ((uint32_t)((bytes[5])));    //< 8 bit(s) from B47
-        to->ACC_Z = ((raw * 0.0001220703125) + (-4));
+        #if (CAN_J1939 == 1)
+        raw  = bytes[3] << 8;
+        raw |= bytes[2];
+        #else
+        raw  = bytes[2] << 8;
+        raw |= bytes[3];
+        #endif
+        to->ACC_Y = ((raw * 0.0001220722) + (-4));
+
+        #if (CAN_J1939 == 1)
+        raw  = bytes[5] << 8;
+        raw |= bytes[4];
+        #else
+        raw  = bytes[4] << 8;
+        raw |= bytes[5];
+        #endif
+        to->ACC_Z = ((raw * 0.0001220722) + (-4));
 
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
         // printf("ACC_X:%0.2f\n", to->ACC_X * 9.7803267714);
@@ -608,6 +655,7 @@ namespace ins401c_Tool {
 
     /* Decode Vector__XXX* INS_GYRO message
     * @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check */
+    /* PGN: 0xFF03 */
     bool dbc_decode_INS_GYRO(uint8_t *pstu, const uint8_t *bytes)
     {
         const bool success = true;
@@ -618,16 +666,32 @@ namespace ins401c_Tool {
 
         uint32_t raw;
         INS_GYRO_t *to = (INS_GYRO_t *)pstu;
+        #if (CAN_J1939 == 1)
+        raw  = bytes[1] << 8;
+        raw |= bytes[0];
+        #else
+        raw  = bytes[0] << 8;
+        raw |= bytes[1];
+        #endif
+        to->GYRO_X = ((raw * 0.00762951) + (-250));
 
-        raw  = ((uint32_t)((bytes[0]))) << 8;    //< 8 bit(s) from B7
-        raw |= ((uint32_t)((bytes[1])));    //< 8 bit(s) from B15
-        to->GYRO_X = ((raw * 0.0076293) + (-250));
-        raw  = ((uint32_t)((bytes[2]))) << 8;    //< 8 bit(s) from B23
-        raw |= ((uint32_t)((bytes[3])));    //< 8 bit(s) from B31
-        to->GYRO_Y = ((raw * 0.0076293) + (-250));
-        raw  = ((uint32_t)((bytes[4]))) << 8;    //< 8 bit(s) from B39
-        raw |= ((uint32_t)((bytes[5])));    //< 8 bit(s) from B47
-        to->GYRO_Z = ((raw * 0.0076293) + (-250));
+        #if (CAN_J1939 == 1)
+        raw  = bytes[3] << 8;
+        raw |= bytes[2];
+        #else
+        raw  = bytes[2] << 8;
+        raw |= bytes[3];
+        #endif
+        to->GYRO_Y = ((raw * 0.00762951) + (-250));
+
+        #if (CAN_J1939 == 1)
+        raw  = bytes[5] << 8;
+        raw |= bytes[4];
+        #else
+        raw  = bytes[4] << 8;
+        raw |= bytes[5];
+        #endif
+        to->GYRO_Z = ((raw * 0.00762951) + (-250));
 
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
 
@@ -647,6 +711,7 @@ namespace ins401c_Tool {
 
     /* Decode Vector__XXX* INS_HeadingPitchRoll message
     * @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check */
+    /* PGN: 0xFF04 */
     bool dbc_decode_INS_HeadingPitchRoll(uint8_t *pstu, const uint8_t *bytes)
     {
         const bool success = true;
@@ -658,15 +723,32 @@ namespace ins401c_Tool {
         uint32_t raw;
         INS_HeadingPitchRoll_t *to = (INS_HeadingPitchRoll_t *)pstu;
 
-        raw  = ((uint32_t)((bytes[0]))) << 8;    //< 8 bit(s) from B7
-        raw |= ((uint32_t)((bytes[1])));    //< 8 bit(s) from B15
-        to->INS_PitchAngle = ((raw * 0.01098649576) + (-360));
-        raw  = ((uint32_t)((bytes[2]))) << 8;    //< 8 bit(s) from B23
-        raw |= ((uint32_t)((bytes[3])));    //< 8 bit(s) from B31
-        to->INS_RollAngle = ((raw * 0.01098649576) + (-360));
-        raw  = ((uint32_t)((bytes[4]))) << 8;    //< 8 bit(s) from B39
-        raw |= ((uint32_t)((bytes[5])));    //< 8 bit(s) from B47
-        to->INS_HeadingAngle = ((raw * 0.01098649576) + (-360));
+        #if (CAN_J1939 == 1)
+        raw  = bytes[1] << 8;
+        raw |= bytes[0];
+        #else
+        raw  = bytes[0] << 8;
+        raw |= bytes[1];
+        #endif
+        to->INS_PitchAngle = ((raw * 0.0109865) + (-360));
+
+        #if (CAN_J1939 == 1)
+        raw  = bytes[3] << 8;
+        raw |= bytes[2];
+        #else
+        raw  = bytes[2] << 8;
+        raw |= bytes[3];
+        #endif
+        to->INS_RollAngle = ((raw * 0.0109865) + (-360));
+
+        #if (CAN_J1939 == 1)
+        raw  = bytes[5] << 8;
+        raw |= bytes[4];
+        #else
+        raw  = bytes[4] << 8;
+        raw |= bytes[5];
+        #endif
+        to->INS_HeadingAngle = ((raw * 0.0109865) + (-360));
 
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
         // printf("INS_PitchAngle:%0.2f\n", to->INS_PitchAngle);
@@ -688,6 +770,7 @@ namespace ins401c_Tool {
 
     /* Decode Vector__XXX* INS_HeightAndIMUStatus message
     * @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check */
+    /* PGN: 0xFF05 */
     bool dbc_decode_INS_HeightAndIMUStatus(uint8_t *pstu, const uint8_t *bytes)
     {
         const bool success = true;
@@ -699,16 +782,33 @@ namespace ins401c_Tool {
         uint32_t raw;
         INS_HeightAndIMUStatus_t *to = (INS_HeightAndIMUStatus_t *)pstu;
 
-        raw  = ((uint32_t)((bytes[0]))) << 24;    //< 8 bit(s) from B7
-        raw |= ((uint32_t)((bytes[1]))) << 16;    //< 8 bit(s) from B15
-        raw |= ((uint32_t)((bytes[2]))) << 8;    //< 8 bit(s) from B23
-        raw |= ((uint32_t)((bytes[3])));    //< 8 bit(s) from B31
+        #if (CAN_J1939 == 1)
+        raw  = bytes[3] << 24;
+        raw |= bytes[2] << 16;
+        raw |= bytes[1] << 8;
+        raw |= bytes[0];
+        #else
+        raw  = bytes[0] << 24;
+        raw |= bytes[1] << 16;
+        raw |= bytes[2] << 8;
+        raw |= bytes[3];
+        #endif
         to->INS_LocatHeight = ((raw * 0.001) + (-10000));
-        raw  = ((uint32_t)((bytes[4]))) << 24;    //< 8 bit(s) from B39
-        raw |= ((uint32_t)((bytes[5]))) << 16;    //< 8 bit(s) from B47
-        raw |= ((uint32_t)((bytes[6]))) << 8;    //< 8 bit(s) from B55
-        raw |= ((uint32_t)((bytes[7])));    //< 8 bit(s) from B63
-        to->IMU_Status = ((raw));
+
+        #if (CAN_J1939 == 1)
+        raw  = bytes[7] << 24;
+        raw |= bytes[6] << 16;
+        raw |= bytes[5] << 8;
+        raw |= bytes[4];
+        #else
+        raw  = bytes[4] << 24;
+        raw |= bytes[5] << 16;
+        raw |= bytes[6] << 8;
+        raw |= bytes[7];
+        #endif
+
+        // to->IMU_Status = ((raw));
+        to->TimeOfWeek = ((raw));
 
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
         // printf("INS_LocatHeight:%0.2f\n", to->INS_LocatHeight);
@@ -722,12 +822,13 @@ namespace ins401c_Tool {
             can_mess_flag = 0x00;
         }
         ins_mess.height = to->INS_LocatHeight;
-        imu_mess.imu_status = to->IMU_Status;
+        ins_mess.time_of_week = to->TimeOfWeek; // unit: ms
         return success;
     }
 
     /* Decode Vector__XXX* INS_LatitudeLongitude message
     * @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check */
+    /* PGN: 0xFF06 */
     bool dbc_decode_INS_LatitudeLongitude(uint8_t *pstu, const uint8_t *bytes)
     {
         const bool success = true;
@@ -739,15 +840,30 @@ namespace ins401c_Tool {
         uint32_t raw;
         INS_LatitudeLongitude_t *to = (INS_LatitudeLongitude_t *)pstu;
 
-        raw  = ((uint32_t)((bytes[0]))) << 24;    //< 8 bit(s) from B7
-        raw |= ((uint32_t)((bytes[1]))) << 16;    //< 8 bit(s) from B15
-        raw |= ((uint32_t)((bytes[2]))) << 8;    //< 8 bit(s) from B23
-        raw |= ((uint32_t)((bytes[3])));    //< 8 bit(s) from B31
+        #if (CAN_J1939 == 1)
+        raw  = bytes[3] << 24;
+        raw |= bytes[2] << 16;
+        raw |= bytes[1] << 8;
+        raw |= bytes[0];
+        #else
+        raw  = bytes[0] << 24;
+        raw |= bytes[1] << 16;
+        raw |= bytes[2] << 8;
+        raw |= bytes[3];
+        #endif
         to->INS_Latitude = ((raw * 1e-07) + (-180));
-        raw  = ((uint32_t)((bytes[4]))) << 24;    //< 8 bit(s) from B39
-        raw |= ((uint32_t)((bytes[5]))) << 16;    //< 8 bit(s) from B47
-        raw |= ((uint32_t)((bytes[6]))) << 8;    //< 8 bit(s) from B55
-        raw |= ((uint32_t)((bytes[7])));    //< 8 bit(s) from B63
+
+        #if (CAN_J1939 == 1)
+        raw  = bytes[7] << 24;
+        raw |= bytes[6] << 16;
+        raw |= bytes[5] << 8;
+        raw |= bytes[4];
+        #else
+        raw  = bytes[4] << 24;
+        raw |= bytes[5] << 16;
+        raw |= bytes[6] << 8;
+        raw |= bytes[7];
+        #endif
         to->INS_Longitude = ((raw * 1e-07) + (-180));
 
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
@@ -768,6 +884,7 @@ namespace ins401c_Tool {
 
     /* Decode Vector__XXX* INS_Speed message
     * @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check */
+    /* PGN: 0xFF07 */
     bool dbc_decode_INS_Speed(uint8_t *pstu, const uint8_t *bytes)
     {
         const bool success = true;
@@ -779,15 +896,32 @@ namespace ins401c_Tool {
         uint32_t raw;
         INS_Speed_t *to = (INS_Speed_t *)pstu;
 
-        raw  = ((uint32_t)((bytes[0]))) << 8;    //< 8 bit(s) from B7
-        raw |= ((uint32_t)((bytes[1])));    //< 8 bit(s) from B15
-        to->INS_NorthSpd = ((raw * 0.0030517) + (-100));
-        raw  = ((uint32_t)((bytes[2]))) << 8;    //< 8 bit(s) from B23
-        raw |= ((uint32_t)((bytes[3])));    //< 8 bit(s) from B31
-        to->INS_EastSpd = ((raw * 0.0030517) + (-100));
-        raw  = ((uint32_t)((bytes[4]))) << 8;    //< 8 bit(s) from B39
-        raw |= ((uint32_t)((bytes[5])));    //< 8 bit(s) from B47
-        to->INS_ToGroundSpd = ((raw * 0.0030517) + (-100));
+        #if (CAN_J1939 == 1)
+        raw  = bytes[1] << 8;
+        raw |= bytes[0];
+        #else
+        raw  = bytes[0] << 8;
+        raw |= bytes[1];
+        #endif
+        to->INS_NorthSpd = ((raw * 0.0030518) + (-100));
+
+        #if (CAN_J1939 == 1)
+        raw  = bytes[3] << 8;
+        raw |= bytes[2];
+        #else
+        raw  = bytes[2] << 8;
+        raw |= bytes[3];
+        #endif
+        to->INS_EastSpd = ((raw * 0.0030518) + (-100));
+
+        #if (CAN_J1939 == 1)
+        raw  = bytes[5] << 8;
+        raw |= bytes[4];
+        #else
+        raw  = bytes[4] << 8;
+        raw |= bytes[5];
+        #endif
+        to->INS_ToGroundSpd = ((raw * 0.0030518) + (-100));
 
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
         // printf("INS_NorthSpd:%0.2f\n", to->INS_NorthSpd);
@@ -809,6 +943,7 @@ namespace ins401c_Tool {
 
     /* Decode Vector__XXX* INS_DataInfo message
     * @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check */
+    /* PGN: 0xFF08 */
     bool dbc_decode_INS_DataInfo(uint8_t *pstu, const uint8_t *bytes)
     {
         const bool success = true;
@@ -820,18 +955,29 @@ namespace ins401c_Tool {
         uint32_t raw;
         INS_DataInfo_t *to = (INS_DataInfo_t *)pstu;
 
-        raw  = ((uint32_t)((bytes[0])));    //< 8 bit(s) from B7
-        to->INS_GpsFlag_Pos = ((raw));
-        raw  = ((uint32_t)((bytes[1])));    //< 8 bit(s) from B15
-        to->INS_NumSV = ((raw));
-        raw  = ((uint32_t)((bytes[2])));    //< 8 bit(s) from B23
-        to->INS_GpsFlag_Heading = ((raw));
-        raw  = ((uint32_t)((bytes[3])));    //< 8 bit(s) from B31
-        to->INS_Gps_Age = ((raw));
-        raw  = ((uint32_t)((bytes[4])));    //< 8 bit(s) from B39
-        to->INS_Car_Status = ((raw));
-        raw  = ((uint32_t)((bytes[5])));    //< 8 bit(s) from B47
-        to->INS_Status = ((raw));
+        raw  = (uint32_t)bytes[0];
+        to->INS_GpsFlag_Pos = raw;
+
+        raw  = (uint32_t)bytes[1];
+        to->INS_NumSV = raw;
+
+        raw  = (uint32_t)bytes[2];
+        to->INS_GpsFlag_Heading = raw;
+
+        raw  = (uint32_t)bytes[3];
+        to->INS_Gps_Age = raw;
+
+        raw  = (uint32_t)bytes[4];
+        to->INS_Car_Status = raw;
+
+        raw  = (uint32_t)bytes[5];
+        to->INS_Status = raw;
+
+        /**** Tag20230229 add by wrj ****/
+        raw = bytes[7] << 8;
+        raw |= bytes[6];
+        to->INS_week_no = raw;
+        /********************************/
 
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
         // printf("INS_GpsFlag_Pos:%d\n", to->INS_GpsFlag_Pos);
@@ -850,11 +996,16 @@ namespace ins401c_Tool {
         }
         ins_mess.ins_position_status = to->INS_GpsFlag_Pos;
         ins_mess.ins_car_status = to->INS_Car_Status;
+        ins_mess.week = to->INS_week_no;
+        /******* Tag20230229 add by wrj *******/
+        ins_mess.ins_status = to->INS_Status;
+        /**************************************/
         return success;
     }
 
     /* Decode Vector__XXX* INS_Std message
     * @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check */
+    /* PGN: 0xFF09 */
     bool dbc_decode_INS_Std(uint8_t *pstu, const uint8_t *bytes)
     {
         const bool success = true;
@@ -866,17 +1017,40 @@ namespace ins401c_Tool {
         uint32_t raw;
         INS_Std_t *to = (INS_Std_t *)pstu;
 
-        raw  = ((uint32_t)((bytes[0]))) << 8;    //< 8 bit(s) from B7
-        raw |= ((uint32_t)((bytes[1])));    //< 8 bit(s) from B15
+        #if (CAN_J1939 == 1)
+        raw  = bytes[1] << 8;
+        raw |= bytes[0];
+        #else
+        raw  = bytes[0] << 8;
+        raw |= bytes[1];
+        #endif
         to->INS_Std_Lat = ((raw * 0.001));
-        raw  = ((uint32_t)((bytes[2]))) << 8;    //< 8 bit(s) from B23
-        raw |= ((uint32_t)((bytes[3])));    //< 8 bit(s) from B31
+
+        #if (CAN_J1939 == 1)
+        raw  = bytes[3] << 8;
+        raw |= bytes[2];
+        #else
+        raw  = bytes[2] << 8;
+        raw |= bytes[3];
+        #endif
         to->INS_Std_Lon = ((raw * 0.001));
-        raw  = ((uint32_t)((bytes[4]))) << 8;    //< 8 bit(s) from B39
-        raw |= ((uint32_t)((bytes[5])));    //< 8 bit(s) from B47
+
+        #if (CAN_J1939 == 1)
+        raw  = bytes[5] << 8;
+        raw |= bytes[4];
+        #else
+        raw  = bytes[4] << 8;
+        raw |= bytes[5];
+        #endif
         to->INS_Std_LocatHeight = ((raw * 0.001));
-        raw  = ((uint32_t)((bytes[6]))) << 8;    //< 8 bit(s) from B55
-        raw |= ((uint32_t)((bytes[7])));    //< 8 bit(s) from B63
+
+        #if (CAN_J1939 == 1)
+        raw  = bytes[7] << 8;
+        raw |= bytes[6];
+        #else
+        raw  = bytes[6] << 8;
+        raw |= bytes[7];
+        #endif
         to->INS_Std_Heading = ((raw * 0.001));
 
         to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
@@ -895,6 +1069,45 @@ namespace ins401c_Tool {
         ins_mess.latitude_std = to->INS_Std_Lat;
         ins_mess.longitude_std = to->INS_Std_Lon;
         ins_mess.height_std = to->INS_Std_LocatHeight;
+
+        /***************** Tag20230229 add by wrj, move here from INS TIME function ******************/
+        // if(can_mess_flag == 0x1ff)
+        if(can_mess_flag == 0xff)
+        {
+            /* Tag20230229 note by wrj, modify imu time to ins time, because imu use same week and time with ins */
+            sprintf(ins401c_output_msg_imu, "%d,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%d\n",ins_mess.week,\
+            (double)(ins_mess.time_of_week),\
+            imu_mess.acc_x, imu_mess.acc_y, imu_mess.acc_z,\
+            imu_mess.gryo_x, imu_mess.gryo_y, imu_mess.gryo_z,\
+            imu_mess.imu_status\
+            );
+
+            sprintf(ins401c_output_msg_ins, "%d,%11.4f,%d,%d,%11.7f,%11.7f,%11.7f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f,%11.4f\n",
+            ins_mess.week, (double)(ins_mess.time_of_week),\
+            /* Tag20230229 modify by wrj, change car status and ins postion status to gps position type and ins status */
+            ins_mess.ins_position_status, ins_mess.ins_status,\
+            ins_mess.latitude, ins_mess.longitude, ins_mess.height,\
+            ins_mess.north_vel, ins_mess.east_vel, ins_mess.up_vel,\
+            ins_mess.roll, ins_mess.pitch, ins_mess.heading,\
+            ins_mess.latitude_std, ins_mess.longitude_std, ins_mess.longitude_std\
+            );
+
+            write_ins401c_imu_file(ins401c_output_msg_imu);
+            write_ins401c_ins_file(ins401c_output_msg_ins);
+#if 1
+            if ((uint32_t)(ins_mess.time_of_week) % 100 < 10) { /* note by wrj: get entire second */
+                create_file(f_ins_txt, "ins.txt", NULL);
+                fprintf(f_ins_txt, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n",
+                    ins_mess.week, (double)ins_mess.time_of_week / 1000.0, ins_mess.latitude, ins_mess.longitude, ins_mess.height,
+                    ins_mess.north_vel, ins_mess.east_vel, ins_mess.up_vel,
+                    ins_mess.roll, ins_mess.pitch, ins_mess.heading, ins_mess.ins_car_status, ins_mess.ins_position_status);
+            }
+#endif
+    		append_ins_kml();
+            can_mess_flag = 0;
+        }
+        /********************************************************************************************/
+
         return success;
     }
 
@@ -955,13 +1168,13 @@ namespace ins401c_Tool {
             write_ins401c_imu_file(ins401c_output_msg_imu);
             write_ins401c_ins_file(ins401c_output_msg_ins);
 #if 1
-		if ((uint32_t)(ins_mess.time_of_week) % 100 < 10) {
-			create_file(f_ins_txt, "ins.txt", NULL);
-			fprintf(f_ins_txt, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n",
-				ins_mess.week, (double)ins_mess.time_of_week / 1000.0, ins_mess.latitude, ins_mess.longitude, ins_mess.height,
-				ins_mess.north_vel, ins_mess.east_vel, ins_mess.up_vel,
-				ins_mess.roll, ins_mess.pitch, ins_mess.heading, ins_mess.ins_car_status, ins_mess.ins_position_status);
-		}
+            if ((uint32_t)(ins_mess.time_of_week) % 100 < 10) {
+                create_file(f_ins_txt, "ins.txt", NULL);
+                fprintf(f_ins_txt, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n",
+                    ins_mess.week, (double)ins_mess.time_of_week / 1000.0, ins_mess.latitude, ins_mess.longitude, ins_mess.height,
+                    ins_mess.north_vel, ins_mess.east_vel, ins_mess.up_vel,
+                    ins_mess.roll, ins_mess.pitch, ins_mess.heading, ins_mess.ins_car_status, ins_mess.ins_position_status);
+            }
 #endif
     		append_ins_kml();
             can_mess_flag = 0;
@@ -1009,7 +1222,8 @@ namespace ins401c_Tool {
         uint16_t data_index = 0;
         while (str != NULL)
         {
-            count++; 
+            count++;
+            /* note by wrj: canfd frame, data bytes > 25, so all canfd frame's DLC need > 25, othersize will be think it's can frame */
             if(data_len > 150)
             {
                 if(count == 4)
@@ -1025,12 +1239,13 @@ namespace ins401c_Tool {
                     data_frame_start_flag = 1;
                 }
             }
-            else
+            else /* note by wrj: can frame: data bytes < 25 */
             {
                 if(count == 4)
                 {
                     mid = strtol(str, &endptr, 16);
                 }
+                /* note by wrj: the space number of can frame is diffrent with canfd frame, here >=8, data scope begin */
                 if( (count >= 8) && (count <= 50) )
                 {
                     valid_data[count-8] = strtol(str, &endptr, 16);
