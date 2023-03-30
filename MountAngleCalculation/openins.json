@@ -62,7 +62,7 @@
     "gnssHeadingCalibration": 0,
     "gnssOutputDataRate": 1,
     "gnssSensorType": 0,
-    "gnssfileName": "F:/data/2022/session_20220927_101956/ins401_log_2209000929_20220927_102342/user_2022_09_27_10_23_45_d/user_2022_09_27_10_23_45_gnssposvel.txt",
+    "gnssfileName": "F:/data/2023/2279000600_20230317_094053/ins402_log_2279000600_20230317_094053/user_2023_03_17_09_41_01_d/user_2023_03_17_09_41_01_gnssposvel.txt",
     "gyroBias": [
         0,
         0,
@@ -75,17 +75,17 @@
     ],
     "imuDataRate": 100,
     "imuSensorType": 1,
-    "initfile": "F:/data/2022/session_20220927_101956/ins401_log_2209000929_20220927_102342/user_2022_09_27_10_23_45_d/user_2022_09_27_10_23_45_ins.txt",
+    "initfile": "F:/data/2023/2279000600_20230317_094053/ins402_log_2279000600_20230317_094053/user_2023_03_17_09_41_01_d/user_2023_03_17_09_41_01_process_ins.txt",
     "initfiletype": 0,
     "initfmpre": 0,
     "initialAttitudeMode": 0,
     "insOutputDataRate": 10,
-    "insfileName": "F:/data/2022/session_20220927_101956/ins401_log_2209000929_20220927_102342/user_2022_09_27_10_23_45_d/user_2022_09_27_10_23_45_imu.txt",
+    "insfileName": "F:/data/2023/2279000600_20230317_094053/ins402_log_2279000600_20230317_094053/user_2023_03_17_09_41_01_d/user_2023_03_17_09_41_01_imu.txt",
     "isDualAntBaselineCalibration": 0,
     "isKmlOutput": 1,
     "isOnlineMisAlignmentEst": 0,
     "isTiltCalibrationRIGHT": 0,
-    "isUseDuaAnt": 0,
+    "isUseDuaAnt": 1,
     "isUseGNSSVel": 0,
     "isUseNHC": 1,
     "isUseNHCRES": 0,
@@ -97,38 +97,38 @@
     "kmlOutputDateRate": 1,
     "odoDataRate": 10,
     "odoLeverArm": [
-        0.17,
-        -0.11,
-        0.21
+        0.62,
+        -0.31,
+        0.44
     ],
     "odoScale": 1,
-    "odofileName": "F:/data/2022/session_20220927_101956/ins401_log_2209000929_20220927_102342/user_2022_09_27_10_23_45_d/user_2022_09_27_10_23_45_odo.txt",
-    "outputfileName": "F:/data/2022/session_20220927_101956/ins401_log_2209000929_20220927_102342/user_2022_09_27_10_23_45_d\\resultsodo\\post",
+    "odofileName": "",
+    "outputfileName": "F:/data/2023/2279000600_20230317_094053/ins402_log_2279000600_20230317_094053/user_2023_03_17_09_41_01_d\\resultsodo\\post",
     "priLeverArm": [
-        0.49,
-        -0.09,
-        -1.06
+        0.94,
+        -0.28,
+        -0.83
     ],
     "procType": 0,
-    "procfileName": "F:/data/2022/session_20220927_101956/ins401_log_2209000929_20220927_102342/user_2022_09_27_10_23_45_d/user_2022_09_27_10_23_45_process",
+    "procfileName": "F:/data/2023/2279000600_20230317_094053/ins402_log_2279000600_20230317_094053/user_2023_03_17_09_41_01_d/user_2023_03_17_09_41_01_process",
     "profiletype": 127,
-    "reffileName": "F:/data/2022/session_20220927_101956/ins401_log_2209000929_20220927_102342/rtcm_base_2022_09_27_10_23_42.bin",
+    "reffileName": "F:/data/2023/2279000600_20230317_094053/ins402_log_2279000600_20230317_094053/rtcm_base_2023_03_17_09_40_53.bin",
     "rotationRBV": [
         0,
         0,
         180
     ],
     "rov2fileName": "",
-    "rovfileName": "F:/data/2022/session_20220927_101956/ins401_log_2209000929_20220927_102342/rtcm_rover_2022_09_27_10_23_44.bin",
+    "rovfileName": "F:/data/2023/2279000600_20230317_094053/ins402_log_2279000600_20230317_094053/rtcm_rover1_2023_03_17_09_41_03.bin",
     "secLeverArm": [
-        0,
-        0,
+        1.99,
+        -0.28,
         0
     ],
     "useGNSSRate": 1,
     "userLeverArm": [
-        0.49,
-        -0.09,
-        -1.06
+        0.94,
+        -0.28,
+        -0.83
     ]
 }

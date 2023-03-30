@@ -23,6 +23,11 @@
          <string>Gnss Post Result</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>Post Ins Csv to Kml</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item>

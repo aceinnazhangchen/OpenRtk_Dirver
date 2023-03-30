@@ -52,7 +52,7 @@ void decode_openrtk330li_interface(char* filename)
 	}
 }
 
-void decode_rtk330la_interface(char* filename)
+void decode_rtk330la_interface(char* filename, bool pruned)
 {
 	RTK330LA_Tool::Rtk330la_decoder* rtk330la_decoder = new RTK330LA_Tool::Rtk330la_decoder();
 	FILE* file = fopen(filename, "rb");
@@ -65,6 +65,7 @@ void decode_rtk330la_interface(char* filename)
 		char read_cache[READ_CACHE_SIZE] = { 0 };
 		createDirByFilePath(filename, dirname);
 		rtk330la_decoder->init();
+		rtk330la_decoder->set_pruned(pruned);
 		rtk330la_decoder->set_base_file_name(dirname);
 		while (!feof(file)) {
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
@@ -82,7 +83,7 @@ void decode_rtk330la_interface(char* filename)
 	delete rtk330la_decoder;
 }
 
-void decode_ins401_interface(char* filename, char* is_parse_dr)
+void decode_ins401_interface(char* filename, char* is_parse_dr, bool pruned)
 {
 	Ins401_Tool::Ins401_decoder* ins401_decoder = new Ins401_Tool::Ins401_decoder();
 	FILE* file = fopen(filename, "rb");
@@ -99,7 +100,8 @@ void decode_ins401_interface(char* filename, char* is_parse_dr)
 		char dirname[256] = { 0 };
 		createDirByFilePath(filename, dirname);
 		ins401_decoder->init();
-		ins401_decoder->set_base_file_name(dirname);
+		ins401_decoder->set_pruned(pruned);
+		ins401_decoder->set_base_file_name(dirname);		
 		while (!feof(file)) {
 			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
 			read_size += readcount;

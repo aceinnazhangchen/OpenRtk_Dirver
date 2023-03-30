@@ -16,6 +16,8 @@ namespace Ins401_Tool {
 	{
 		all_type_pack_num.clear();
 		output_file_map.clear();
+		m_TRJL_ins_kml = new Kml_Ins_Obj();
+		m_TRJM_ins_kml = new Kml_Ins_Obj();
 		init();
 	}
 
@@ -26,6 +28,7 @@ namespace Ins401_Tool {
 
 	void Ins401_decoder::init()
 	{
+		is_pruned = false;
 		pack_num = 0;
 		crc_right_num = 0;
 		crc_error_num = 0;
@@ -46,12 +49,14 @@ namespace Ins401_Tool {
 		memset(&system_fault_detection, 0, sizeof(system_fault_detection));		
 		memset(&ins_integ, 0, sizeof(ins_integ));
 		memset(&monitor, 0, sizeof(monitor));
+		memset(&movbs, 0, sizeof(movbs));
 		memset(&gnss_kml, 0, sizeof(gnss_kml));
 		memset(&ins_kml, 0, sizeof(ins_kml));
 		memset(base_file_name, 0, 1024);
 		
 		all_type_pack_num[em_RAW_IMU] = 0;
 		all_type_pack_num[em_GNSS_SOL] = 0;
+        all_type_pack_num[em_GNSS_PVT] = 0;
 		all_type_pack_num[em_MOVBS_SOL] = 0;
         all_type_pack_num[em_HEADING_SOL] = 0;
 		all_type_pack_num[em_INS_SOL] = 0;
@@ -65,12 +70,17 @@ namespace Ins401_Tool {
 		all_type_pack_num[em_GNSS_SOL_INTEGEITY] = 0;
 		all_type_pack_num[em_RTK_DEBUG1] = 0;
 		all_type_pack_num[em_PACKAGE_FD] = 0;
-		all_type_pack_num[em_INS_INTERGRITY] = 0;
+		all_type_pack_num[em_MTK_DEBUG] = 0;
+		all_type_pack_num[em_INS_INTEGRITY] = 0;
 		all_type_pack_num[em_G1] = 0;
 		all_type_pack_num[em_RUNSTATUS_MONITOR] = 0;
+		all_type_pack_num[em_TRJL] = 0;
+		all_type_pack_num[em_TRJM] = 0;
+		all_type_pack_num[em_ins_record] = 0;
 
 		all_type_file_output[em_RAW_IMU] = 1;
 		all_type_file_output[em_GNSS_SOL] = 1;
+        all_type_file_output[em_GNSS_PVT] = 1;
 		all_type_file_output[em_MOVBS_SOL] = 1;
         all_type_file_output[em_HEADING_SOL] = 1;
 		all_type_file_output[em_INS_SOL] = 1;
@@ -84,10 +94,16 @@ namespace Ins401_Tool {
 		all_type_file_output[em_GNSS_SOL_INTEGEITY] = 1;
 		all_type_file_output[em_RTK_DEBUG1] = 1;
 		all_type_file_output[em_PACKAGE_FD] = 1;
-		all_type_file_output[em_INS_INTERGRITY] = 1;
+        all_type_file_output[em_MTK_DEBUG] = 1;
+		all_type_file_output[em_INS_INTEGRITY] = 1;
 		all_type_file_output[em_G1] = 1;
 		all_type_file_output[em_RUNSTATUS_MONITOR] = 1;
+		all_type_file_output[em_TRJL] = 1;
+		all_type_file_output[em_TRJM] = 1;
+		all_type_file_output[em_ins_record] = 1;
 		Kml_Generator::Instance()->init();
+		m_TRJL_ins_kml->init();
+		m_TRJM_ins_kml->init();
 	}
 
 	void Ins401_decoder::close_all_files()
@@ -183,15 +199,11 @@ namespace Ins401_Tool {
 				, imu.accel_x, imu.accel_y, imu.accel_z
 				, imu.gyro_x, imu.gyro_y, imu.gyro_z);
 		}
+	}
+
+	void Ins401_decoder::output_imu_raw_process()
+	{
 #ifdef OUTPUT_INNER_FILE
-		//txt
-		FILE* f_imu_txt = get_file("imu.txt");
-		if (f_imu_txt) {
-			fprintf(f_imu_txt, "%d,%11.4f,    ,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f,%14.10f\n"
-				, imu.gps_week, (double)imu.gps_millisecs / 1000.0
-				, imu.accel_x, imu.accel_y, imu.accel_z
-				, imu.gyro_x, imu.gyro_y, imu.gyro_z);
-		}
 		//process
 		FILE* f_process = get_file("process");
 		if (f_process) {
@@ -264,9 +276,9 @@ namespace Ins401_Tool {
 			fprintf(f_gnss_csv, ",%10.4f,%10.4f,%10.4f", gnss.north_vel_std, gnss.east_vel_std, gnss.up_vel_std);
 			fprintf(f_gnss_csv, "\n");
 		}
+		if (is_pruned) return;
 #ifdef OUTPUT_INNER_FILE
 		double track_over_ground = atan2(gnss.east_vel, gnss.north_vel)*R2D;
-		double horizontal_speed = sqrt(gnss.north_vel * gnss.north_vel + gnss.east_vel * gnss.east_vel);
 		//txt
 		FILE* f_gnss_txt = get_file("gnssposvel.txt");
 		if (f_gnss_txt) {
@@ -275,6 +287,19 @@ namespace Ins401_Tool {
 				gnss.latitude_std, gnss.longitude_std, gnss.height_std,
 				gnss.position_type, gnss.north_vel, gnss.east_vel, gnss.up_vel, track_over_ground);
 		}
+		FILE* f_gnss_time_txt = get_file("gnss_process_time.csv");
+		if (f_gnss_time_txt) {
+			fprintf(f_gnss_time_txt, "%d,%11.4f,%6.4f\n", gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, (imu.gps_millisecs - gnss.gps_millisecs) / 1000.0);
+		}
+#endif
+		append_gnss_kml();
+	}
+
+	void Ins401_decoder::output_gnss_sol_process()
+	{
+#ifdef OUTPUT_INNER_FILE
+		double track_over_ground = atan2(gnss.east_vel, gnss.north_vel)*R2D;
+		double horizontal_speed = sqrt(gnss.north_vel * gnss.north_vel + gnss.east_vel * gnss.east_vel);
 		//process
 		FILE* f_process = get_file("process");
 		if (f_process) {
@@ -290,14 +315,35 @@ namespace Ins401_Tool {
 			fprintf(f_process, "$GPVNED,%d,%11.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f,%10.4f\n",
 				gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, gnss.north_vel, gnss.east_vel, -gnss.up_vel, gnss.north_vel_std, gnss.east_vel_std, gnss.up_vel_std);
 		}
-		FILE* f_gnss_time_txt = get_file("gnss_process_time.csv");
-		if (f_gnss_time_txt) {
-			fprintf(f_gnss_time_txt, "%d,%11.4f,%6.4f\n", gnss.gps_week, (double)gnss.gps_millisecs / 1000.0, (imu.gps_millisecs - gnss.gps_millisecs) / 1000.0);
-		}		
 #endif
-		append_gnss_kml();
 	}
 
+	void Ins401_decoder::output_pvt_sol()
+	{
+		//csv
+		std::string title =
+			"GPS_Week(),GPS_TimeOfWeek(s)"
+			",nspp_use(), pvt_time(s)"
+			",position_x(cm),position_y(cm),position_z(cm)"
+            ",velocity_x(cm/s),velocity_y(cm/s),velocity_z(cm/s)"
+            ",pos_acc_east(mm),pos_acc_north(mm),pos_acc_down(mm)"
+            ",vel_acc_east(mm),vel_acc_north(mm),vel_acc_down(mm)\n";
+
+		FILE* f_gnss_csv = get_file("pvt.csv", title);
+		if (f_gnss_csv) {
+			if (show_format_time) {
+				fprintf(f_gnss_csv, "%s,", week_2_time_str(mtk_pvt.gps_week, mtk_pvt.gps_tow));
+			}
+			fprintf(f_gnss_csv, "%d,%11.4f", mtk_pvt.gps_week, (double)mtk_pvt.gps_tow / 1000);
+			fprintf(f_gnss_csv, ",%5d, %11.1f", mtk_pvt.nspp_use, mtk_pvt.pvt_time);
+			fprintf(f_gnss_csv, ",%11.7f,%11.7f,%11.7f", mtk_pvt.pvt_pos[0], mtk_pvt.pvt_pos[1], mtk_pvt.pvt_pos[2]);
+			fprintf(f_gnss_csv, ",%11.7f,%11.7f,%11.7f", mtk_pvt.pvt_pos[3], mtk_pvt.pvt_pos[4], mtk_pvt.pvt_pos[5]);
+			fprintf(f_gnss_csv, ",%11.7f,%11.7f,%11.7f", mtk_pvt.pvt_std[0], mtk_pvt.pvt_std[1], mtk_pvt.pvt_std[2]);
+			fprintf(f_gnss_csv, ",%11.7f,%11.7f,%11.7f", mtk_pvt.pvt_std[3], mtk_pvt.pvt_std[4], mtk_pvt.pvt_std[5]);
+			fprintf(f_gnss_csv, "\n");
+		}
+	}
+	
 	void Ins401_decoder::MI_output_gnss_sol()
 	{
 #ifdef MI_OUTPUT_FILE
@@ -341,8 +387,27 @@ namespace Ins401_Tool {
 	}
 
 	void Ins401_decoder::output_ins_sol() {
+#ifdef OUTPUT_INNER_FILE
+		if (ins.gps_millisecs % 100 < 10) {
+			//txt
+			std::string title_txt =
+				"GPS_Week(),GPS_TimeOfWeek(s)"
+				",latitude(deg),longitude(deg),height(m)"
+				",north_velocity(m/s),east_velocity(m/s),up_velocity(m/s)"
+				",roll(deg),pitch(deg),heading(deg)"
+				",ins_position_type(),ins_status()\n";
+			FILE* f_ins_txt = get_file("10hz_ins.csv", title_txt);
+			if (f_ins_txt) {
+				fprintf(f_ins_txt, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n",
+					ins.gps_week, (double)ins.gps_millisecs / 1000.0, ins.latitude, ins.longitude, ins.height,
+					ins.north_velocity, ins.east_velocity, ins.up_velocity,
+					ins.roll, ins.pitch, ins.heading, ins.ins_position_type, ins.ins_status);
+			}
+		}
+#endif
+		if (is_pruned) return;
 		//csv
-		std::string title = 
+		std::string title =
 			"GPS_Week(),GPS_TimeOfWeek(s),ins_status(),ins_position_type()"
 			",latitude(deg),longitude(deg),height(m)"
 			",north_velocity(m/s),east_velocity(m/s),up_velocity(m/s)"
@@ -353,7 +418,7 @@ namespace Ins401_Tool {
 			",long_vel_std(m/s),lat_vel_std(m/s)"
 			",roll_std(deg),pitch_std(deg),heading_std(deg)"
 			",contient()\n";
-		FILE* f_ins_csv = get_file("ins.csv", title, show_format_time);
+		FILE* f_ins_csv = get_file("100hz_ins.csv", title, show_format_time);
 		if (f_ins_csv) {
 			if (show_format_time) {
 				fprintf(f_ins_csv, "%s,", week_2_time_str(ins.gps_week, ins.gps_millisecs));
@@ -368,23 +433,13 @@ namespace Ins401_Tool {
 			fprintf(f_ins_csv, "%8.3f,%8.3f,", ins.long_vel_std, ins.lat_vel_std);
 			fprintf(f_ins_csv, "%8.3f,%8.3f,%8.3f,", ins.roll_std, ins.pitch_std, ins.heading_std);
 			fprintf(f_ins_csv, "%3d\n", ins.id_contient);
-		}
+		}		
+		append_ins_kml();
+	}
+
+	void Ins401_decoder::output_ins_sol_process() {
 #ifdef OUTPUT_INNER_FILE
 		if (ins.gps_millisecs % 100 < 10) {
-			//txt
-			std::string title_txt =
-				"GPS_Week(),GPS_TimeOfWeek(s)"
-				",latitude(deg),longitude(deg),height(m)"
-				",north_velocity(m/s),east_velocity(m/s),up_velocity(m/s)"
-				",roll(deg),pitch(deg),heading(deg)"
-				",ins_position_type(),ins_status()\n";
-			FILE* f_ins_txt = get_file("ins.txt", title_txt);
-			if (f_ins_txt) {
-				fprintf(f_ins_txt, "%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d\n",
-					ins.gps_week, (double)ins.gps_millisecs / 1000.0, ins.latitude, ins.longitude, ins.height,
-					ins.north_velocity, ins.east_velocity, ins.up_velocity,
-					ins.roll, ins.pitch, ins.heading, ins.ins_position_type, ins.ins_status);
-			}
 			//process
 			FILE* f_process = get_file("process");
 			if (f_process) {
@@ -395,7 +450,6 @@ namespace Ins401_Tool {
 			}
 		}
 #endif
-		append_ins_kml();
 	}
 
 	void Ins401_decoder::output_ins_integ()
@@ -406,20 +460,20 @@ namespace Ins401_Tool {
 			",pitch_pl, roll_pl, heading_pl"
 			",hor_pos_pl_status, ver_pos_pl_status, hor_vel_pl_status, ver_vel_pl_status"
 			",pitch_pl_status, roll_pl_status, heading_pl_status\n";
-		FILE* f_ins_intergrity_csv = get_file("ins_intergrity.csv", title);
-		if (f_ins_intergrity_csv) {
-			fprintf(f_ins_intergrity_csv, "%4d,%11.4f", ins_integ.gps_week, (double)ins_integ.gps_millisecs / 1000.0);
-			fprintf(f_ins_intergrity_csv, ",%8.3f,%8.3f,%8.3f,%8.3f", ins_integ.hor_pos_pl, ins_integ.ver_pos_pl, ins_integ.hor_vel_pl, ins_integ.ver_vel_pl);
-			fprintf(f_ins_intergrity_csv, ",%8.3f,%8.3f,%8.3f", ins_integ.pitch_pl, ins_integ.roll_pl, ins_integ.heading_pl);
-			fprintf(f_ins_intergrity_csv, ",%2d,%2d,%2d,%2d", ins_integ.hor_pos_pl_status, ins_integ.ver_pos_pl_status, ins_integ.hor_vel_pl_status, ins_integ.ver_vel_pl_status);
-			fprintf(f_ins_intergrity_csv, ",%2d,%2d,%2d", ins_integ.pitch_pl_status, ins_integ.roll_pl_status, ins_integ.heading_pl_status);
-			fprintf(f_ins_intergrity_csv, "\n");
+		FILE* f_ins_integrity_csv = get_file("ins_integrity.csv", title);
+		if (f_ins_integrity_csv) {
+			fprintf(f_ins_integrity_csv, "%4d,%11.4f", ins_integ.gps_week, (double)ins_integ.gps_millisecs / 1000.0);
+			fprintf(f_ins_integrity_csv, ",%8.3f,%8.3f,%8.3f,%8.3f", ins_integ.hor_pos_pl, ins_integ.ver_pos_pl, ins_integ.hor_vel_pl, ins_integ.ver_vel_pl);
+			fprintf(f_ins_integrity_csv, ",%8.3f,%8.3f,%8.3f", ins_integ.pitch_pl, ins_integ.roll_pl, ins_integ.heading_pl);
+			fprintf(f_ins_integrity_csv, ",%2d,%2d,%2d,%2d", ins_integ.hor_pos_pl_status, ins_integ.ver_pos_pl_status, ins_integ.hor_vel_pl_status, ins_integ.ver_vel_pl_status);
+			fprintf(f_ins_integrity_csv, ",%2d,%2d,%2d", ins_integ.pitch_pl_status, ins_integ.roll_pl_status, ins_integ.heading_pl_status);
+			fprintf(f_ins_integrity_csv, "\n");
 		}
 	}
 
 	void Ins401_decoder::output_ins_and_integ()
 	{
-		if (ins.gps_millisecs != ins_integ.gps_millisecs) {
+		if (ins.gps_millisecs != ins_integ.gps_millisecs ) {
 			return;
 		}
 		if (ins.gps_millisecs % 100 >= 10) {
@@ -435,23 +489,30 @@ namespace Ins401_Tool {
 			",north_velocity_std(m/s),east_velocity_std(m/s),up_velocity_std(m/s)"
 			",roll_std(deg),pitch_std(deg),heading_std(deg)"
 			",hor_pos_pl, ver_pos_pl, hor_vel_pl, ver_vel_pl"
-			",pitch_pl, roll_pl, heading_pl\n";
+			",pitch_pl, roll_pl, heading_pl,cor_pitch,cor_heading\n";
 
-		FILE* f_ins_and_intergrity_csv = get_file("ins_and_intergrity.csv", title);
-		if (f_ins_and_intergrity_csv) {
-			fprintf(f_ins_and_intergrity_csv, 
+		double cor_pitch = 0.0;
+		double cor_heading = 0.0;
+		if ((uint32_t)movbs.tow != 0 /*&& fabs(double(ins.gps_millisecs) / 1000.0 - double(movbs.tow)) < 1*/) {
+			cor_pitch = movbs.cor_pitch;
+			cor_heading = movbs.cor_heading;
+		}
+		FILE* f_ins_and_integrity_csv = get_file("ins_and_integrity.csv", title);
+		if (f_ins_and_integrity_csv) {
+			fprintf(f_ins_and_integrity_csv, 
 				"%d,%11.4f,%14.9f,%14.9f,%10.4f,%10.4f,%10.4f,%10.4f,%14.9f,%14.9f,%14.9f,%3d,%3d",
 				ins.gps_week, (double)ins.gps_millisecs / 1000.0
 				, ins.latitude, ins.longitude, ins.height
 				, ins.north_velocity, ins.east_velocity, ins.up_velocity
 				, ins.roll, ins.pitch, ins.heading
-				, ins.ins_position_type, ins.ins_status);
-			fprintf(f_ins_and_intergrity_csv, ",%8.3f,%8.3f,%8.3f", ins.latitude_std, ins.longitude_std, ins.height_std);
-			fprintf(f_ins_and_intergrity_csv, ",%8.3f,%8.3f,%8.3f", ins.north_velocity_std, ins.east_velocity_std, ins.up_velocity_std);
-			fprintf(f_ins_and_intergrity_csv, ",%8.3f,%8.3f,%8.3f", ins.roll_std, ins.pitch_std, ins.heading_std);
-			fprintf(f_ins_and_intergrity_csv, ",%8.3f,%8.3f,%8.3f,%8.3f", ins_integ.hor_pos_pl, ins_integ.ver_pos_pl, ins_integ.hor_vel_pl, ins_integ.ver_vel_pl);
-			fprintf(f_ins_and_intergrity_csv, ",%8.3f,%8.3f,%8.3f", ins_integ.pitch_pl, ins_integ.roll_pl, ins_integ.heading_pl);
-			fprintf(f_ins_and_intergrity_csv, "\n");
+				, ins.ins_status, ins.ins_position_type);
+			fprintf(f_ins_and_integrity_csv, ",%8.3f,%8.3f,%8.3f", ins.latitude_std, ins.longitude_std, ins.height_std);
+			fprintf(f_ins_and_integrity_csv, ",%8.3f,%8.3f,%8.3f", ins.north_velocity_std, ins.east_velocity_std, ins.up_velocity_std);
+			fprintf(f_ins_and_integrity_csv, ",%8.3f,%8.3f,%8.3f", ins.roll_std, ins.pitch_std, ins.heading_std);
+			fprintf(f_ins_and_integrity_csv, ",%8.3f,%8.3f,%8.3f,%8.3f", ins_integ.hor_pos_pl, ins_integ.ver_pos_pl, ins_integ.hor_vel_pl, ins_integ.ver_vel_pl);
+			fprintf(f_ins_and_integrity_csv, ",%8.3f,%8.3f,%8.3f", ins_integ.pitch_pl, ins_integ.roll_pl, ins_integ.heading_pl);
+			fprintf(f_ins_and_integrity_csv, ",%8.3f,%8.3f", cor_pitch, cor_heading);
+			fprintf(f_ins_and_integrity_csv, "\n");
 		}
 	}
 
@@ -504,17 +565,30 @@ namespace Ins401_Tool {
 				, misa.RVB[0], misa.RVB[1], misa.RVB[2]
 				, misa.CVB[0], misa.CVB[1], misa.CVB[2]);
 		}
+//#ifdef OUTPUT_INNER_FILE
+//		//FILE* f_misa_txt = get_file("misa.txt");
+//		//if (f_misa_txt) {
+//		//	fprintf(f_misa_txt
+//		//		, "%d,%d,%d"
+//		//		",%f,%f,%f"
+//		//		",%f,%f,%f\n"
+//		//		, misa.gps_week, misa.gps_millisecs, misa.flag
+//		//		, misa.RVB[0], misa.RVB[1], misa.RVB[2]
+//		//		, misa.CVB[0], misa.CVB[1], misa.CVB[2]);
+//		//}
+//		FILE* f_process = get_file("process");
+//		fprintf(f_process
+//			, "$GPMISA,%d,%d,%d"
+//			",%f,%f,%f"
+//			",%f,%f,%f\n"
+//			, misa.gps_week, misa.gps_millisecs, misa.flag
+//			, misa.RVB[0], misa.RVB[1], misa.RVB[2]
+//			, misa.CVB[0], misa.CVB[1], misa.CVB[2]);
+//#endif
+	}
+	void Ins401_decoder::output_misa_sol_process()
+	{
 #ifdef OUTPUT_INNER_FILE
-		FILE* f_misa_txt = get_file("misa.txt");
-		if (f_misa_txt) {
-			fprintf(f_misa_txt
-				, "%d,%d,%d"
-				",%f,%f,%f"
-				",%f,%f,%f\n"
-				, misa.gps_week, misa.gps_millisecs, misa.flag
-				, misa.RVB[0], misa.RVB[1], misa.RVB[2]
-				, misa.CVB[0], misa.CVB[1], misa.CVB[2]);
-		}
 		FILE* f_process = get_file("process");
 		fprintf(f_process
 			, "$GPMISA,%d,%d,%d"
@@ -538,12 +612,10 @@ namespace Ins401_Tool {
 			fprintf(f_odo_csv, "%d,%11.4f,%3d,%10.4f,%3d,%16I64d\n"
 				, odo.GPS_Week, (double)odo.GPS_TimeOfWeek / 1000.0, odo.mode, odo.speed, odo.fwd, odo.wheel_tick);
 		}
+
+	}
+	void Ins401_decoder::output_odo_raw_process() {
 #ifdef OUTPUT_INNER_FILE
-		FILE* f_odo_txt = get_file("odo.txt");
-		if (f_odo_txt) {
-			fprintf(f_odo_txt, "%d,%11.4f,%3d,%10.4f,%3d,%16I64d\n"
-				, odo.GPS_Week, (double)odo.GPS_TimeOfWeek / 1000.0, odo.mode, odo.speed, odo.fwd, odo.wheel_tick);
-		}
 		FILE* f_process = get_file("process");
 		if (f_process) {
 			fprintf(f_process, "$GPODO,%d,%11.4f,%3d,%10.4f,%3d,%16I64d\n"
@@ -642,62 +714,104 @@ namespace Ins401_Tool {
 		}
 	}
 
+	void Ins401_decoder::output_mvb()
+	{
+		std::string title =
+			"GPS_Week(),GPS_TimeOfWeek(s)"
+			",rov_type,rov2_type"
+			",rov_lat(deg),rov_lon(deg),rov_hgt(m)"
+			",rov_north_vel(m/s),rov_east_vel(m/s),rov_up_vel(m/s)"
+			",rov_lat_std(m), rov_lon_std(m),rov_hgt_std(m)"
+			",rov_north_vel_std(m/s),rov_east_vel_std(m/s),rov_up_vel_std(m/s)"
+			",mvbs_north(m),mvbs_east(m),mvbs_up(m),mvbs_length_err(m)"
+			",mvb_heading(deg),mvb_std_heading(deg),mvb_pitch(deg)"
+			",cor_heading(deg),cor_pitch(deg)"
+			"\n";
+		FILE* f_mvb_csv = get_file("mvb.csv", title);
+		if (f_mvb_csv)
+		{
+			fprintf(f_mvb_csv, "%d,%11.4f,", movbs.week, (double)movbs.tow);
+			fprintf(f_mvb_csv, "%d,%d,", movbs.masterType, movbs.slaveType);
+			fprintf(f_mvb_csv, "%14.9f,%14.9f,%14.9f,", movbs.masterLon, movbs.masterLat, movbs.masterHg);
+			fprintf(f_mvb_csv, "%8.3f,%8.3f,%8.3f,", movbs.masterVelN, movbs.masterVelE, movbs.masterVelU);
+			fprintf(f_mvb_csv, "%8.3f,%8.3f,%8.3f,", movbs.lonStd, movbs.latStd, movbs.hgStd);
+			fprintf(f_mvb_csv, "%8.3f,%8.3f,%8.3f,", movbs.velNStd, movbs.velEStd, movbs.velUStd);
+			fprintf(f_mvb_csv, "%8.3f,%8.3f,%8.3f,%8.3f,", movbs.baseline_neu[0], movbs.baseline_neu[1], movbs.baseline_neu[2], movbs.bs_err);
+			fprintf(f_mvb_csv, "%8.4f,%8.4f,%8.4f,", movbs.heading, movbs.std_heading, movbs.pitch);
+			fprintf(f_mvb_csv, "%8.4f,%8.4f\n", movbs.cor_heading, movbs.cor_pitch);
+		}
+	}
+
 	void Ins401_decoder::output_movbs_sol()
 	{
-		std::string title = 
-			"GPS_Week(),GPS_TimeOfWeek(s)"
-			",masterFlag(),slaveFlag(),masterType(),slaveType()"
-			",masterSatView(),masterSatSol(),slaveSatView(),slaveSatSol()"
-			",HDOP(),VDOP(),TDOP(),PDOP()"
-			",solAge()"
-			",masterLon(deg),masterLat(deg), masterHg(m)"
-			",slaveLon(deg),slaveLat(deg),slaveHg(m)"
-			",roll(deg),pitch(deg),heading(deg),std_heading(deg), geoSep(m)"
-			",masterVelN(m/s),masterVelE(m/s),masterVelU(m/s)"
-			",slaveVelN(m/s),slaveVelE(m/s),slaveVelU(m/s)"
-            ",lonStd(),latStd(),hgStd()"
-            ",velNStd(),velEStd(),velUStd()"
-            ",horPosPl(),verPosPl(),horVelPl(),verVelPl()"
-            ",posPlStatus(),velPlStatus(),fwVer(),alo_time()"
-			"\n";
-		FILE* f_movbs_csv = get_file("movbs.csv", title);
+		//std::string title = 
+		//	"GPS_Week(),GPS_TimeOfWeek(s)"
+		//	",masterFlag(),slaveFlag(),masterType(),slaveType()"
+		//	",masterSatView(),masterSatSol(),slaveSatView(),slaveSatSol()"
+		//	",HDOP(),VDOP(),TDOP(),PDOP()"
+		//	",solAge()"
+		//	",masterLon(deg),masterLat(deg), masterHg(m)"
+		//	",slaveLon(deg),slaveLat(deg),slaveHg(m)"
+		//	",roll(deg),pitch(deg),heading(deg),cor_pitch(deg),cor_heading(deg),std_heading(deg)"
+		//	",mvbs_north(m),mvbs_east(m),mvbs_up(m),mvbs_length_err(m)"
+		//	",geoSep(m)"
+		//	",masterVelN(m/s),masterVelE(m/s),masterVelU(m/s)"
+		//	",slaveVelN(m/s),slaveVelE(m/s),slaveVelU(m/s)"
+		//	",lonStd(),latStd(),hgStd()"
+		//	",velNStd(),velEStd(),velUStd()"
+		//	",horPosPl(),verPosPl(),horVelPl(),verVelPl()"
+		//	",posPlStatus(),velPlStatus(),fwVer(),alo_time()"
+		//	"\n";
+		//FILE* f_movbs_csv = get_file("movbs.csv", title);
 		// create_file(f_movbs_csv, "movbs.csv", title.c_str(), show_format_time);
 		// if (show_format_time) {
 		// 	fprintf(f_movbs_csv, "%s,", week_2_time_str(movbs.week, movbs.tow));
 		// }
-        if (f_movbs_csv)
-        {
-            fprintf(f_movbs_csv, "%d,%11.4f,", movbs.week, (double)movbs.tow);
-            fprintf(f_movbs_csv, "%d,%d,%d,%d,", movbs.masterFlag, movbs.slaveFlag, movbs.masterType, movbs.slaveType);
-            fprintf(f_movbs_csv, "%d,%d,%d,%d,", movbs.masterSatView, movbs.masterSatSol, movbs.slaveSatView, movbs.slaveSatSol);
-            fprintf(f_movbs_csv, "%10.4f,%10.4f,%10.4f,%10.4f,", movbs.HDOP, movbs.VDOP, movbs.TDOP, movbs.PDOP);
-            fprintf(f_movbs_csv, "%4.2f,", movbs.solAge);
-            fprintf(f_movbs_csv, "%14.9f,%14.9f,%14.9f,", movbs.masterLon, movbs.masterLat, movbs.masterHg);
-            fprintf(f_movbs_csv, "%14.9f,%14.9f,%14.9f,", movbs.slaveLon, movbs.slaveLat, movbs.slaveHg);
-            fprintf(f_movbs_csv, "%8.4f,%8.4f,%8.4f,%8.4f,%8.4f,", movbs.roll, movbs.pitch, movbs.heading, movbs.std_heading, movbs.geoSep);
-            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.masterVelN, movbs.masterVelE, movbs.masterVelU);
-            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.slaveVelN, movbs.slaveVelE, movbs.slaveVelU);
-            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.lonStd, movbs.latStd, movbs.hgStd);
-            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.velNStd, movbs.velEStd, movbs.velUStd);
-            fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,%8.3f,", movbs.horPosPl, movbs.verPosPl, movbs.horVelPl, movbs.verVelPl);
-            fprintf(f_movbs_csv, "%d,%d,%d,%d\n", movbs.posPlStatus, movbs.velPlStatus, movbs.fwVer, movbs.alo_time);
-        }
+		//if (f_movbs_csv)
+		//{
+		//	fprintf(f_movbs_csv, "%d,%11.4f,", movbs.week, (double)movbs.tow);
+		//	fprintf(f_movbs_csv, "%d,%d,%d,%d,", movbs.masterFlag, movbs.slaveFlag, movbs.masterType, movbs.slaveType);
+		//	fprintf(f_movbs_csv, "%d,%d,%d,%d,", movbs.masterSatView, movbs.masterSatSol, movbs.slaveSatView, movbs.slaveSatSol);
+		//	fprintf(f_movbs_csv, "%10.4f,%10.4f,%10.4f,%10.4f,", movbs.HDOP, movbs.VDOP, movbs.TDOP, movbs.PDOP);
+		//	fprintf(f_movbs_csv, "%4.2f,", movbs.solAge);
+		//	fprintf(f_movbs_csv, "%14.9f,%14.9f,%14.9f,", movbs.masterLon, movbs.masterLat, movbs.masterHg);
+		//	fprintf(f_movbs_csv, "%14.9f,%14.9f,%14.9f,", movbs.slaveLon, movbs.slaveLat, movbs.slaveHg);
+		//	fprintf(f_movbs_csv, "%8.4f,%8.4f,%8.4f,%8.4f,%8.4f,%8.4f,", movbs.roll, movbs.pitch, movbs.heading, movbs.cor_pitch,movbs.cor_heading, movbs.std_heading);
+		//	fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,%8.3f,", movbs.baseline_neu[0], movbs.baseline_neu[1], movbs.baseline_neu[2], movbs.bs_err);
+		//	fprintf(f_movbs_csv, "%8.4f,", movbs.geoSep);
+		//	fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.masterVelN, movbs.masterVelE, movbs.masterVelU);
+		//	fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.slaveVelN, movbs.slaveVelE, movbs.slaveVelU);
+		//	fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.lonStd, movbs.latStd, movbs.hgStd);
+		//	fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,", movbs.velNStd, movbs.velEStd, movbs.velUStd);
+		//	fprintf(f_movbs_csv, "%8.3f,%8.3f,%8.3f,%8.3f,", movbs.horPosPl, movbs.verPosPl, movbs.horVelPl, movbs.verVelPl);
+		//	fprintf(f_movbs_csv, "%d,%d,%d,%d\n", movbs.posPlStatus, movbs.velPlStatus, movbs.fwVer, movbs.alo_time);
+		//}
+//#ifdef OUTPUT_INNER_FILE
+//#if 1
+//            /*FILE* f_movbs_txt = get_file("movbs.txt");
+//			if (f_movbs_txt) {
+//				fprintf(f_movbs_txt, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
+//				movbs.week, movbs.tow, movbs.masterFlag, movbs.slaveFlag, movbs.masterType,
+//				movbs.slaveType, movbs.roll, movbs.pitch, movbs.heading);
+//            }*/
+//			//process
+//			FILE* f_process = get_file("process");
+//			if (f_process) {
+//				fprintf(f_process, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
+//				movbs.week, movbs.tow, movbs.masterFlag, movbs.slaveFlag, movbs.masterType,
+//				movbs.slaveType, movbs.roll, movbs.pitch, movbs.heading);
+//            }
+//#endif
+//#endif
+	}
+	void Ins401_decoder::output_movbs_sol_process() {
 #ifdef OUTPUT_INNER_FILE
-#if 1
-            FILE* f_movbs_txt = get_file("movbs.txt");
-			if (f_movbs_txt) {
-				fprintf(f_movbs_txt, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
+		FILE* f_process = get_file("process");
+		if (f_process) {
+			fprintf(f_process, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
 				movbs.week, movbs.tow, movbs.masterFlag, movbs.slaveFlag, movbs.masterType,
 				movbs.slaveType, movbs.roll, movbs.pitch, movbs.heading);
-            }
-			//process
-			FILE* f_process = get_file("process");
-			if (f_process) {
-				fprintf(f_process, "$GPMOVBS,%d,%11.4f,%d,%d,%d,%d,%10.4f,%10.4f,%10.4f\n",
-				movbs.week, movbs.tow, movbs.masterFlag, movbs.slaveFlag, movbs.masterType,
-				movbs.slaveType, movbs.roll, movbs.pitch, movbs.heading);
-            }
-#endif
+		}
 #endif
 	}
 
@@ -714,24 +828,19 @@ namespace Ins401_Tool {
             fprintf(f_heading_csv, "%10.6f,%10.6f,%10.6f,%10.6f,", heading.length, heading.heading, heading.pitch, heading.roll);
             fprintf(f_heading_csv, "%10.6f,%10.6f\n", heading.hdgstddev, heading.ptchstddev);
         }
-#ifdef OUTPUT_INNER_FILE
-#if 1
-			//txt
-            FILE* f_heading_txt = get_file("heading.txt");
-			if (f_heading_txt) {
-				fprintf(f_heading_txt, "$GPHEADING,%d,%11.4f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f\n",heading.gps_week, heading.gps_millisecs,
-			heading.length, heading.heading, heading.pitch, heading.hdgstddev, heading.ptchstddev);
-			}
-			//process
-			FILE* f_process = get_file("process");
-			if (f_process) {
-				fprintf(f_process, "$GPHEADING,%d,%11.4f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f\n",heading.gps_week, heading.gps_millisecs,
-			heading.length, heading.heading, heading.pitch, heading.hdgstddev, heading.ptchstddev);
-			}
 
-#endif
-#endif
 	}    
+	void Ins401_decoder::output_heading_sol_process()
+	{
+#ifdef OUTPUT_INNER_FILE
+		//process
+		FILE* f_process = get_file("process");
+		if (f_process) {
+			fprintf(f_process, "$GPHEADING,%d,%11.4f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f\n", heading.gps_week, heading.gps_millisecs,
+				heading.length, heading.heading, heading.pitch, heading.hdgstddev, heading.ptchstddev);
+		}
+#endif
+	}
 
 	void Ins401_decoder::output_check()
 	{
@@ -753,7 +862,7 @@ namespace Ins401_Tool {
 	{
 		std::string title = 
 			"week,tow,adc_voltin,adc_core,adc_vdd,adc_gnd,"
-			"err_out_pin(),rf_err_pin(),ant_err_pin(),handshake_flag(),reset_pin()\n";
+			"err_out_pin(),rf_err_pin(),ant_err_pin(),handshake_flag(),reset_pin(),up_gnss\n";
 		FILE* f_fd = get_file("fd.csv", title);
 		if (f_fd) {
 			fprintf(f_fd, 
@@ -771,7 +880,7 @@ namespace Ins401_Tool {
 				system_fault_detection.status.gnss_ant_err_pin,
 				system_fault_detection.status.gnss_handshake_flag,
 				system_fault_detection.status.gnss_reset_pin,
-				system_fault_detection.ttff);
+				system_fault_detection.up_gnss);
 		}
 	}
 
@@ -911,6 +1020,8 @@ namespace Ins401_Tool {
 				memcpy(&imu, payload, packet_size);
 				if (!m_isOutputFile) break;
 				output_imu_raw();
+				output_imu_raw_process();
+				if (is_pruned) break;
 				MI_output_imu_raw();
 #ifdef OUTPUT_INNER_FILE
 				save_novatel_raw_imu();
@@ -923,6 +1034,7 @@ namespace Ins401_Tool {
 			if (raw.length == packet_size) {
 				memcpy(&cor_imu, payload, packet_size);
 				if (!m_isOutputFile) break;
+				if (is_pruned) break;
 				output_cor_imu_raw();
 			}
 		}break;
@@ -933,15 +1045,31 @@ namespace Ins401_Tool {
 				memcpy(&gnss, payload, packet_size);
 				if (!m_isOutputFile) break;
 				output_gnss_sol();
-				//MI_output_gnss_sol();
-				output_gnss_and_integ();
+				output_gnss_sol_process();
+				output_gnss_and_integ();		
 			}
 		}break;
+        case em_GNSS_PVT:
+        {
+            size_t packet_size = sizeof(gnss_pvt_t);
+            if(raw.length == packet_size)
+            {
+                memcpy(&mtk_pvt, payload, packet_size);
+				if (!m_isOutputFile) break;
+				output_pvt_sol();
+            }
+
+        }
+        break;
         case em_MOVBS_SOL:
 		{
 			size_t packet_size = sizeof(movbs_sol_t);
 			if (raw.length == packet_size) {
 				memcpy(&movbs, payload, packet_size);
+				if (!m_isOutputFile) break;
+				output_movbs_sol_process();
+				if (is_pruned) break;
+				output_mvb();
 				output_movbs_sol();
 			}
 		}
@@ -951,6 +1079,9 @@ namespace Ins401_Tool {
 			size_t packet_size = sizeof(heading_t);
 			if (raw.length == packet_size) {
 				memcpy(&heading, payload, packet_size);
+				if (!m_isOutputFile) break;
+				output_heading_sol_process();
+				if (is_pruned) break;
 				output_heading_sol();
 			}            
         }
@@ -962,17 +1093,19 @@ namespace Ins401_Tool {
 				memcpy(&ins, payload, raw.length);
 				if (!m_isOutputFile) break;
 				output_ins_sol();
+				output_ins_sol_process();
 				MI_output_ins_sol();
 			}
 		}break;
-		case em_INS_INTERGRITY:
+		case em_INS_INTEGRITY:
 		{
-			size_t packet_size = sizeof(ins_intergrity_t);
+			size_t packet_size = sizeof(ins_integrity_t);
 			if (raw.length == packet_size) {
 				memcpy(&ins_integ, payload, packet_size);
 				if (!m_isOutputFile) break;
-				output_ins_integ();
 				output_ins_and_integ();
+				if (is_pruned) break;
+				output_ins_integ();
 			}	
 		}break;
 		case em_RAW_ODO:
@@ -980,8 +1113,10 @@ namespace Ins401_Tool {
 			size_t packet_size = sizeof(odo_t);
 			if (raw.length == packet_size) {
 				memcpy(&odo, payload, packet_size);
+				//if (is_pruned) break;
 				if (!m_isOutputFile) break;
 				output_odo_raw();
+				output_odo_raw_process();
 			}
 		}break;
 		case em_DIAGNOSTIC_MSG:
@@ -990,12 +1125,14 @@ namespace Ins401_Tool {
 			if (raw.length == packet_size) {
 				memcpy(&dm, payload, packet_size);
 				if (!m_isOutputFile) break;
+				if (is_pruned) break;
 				output_dm_raw();
 			}
 		}break;
 		case em_ROVER_RTCM:
 		{
 			if (!m_isOutputFile) break;
+			if (is_pruned) break;
 			output_rover_rtcm();
 		}break;
 		case em_MISALIGN:
@@ -1004,6 +1141,8 @@ namespace Ins401_Tool {
 			if (raw.length == packet_size) {
 				memcpy(&misa, payload, packet_size);
 				if (!m_isOutputFile) break;
+				output_misa_sol_process();
+				if (is_pruned) break;
 				output_misa_sol();
 			}
 		}break;
@@ -1011,6 +1150,7 @@ namespace Ins401_Tool {
 		{
 			size_t packet_size = sizeof(SaveMsg);
 			int ret = 0;
+			if (is_pruned) break;
 			if (!m_isOutputFile) break;
 			for (uint32_t i = 0; i < raw.length; i++)
 			{
@@ -1023,6 +1163,7 @@ namespace Ins401_Tool {
 			if (raw.length == packet_size){
 				memcpy(&packetcheck, payload, packet_size);
 				if (!m_isOutputFile) break;
+				if (is_pruned) break;
 				output_check();
 			}
 		}break;
@@ -1032,7 +1173,7 @@ namespace Ins401_Tool {
 			if (raw.length == packet_size) {
 				memcpy(&gnss_integ, payload, packet_size);
 				if (!m_isOutputFile) break;
-				output_gnss_integ();
+				if (!is_pruned) output_gnss_integ();
 				output_gnss_and_integ();
 				last_gnss_integ_millisecs = (uint32_t)gnss_integ.gps_millisecs;
 			}
@@ -1042,8 +1183,9 @@ namespace Ins401_Tool {
 #ifdef OUTPUT_INNER_FILE
 			size_t packet_size = sizeof(binary_rtk_debug1_t);
 			if (raw.length == packet_size) {
-				memcpy(&rtk_debug1, payload, packet_size);	
+				memcpy(&rtk_debug1, payload, packet_size);				
 				if (!m_isOutputFile) break;
+				if (is_pruned) break;
 				output_rtk_debug1();
 			}
 #endif
@@ -1052,20 +1194,92 @@ namespace Ins401_Tool {
 		{
 			size_t packet_size = sizeof(system_fault_detection_t);
 			if (raw.length == packet_size || raw.length == sizeof(system_fault_detection_t_20220930)) {
-				memcpy(&system_fault_detection, payload, packet_size);
+				memcpy(&system_fault_detection, payload, packet_size);				
 				if (!m_isOutputFile) break;
+				if (is_pruned) break;
 				output_system_fault_detection();
 			}
 		}break;
+        case em_MTK_DEBUG:
+        {
+            save_mtk_debug_bin(payload, raw.length);
+        }
 		case em_G1:
 		{
 			if (!m_isOutputFile) break;
+			if (is_pruned) break;
 			output_G1();
 		}break;
 		case em_RUNSTATUS_MONITOR:
 		{
 			if (!m_isOutputFile) break;
+			if (is_pruned) break;
 			output_runstatus_monitor();
+		}break;
+		case em_TRJL:
+		{
+			if (!m_isOutputFile) break;
+			if (is_pruned) break;
+			FILE* f_TRJL = get_file("TRJL.txt");
+			if (f_TRJL) {
+				fwrite(payload, 1, raw.length, f_TRJL);
+				char message[1280] = { 0 };
+				memcpy(message, payload, raw.length);
+				double value_array[22] = { 0 };
+				split_string_2_double(message + 6, ",", value_array,22);
+				ins_kml.gps_week = imu.gps_week;
+				ins_kml.gps_secs = value_array[0];
+				ins_kml.ins_status = (int)value_array[20];
+				ins_kml.ins_position_type = (int)value_array[19];
+				ins_kml.latitude = value_array[1];
+				ins_kml.longitude = value_array[2];
+				ins_kml.height = value_array[3];
+				ins_kml.north_velocity = value_array[4];
+				ins_kml.east_velocity = value_array[5];
+				ins_kml.up_velocity = -value_array[6];
+				ins_kml.roll = value_array[7];
+				ins_kml.pitch = value_array[8];
+				ins_kml.heading = value_array[9];
+				m_TRJL_ins_kml->append_ins(ins_kml);
+			}
+
+		}break;
+		case em_TRJM:
+		{
+			if (!m_isOutputFile) break;
+			if (is_pruned) break;
+			FILE* f_TRJM = get_file("TRJM.txt");	
+			if (f_TRJM) {
+				fwrite(payload, 1, raw.length, f_TRJM);
+				char message[1280] = { 0 };
+				memcpy(message, payload, raw.length);
+				double value_array[22] = { 0 };
+				split_string_2_double(message + 6, ",", value_array, 22);
+				ins_kml.gps_week = imu.gps_week;
+				ins_kml.gps_secs = value_array[0];
+				ins_kml.ins_status = (int)value_array[20];
+				ins_kml.ins_position_type = (int)value_array[19];
+				ins_kml.latitude = value_array[1];
+				ins_kml.longitude = value_array[2];
+				ins_kml.height = value_array[3];
+				ins_kml.north_velocity = value_array[4];
+				ins_kml.east_velocity = value_array[5];
+				ins_kml.up_velocity = -value_array[6];
+				ins_kml.roll = value_array[7];
+				ins_kml.pitch = value_array[8];
+				ins_kml.heading = value_array[9];
+				m_TRJM_ins_kml->append_ins(ins_kml);
+			}
+		}break;
+		case em_ins_record:
+		{
+			if (!m_isOutputFile) break;
+			if (is_pruned) break;
+			FILE* f_ins_record = get_file("ins_record.bin");
+			if (f_ins_record) {
+				fwrite(payload, 1, raw.length, f_ins_record);
+			}
+
 		}break;
 		default:
 			break;
@@ -1154,7 +1368,7 @@ namespace Ins401_Tool {
 				raw.nmea[raw.nmeabyte++] = 0x0A;
 				raw.nmea[raw.nmeabyte++] = 0;
 				raw.nmea_flag = 0;
-				if (m_isOutputFile) {
+				if (m_isOutputFile && !is_pruned) {
 					FILE* f_nmea = get_file("nmea.txt");
 					fprintf(f_nmea, (char*)raw.nmea);
 #ifdef MI_OUTPUT_FILE
@@ -1187,13 +1401,18 @@ namespace Ins401_Tool {
 		m_isOutputFile = output;
 	}
 
+	void Ins401_decoder::set_pruned(bool pruned)
+	{
+		is_pruned = pruned;
+	}
+
 	int Ins401_decoder::input_data(uint8_t data)
 	{
 		assert(raw.header_len <= 4);
 		//assert(raw.nbyte <= 112);
-		if (raw.nbyte > 229) {
-			printf("error, raw.nbyte = %d\n", raw.nbyte);
-		}
+		//if (raw.nbyte > 230) {
+		//	printf("error, raw.nbyte = %d\n", raw.nbyte);
+		//}
 		int ret = 0;
 		if (raw.flag == 0) {
 			raw.header[raw.header_len++] = data;
@@ -1234,6 +1453,12 @@ namespace Ins401_Tool {
 					raw.nbyte = 0;
 					raw.length = 0;
 				}
+				else
+				{
+					if (raw.length > 270 && raw.packet_type != em_COR_IMU) {
+						printf("type = %04x, length = %d\n", raw.packet_type, raw.length);
+					}
+				}
 			}
 			else if (raw.length > 0 && raw.nbyte == raw.length + 8) { //8 = [type1,type2,len(4)] + [crc1,crc2]
 				uint16_t packet_crc = 256 * raw.buff[raw.nbyte - 2] + raw.buff[raw.nbyte - 1];
@@ -1267,9 +1492,17 @@ namespace Ins401_Tool {
 			}
 			fprintf(f_log, "all_pack_num = %d\ncrc_right_num = %d\ncrc_error_num = %d\n", pack_num, crc_right_num, crc_error_num);
 		}
-		Kml_Generator::Instance()->open_files(base_file_name);
-		Kml_Generator::Instance()->write_files();
-		Kml_Generator::Instance()->close_files();
+		if (!is_pruned) {
+			Kml_Generator::Instance()->open_files(base_file_name);
+			Kml_Generator::Instance()->write_files();
+			Kml_Generator::Instance()->close_files();
+			m_TRJL_ins_kml->open_file(base_file_name, "TRJL.kml");
+			m_TRJL_ins_kml->write_file();
+			m_TRJL_ins_kml->close_file();
+			m_TRJM_ins_kml->open_file(base_file_name, "TRJM.kml");
+			m_TRJM_ins_kml->write_file();
+			m_TRJM_ins_kml->close_file();
+		}
 		close_all_files();
 	}
 
@@ -1291,5 +1524,12 @@ namespace Ins401_Tool {
 	raw_imu_t * Ins401_decoder::get_imu_raw()
 	{
 		return &imu;
+	}
+	void Ins401_decoder::save_mtk_debug_bin(uint8_t* buff, uint16_t len)
+	{
+		FILE* f_mtk_debug_bin = get_file("mtk_debug.bin");
+		if (f_mtk_debug_bin) {
+			fwrite(buff, 1, len, f_mtk_debug_bin);
+		}
 	}
 };

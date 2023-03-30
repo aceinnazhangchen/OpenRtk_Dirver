@@ -61,6 +61,8 @@ void CsvAnalysisTools::onAnalysisClicked()
 	if (filename.isEmpty()) {
 		return;
 	}
+	ui.progressBar->setValue(0);
+	m_CsvAnalysisThread->setFileFormat(ui.fileformat_cmb->currentIndex());
 	m_CsvAnalysisThread->setFileName(filename);
 	m_CsvAnalysisThread->start();
 	setOperable(false);
