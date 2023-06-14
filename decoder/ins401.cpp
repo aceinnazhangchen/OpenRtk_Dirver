@@ -1455,8 +1455,9 @@ namespace Ins401_Tool {
 				}
 				else
 				{
-					if (raw.length > 270 && raw.packet_type != em_COR_IMU) {
-						printf("type = %04x, length = %d\n", raw.packet_type, raw.length);
+					if (raw.length > 500 && raw.packet_type != em_COR_IMU) 
+                    {
+						// printf("type = %04x, length = %d\n", raw.packet_type, raw.length);
 					}
 				}
 			}
