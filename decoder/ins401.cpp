@@ -59,6 +59,7 @@ namespace Ins401_Tool {
         all_type_pack_num[em_GNSS_PVT] = 0;
 		all_type_pack_num[em_MOVBS_SOL] = 0;
         all_type_pack_num[em_HEADING_SOL] = 0;
+        all_type_pack_num[em_GNSS_HEADING_SOL] = 0;
 		all_type_pack_num[em_INS_SOL] = 0;
 		all_type_pack_num[em_RAW_ODO] = 0;
 		all_type_pack_num[em_DIAGNOSTIC_MSG] = 0;
@@ -83,6 +84,7 @@ namespace Ins401_Tool {
         all_type_file_output[em_GNSS_PVT] = 1;
 		all_type_file_output[em_MOVBS_SOL] = 1;
         all_type_file_output[em_HEADING_SOL] = 1;
+        all_type_file_output[em_GNSS_HEADING_SOL] = 1;
 		all_type_file_output[em_INS_SOL] = 1;
 		all_type_file_output[em_RAW_ODO] = 1;
 		all_type_file_output[em_DIAGNOSTIC_MSG] = 1;
@@ -830,6 +832,24 @@ namespace Ins401_Tool {
         }
 
 	}    
+
+
+	void Ins401_decoder::output_gnss_heading_sol()
+	{
+		std::string title = 
+			"GPS_Week(),GPS_TimeOfWeek(s)"
+			",soltype(),heading(),length(m),heading_sd()"
+			",heading_sd()\n";
+		FILE* f_heading_csv = get_file("gnss_heading.csv", title);
+        if (f_heading_csv)
+        {
+            fprintf(f_heading_csv, "%d,%06d,", gnss_heading.gps_week, gnss_heading.gps_millisecs/1000);
+            fprintf(f_heading_csv, "%2d,%10.6f,%10.6f,", gnss_heading.soltype, gnss_heading.heading, gnss_heading.length);
+            fprintf(f_heading_csv, "%10.6f,%10.6f\n", gnss_heading.heading_sd, gnss_heading.length_sd);
+        }
+
+	}    
+
 	void Ins401_decoder::output_heading_sol_process()
 	{
 #ifdef OUTPUT_INNER_FILE
@@ -838,6 +858,19 @@ namespace Ins401_Tool {
 		if (f_process) {
 			fprintf(f_process, "$GPHEADING,%d,%11.4f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f\n", heading.gps_week, heading.gps_millisecs,
 				heading.length, heading.heading, heading.pitch, heading.hdgstddev, heading.ptchstddev);
+		}
+#endif
+	}
+
+
+	void Ins401_decoder::output_gnss_heading_sol_process()
+	{
+#ifdef OUTPUT_INNER_FILE
+		//process
+		FILE* f_process = get_file("process");
+		if (f_process) {
+			fprintf(f_process, "$GPHEADING,%d,%6d,%10.6f,%10.6f,%10.6f,%10.6f,%2d\n", gnss_heading.gps_week, gnss_heading.gps_millisecs / 1000,
+				gnss_heading.length, gnss_heading.heading, gnss_heading.heading_sd, gnss_heading.length_sd, gnss_heading.soltype);
 		}
 #endif
 	}
@@ -1084,7 +1117,18 @@ namespace Ins401_Tool {
 				if (is_pruned) break;
 				output_heading_sol();
 			}            
-        }
+        }break;
+        case em_GNSS_HEADING_SOL:
+        {
+			size_t packet_size = sizeof(binary_gnss_heading_t);
+			if (raw.length == packet_size) {
+				memcpy(&gnss_heading, payload, packet_size);
+				if (!m_isOutputFile) break;
+				output_gnss_heading_sol_process();
+				if (is_pruned) break;
+				output_gnss_heading_sol();
+			}            
+        }break;
 		case em_INS_SOL:
 		{
 			size_t packet_size_20211207 = sizeof(ins_sol_t_20211207);
