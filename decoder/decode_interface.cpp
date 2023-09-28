@@ -9,6 +9,7 @@
 #include "beidou.h"
 #include "NPOS122_decoder.h"
 #include "ins401c.h"
+#include "rtk350la.h"
 
 #ifndef  WIN32
 #include<ctype.h>
@@ -82,6 +83,38 @@ void decode_rtk330la_interface(char* filename, bool pruned)
 	}
 	delete rtk330la_decoder;
 }
+
+void decode_rtk350la_interface(char* filename, bool pruned)
+{
+	RTK350LA_Tool::RTK350LA_decoder* rtk350la_decoder = new RTK350LA_Tool::RTK350LA_decoder();
+	FILE* file = fopen(filename, "rb");
+	if (file && rtk350la_decoder) {
+		char dirname[256] = { 0 };
+		int ret = 0;
+		int64_t file_size = getFileSize(file);
+		size_t read_size = 0;
+		size_t readcount = 0;
+		char read_cache[READ_CACHE_SIZE] = { 0 };
+		createDirByFilePath(filename, dirname);
+		rtk350la_decoder->init();
+		rtk350la_decoder->set_pruned(pruned);
+		rtk350la_decoder->set_base_file_name(dirname);
+		while (!feof(file)) {
+			readcount = fread(read_cache, sizeof(char), READ_CACHE_SIZE, file);
+			read_size += readcount;
+			for (size_t i = 0; i < readcount; i++) {
+				ret = rtk350la_decoder->input_raw(read_cache[i]);
+			}
+			double percent = (double)read_size / (double)file_size * 100;
+			printf("Process : %4.1f %%\r", percent);
+		}
+		rtk350la_decoder->finish();
+		fclose(file);
+		printf("\nfinished\r\n");
+	}
+	delete rtk350la_decoder;
+}
+
 
 void decode_ins401_interface(char* filename, char* is_parse_dr, bool pruned)
 {

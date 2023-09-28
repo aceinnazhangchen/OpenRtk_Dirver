@@ -13,6 +13,11 @@ void decode_rtk330la(char* filename,bool pruned)
 	decode_rtk330la_interface(filename,pruned);
 }
 
+void decode_rtk350la(char* filename,bool pruned)
+{
+	decode_rtk350la_interface(filename, pruned);
+}
+
 void decode_ins401(char* filename, bool pruned)
 {
 	char is_parse_dr[] = "false";
@@ -52,6 +57,9 @@ int main(int argc, char* argv[]) {
 		else if (strcmp(argv[1], "-ins401c") == 0) {
 			decode_ins401c(filename);
 		}
+		else if (strcmp(argv[1], "-RTK350LA") == 0) {
+			decode_rtk350la(filename, false);
+		}        
 		else {
 			printf("User_Decoder_Console.exe -u(OpenRTK330LI)|i(RTK330LA)|ins401|ins401c|beidou|npos122 <filename> \n");
 		}
